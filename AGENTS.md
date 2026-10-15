@@ -14,7 +14,7 @@ decisions in it have reasons attached, and several of them are deliberate revers
 
 ## Status
 
-Nothing is built yet. The stack below is settled; scaffolding is the next step.
+Scaffolded: an empty vinext app that type-checks, lints, builds and runs locally. No features yet.
 
 ## Hard constraint: $0, no card
 
@@ -40,7 +40,11 @@ The free-plan limits that shape the code:
 |---|---|
 | Platform | One Cloudflare Worker serving the PWA, the Telegram webhook and the cron jobs |
 | Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
-| Components | shadcn/ui on Tailwind CSS 4 |
+| Components | shadcn/ui, `base-nova` style on Base UI, Tailwind CSS 4 |
+| Font | Inter with the `vietnamese` subset. Geist, shadcn's default, has no Vietnamese glyphs |
+| Browser-side server state | TanStack Query, once a screen needs client caching or optimistic updates. Not SWR: same job, less for mutations |
+| Client state | None until something needs it, then Zustand. Not Redux Toolkit: far more machinery than one user needs |
+| Tables | TanStack Table, through shadcn's data table |
 | Cloudflare CLI | `cf` with a typed `cloudflare.config.ts`. Not Wrangler |
 | Database | D1, through Drizzle ORM (1.0 release candidate, pinned to an exact version) |
 | Validation | Zod 4. One schema drives input validation, the LLM's `response_format` and the check on what it returns |
@@ -51,6 +55,8 @@ The free-plan limits that shape the code:
 | Tooling runtime | Node 26 |
 | Package manager | pnpm |
 | Lint and format | Oxlint (type-aware) with `@shadcn/lint`, and Oxfmt |
+
+A library arrives with the feature that needs it, not ahead of it. One per concern - never two that do the same job.
 
 vinext and `cf` are both pre-1.0-stable choices, taken on purpose: the product is not shipping soon, and they are
 the direction Cloudflare recommends for new projects. If vinext's server rendering will not fit in 10 ms of CPU,
@@ -70,8 +76,11 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 
 ## Setup
 
-- Node 26 and pnpm. The pnpm version is pinned in `package.json`; Node no longer ships Corepack, so install pnpm
-  itself once - see https://pnpm.io/installation.
+- Node 26 and pnpm. `.node-version` pins Node for version managers that read it; the pnpm version is pinned in
+  `package.json`. Node no longer ships Corepack, so install pnpm itself once - see https://pnpm.io/installation.
+- `pnpm install`. `pnpm-workspace.yaml` holds the supply-chain settings: new releases wait a day, a drop in publish
+  trust fails the install, and dependency build scripts run only for packages listed under `allowBuilds`. Review a
+  package before adding it there. Versions are pinned exactly.
 - `pnpm exec cf auth login`. It opens a browser to approve access, so a person does it, not an agent.
 - Claude Code: trust the folder when asked. `.claude/settings.json` declares the `cloudflare/skills` marketplace
   and enables its `cloudflare` plugin, which brings Cloudflare's skills and the Cloudflare MCP server. If Claude
@@ -87,7 +96,9 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 - Preview with `--dry-run`. A destructive command that aborts for lack of `--force` still exits 0.
 - Never deploy, delete a resource or change a secret unless asked. Those reach the live app.
 - Generated binding types live in `.cloudflare/types`, which is gitignored and listed in `tsconfig.json`.
-  `cf workers types` regenerates them outside the Vite workflow.
+  `cf workers types` regenerates them outside the Vite workflow; `pnpm typecheck` runs it first.
+- Keep `compatibilityDate` at the newest date the local `workerd` supports. Above it the dev server refuses to
+  start, and `build` does not notice.
 
 ## TypeScript
 
@@ -129,7 +140,12 @@ The bar is a principal engineer's, on current TypeScript. Compiling is not the s
 - **`@shadcn/lint`** runs inside Oxlint as a JS plugin. It is given the allowed styling rules and reports
   violations against the project's own components and theme. Oxlint's JS plugins are still alpha, with a known
   out-of-memory problem on Windows; if that bites, run lint under WSL.
-- **Oxfmt** formats, including Tailwind class sorting. It is in beta.
+- **Oxfmt** formats code and config, sorting imports and Tailwind classes. It is in beta. Markdown is left out on
+  purpose: docs are wrapped by hand at about 120 columns, and Oxfmt pads tables far past that.
+- All six `@shadcn/lint` rules are errors, by the owner's choice: no restyling a component through `className`, no
+  raw palette colors, no arbitrary values, no inline styles, no classes Tailwind cannot generate, no dynamically
+  built classes on a component. A design need the theme cannot express goes into the theme or a variant. Until
+  the first component exists, it warns that `@/components/ui` does not resolve; that is expected.
 
 Run lint and fix what it reports before calling frontend work done.
 
@@ -151,7 +167,18 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 
 ## Commands
 
-None yet. This section gets filled in at scaffolding.
+| Command | Does |
+|---|---|
+| `pnpm dev` | Dev server on workerd, with HMR |
+| `pnpm build` | Production build into `.cloudflare/output`, pre-rendering static routes |
+| `pnpm start` | Serve the production build locally |
+| `pnpm typecheck` | Generate binding types, then `tsc` |
+| `pnpm lint` | Oxlint, type-aware |
+| `pnpm format` / `pnpm format:check` | Oxfmt |
+| `pnpm deploy` | Deploy to Cloudflare. Only when asked |
+
+Before calling a change done: `format:check`, `lint`, `typecheck` and `build` all pass. There is no test runner
+yet; it arrives with the first feature worth testing.
 
 ## Style
 

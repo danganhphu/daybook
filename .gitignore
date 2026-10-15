@@ -1,8 +1,12 @@
 # Dependencies
 node_modules/
 
-# Build output, and Cloudflare's generated types and local state
+# Build output, and generated types and local state (vinext routes, Cloudflare bindings)
 dist/
+.next/
+.vinext/
+next-env.d.ts
+worker-configuration.d.ts
 .cloudflare/
 .wrangler/
 *.tsbuildinfo
