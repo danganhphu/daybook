@@ -1,0 +1,39 @@
+# Build output
+bin/
+obj/
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Editors
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Aspire local state
+.aspire/
+.containers
+
+## Aspire's own agent skills, installed by `aspire agent init`. Not committed:
+## they ship with the Aspire CLI and are version matched to whichever one you
+## have, so a vendored copy drifts the moment anybody updates. AGENTS.md lists
+## the command as a setup step.
+.claude/skills/
+
+## Per-machine agent settings. .claude/settings.json is shared; this one holds
+## whatever must not be.
+.claude/settings.local.json
