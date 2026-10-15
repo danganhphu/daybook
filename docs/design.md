@@ -2,9 +2,12 @@
 
 Trạng thái: bản nháp đã thống nhất qua thảo luận ngày 2026-10-15. Chưa viết dòng code nào.
 
-Stack chốt được phần lớn: **Aspire** điều phối chạy local, dựng frontend và backend lên cùng lúc dưới một AppHost -
-kéo theo backend là .NET. Frontend là **Next.js** với **shadcn/ui**, lint bằng **`@shadcn/lint`**. Còn để ngỏ: con
-bot nằm ở đâu, và dùng database nào.
+Stack đã chốt: tất cả chạy trên gói free của **Cloudflare**. Một Worker duy nhất lo web, webhook Telegram và lịch
+nhắc; dữ liệu nằm ở **D1**; parse bằng **Workers AI**. Viết bằng **TypeScript**, web là **vinext** (API của Next.js
+chạy trên Vite) với **shadcn/ui**. Chi tiết kỹ thuật ở `AGENTS.md`.
+
+Bản đầu của thiết kế này chọn Aspire và .NET. Đã đổi vì một ràng buộc đến sau: **chi phí phải bằng 0 và không nhập
+thẻ**. Xem mục Kiến trúc.
 
 ## Người dùng
 
@@ -182,21 +185,24 @@ hoặc parse hỏng. Hai lợi ích: lần ngược lại được khi số li�
 
 ## Kiến trúc
 
-Hai cửa vào, một bộ não:
+Hai cửa vào, một bộ não, tất cả nằm trong một Worker:
 
 ```
-  Telegram bot  --+
-                  +--> API (parse, luu, nhac, thong ke) --> database
-  PWA (web)     --+
+  Telegram  --webhook--+
+                       +--> core (parse, luu, nhac, thong ke) --> D1
+  PWA (web) -----------+         ^
+  Cron (7:30, thu 6) ------------+
 ```
 
-Điều kiện bắt buộc: **không có logic nào nằm trong bot**. Bot nhận chữ, gọi API, hiện kết quả. Web cũng vậy. Giữ
+Điều kiện bắt buộc: **không có logic nào nằm trong bot**. Bot nhận chữ, gọi core, hiện kết quả. Web cũng vậy. Giữ
 được kỷ luật này thì thêm cửa vào thứ ba sau này - Zalo, Messenger - chỉ là viết thêm một lớp mỏng.
 
-Chạy local bằng **Aspire**: một AppHost dựng cả frontend lẫn backend lẫn database lên cùng lúc, một lệnh, không
-phải mở ba cửa sổ terminal. Backend vì thế là .NET, frontend là Next.js + shadcn/ui.
+**Chi phí: 0 đồng, không nhập thẻ.** Ràng buộc này quyết định chọn nền tảng. AWS, Azure, Google Cloud đều đòi thẻ và
+không nhà nào chịu dừng ở mức 0 đồng - lố hạn mức là tự trừ tiền. Cloudflare thì chặn request chứ không tính tiền,
+và một người dùng chỉ chạm chưa tới 1% hạn mức free. Cái giá: Workers không chạy được .NET, nên stack chuyển sang
+TypeScript.
 
-PWA nói ở trên là chính cái Next.js này - thêm manifest và service worker, không phải một app thứ hai.
+PWA nói ở trên là chính app web này - thêm manifest và service worker, không phải một app thứ hai.
 
 Zalo đã cân nhắc và loại cho bản đầu: Official Account API đòi xác minh doanh nghiệp, có phí, giới hạn số tin. Không
 hợp một món cá nhân. Bạn ấy có sẵn Telegram nên vấn đề này tạm không tồn tại.

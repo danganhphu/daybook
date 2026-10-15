@@ -7,61 +7,142 @@ takes orders on the road, by phone and over chat, and today she keeps all of it 
 of it.
 
 Telegram is the main way in, because she already lives in it. A PWA covers the things chat is bad at - correcting
-an old entry, browsing, reading numbers off a table. Both are thin clients over one API.
+an old entry, browsing, reading numbers off a table. Both are thin adapters over one core.
 
 The design is in [docs/design.md](docs/design.md). Read it before proposing changes to the interaction model; the
 decisions in it have reasons attached, and several of them are deliberate reversals of the obvious choice.
 
 ## Status
 
-Nothing is built yet.
+Nothing is built yet. The stack below is settled; scaffolding is the next step.
 
-Settled so far:
+## Hard constraint: $0, no card
 
-- **Aspire** is the local orchestrator, running the frontend and the backend together under one AppHost. That
-  fixes the backend to .NET.
-- **Next.js** for the frontend, with **shadcn/ui** for components and **`@shadcn/lint`** policing the Tailwind
-  usage.
+Everything runs on Cloudflare's free plan, with no payment method on the account. Over a limit, Cloudflare refuses
+requests instead of billing, which is the point. Do not add anything that needs a card or can bill.
 
-Still open: where the Telegram bot lives, and which database.
+That constraint picked the platform. AWS, Azure and Google Cloud all want a card, and none of them will stop at $0;
+Cloudflare does, but Workers cannot run .NET, which is why this is TypeScript and not the .NET stack first planned.
 
-Do not scaffold an application until the rest of that is agreed.
+The free-plan limits that shape the code:
+
+| Limit | Consequence |
+|---|---|
+| 10 ms CPU per request or cron run | Waiting on I/O does not count, so an LLM call is fine. Server rendering on every request is the risk - measure CPU time from the first deploy |
+| 100,000 Worker requests a day | Static asset requests are free and do not count |
+| D1: 5M rows read, 100k rows written a day | Index every lookup. An unindexed scan counts every row it touches as read |
+| Workers AI: 10,000 Neurons a day | It errors once used up. Local dev calls the real service, so dev runs spend the same budget |
+| 5 Cron Triggers per account, UTC only | 07:30 in Vietnam is `30 0 * * *`. Write day names (`FRI`): in Cloudflare's numbering 1 is Sunday |
+
+## Stack
+
+| Concern | Choice |
+|---|---|
+| Platform | One Cloudflare Worker serving the PWA, the Telegram webhook and the cron jobs |
+| Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
+| Components | shadcn/ui on Tailwind CSS 4 |
+| Cloudflare CLI | `cf` with a typed `cloudflare.config.ts`. Not Wrangler |
+| Database | D1, through Drizzle ORM (1.0 release candidate, pinned to an exact version) |
+| Validation | Zod 4. One schema drives input validation, the LLM's `response_format` and the check on what it returns |
+| LLM | Workers AI binding, with Groq as the fallback |
+| Telegram | grammY in webhook mode, verified with `secret_token` |
+| Tests | Vitest 5 with `@cloudflare/vitest-plugin` |
+| Language | TypeScript 7 |
+| Tooling runtime | Node 26 |
+| Package manager | pnpm |
+| Lint and format | Oxlint (type-aware) with `@shadcn/lint`, and Oxfmt |
+
+vinext and `cf` are both pre-1.0-stable choices, taken on purpose: the product is not shipping soon, and they are
+the direction Cloudflare recommends for new projects. If vinext's server rendering will not fit in 10 ms of CPU,
+the fallback stays inside the same toolchain: `output: "export"`, served as static assets.
+
+## Architecture
+
+- **No logic in an adapter.** The Telegram adapter and the web pages call the core; the core never imports from
+  them. A third entrance - Zalo, Messenger - has to be a thin layer, not a rewrite.
+- **The Worker entry routes the bot before vinext.** The Telegram webhook path is handled in the custom Worker
+  entry, so a bot message never pays for React rendering. Everything else is handed to vinext's fetch handler.
+  The same entry exports `scheduled` for the morning digest and the Friday summary.
+- **The webhook answers fast.** Long work - the LLM call - goes into `ctx.waitUntil`, which allows 30 seconds.
+- **Never lose her words.** Every message is stored verbatim in `capture` before anything else happens, including
+  when parsing fails or the LLM quota has run out. Re-parsing later is what makes a free LLM tier safe to rely on.
+- **Nothing polls.** Work happens on a request or on a cron trigger.
 
 ## Setup
 
-Aspire's agent skills are installed, not committed: they ship inside the Aspire CLI and are version matched to it,
-so a vendored copy drifts the moment anyone updates. Run this after cloning, and again after `aspire update --self`:
+- Node 26 and pnpm. The pnpm version is pinned in `package.json`; Node no longer ships Corepack, so install pnpm
+  itself once - see https://pnpm.io/installation.
+- `pnpm exec cf auth login`. It opens a browser to approve access, so a person does it, not an agent.
+- Claude Code: trust the folder when asked. `.claude/settings.json` declares the `cloudflare/skills` marketplace
+  and enables its `cloudflare` plugin, which brings Cloudflare's skills and the Cloudflare MCP server. If Claude
+  Code reports it as enabled but not installed, run `claude plugin install cloudflare@cloudflare --scope project`.
+- VS Code: install the TypeScript 7 extension (`TypeScriptTeam.native-preview`) until VS Code bundles it.
 
-```powershell
-aspire agent init --skills all --skill-locations claudecode
-```
+## Cloudflare tooling
 
-## MCP servers
+- Use `cf`. For the few things it cannot do yet, run Wrangler through `npx` without adding it to the project:
+  `npx wrangler tail <worker>`, `npx wrangler secret put <name> --name <worker>`.
+- Find commands with `cf cli search "<task>"` and check them with `--help` or `cf schema`. Do not translate
+  Wrangler commands from memory.
+- Preview with `--dry-run`. A destructive command that aborts for lack of `--force` still exits 0.
+- Never deploy, delete a resource or change a secret unless asked. Those reach the live app.
+- Generated binding types live in `.cloudflare/types`, which is gitignored and listed in `tsconfig.json`.
+  `cf workers types` regenerates them outside the Vite workflow.
 
-`.mcp.json` registers five. Three of them only become useful once the application exists, which is worth knowing
-before you wonder why a tool returns nothing:
+## TypeScript
 
-| Server | Needs |
-|---|---|
-| `aspire` | an AppHost in the repo |
-| `next-devtools` | Next.js 16 or later **and a dev server actually running**. It reads the live app - errors, routes, logs, compilation issues - rather than the source |
-| `shadcn` | a `components.json` in the project |
-| `microsoft-learn` | nothing. Use it for .NET questions instead of guessing |
-| `chrome-devtools` | nothing. For driving the PWA in a real browser |
+- **TypeScript 7 only**, the native compiler, so `tsc` is TS 7. Nothing here needs the TS 6 JavaScript API - that
+  is why linting is Oxlint rather than typescript-eslint - so there is no `@typescript/typescript6` alias. If a
+  tool ever needs one, add the alias pair from the TS 7 release notes; do not downgrade.
+- **tsconfig:** `strict`, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`,
+  `noImplicitReturns`, `noPropertyAccessFromIndexSignature`, `noFallthroughCasesInSwitch`, `noUnusedLocals`,
+  `noUnusedParameters`, `verbatimModuleSyntax` and `erasableSyntaxOnly`, with `moduleResolution: "bundler"`. List
+  `types` explicitly, because TS 7 defaults it to `[]`. Never `baseUrl`; TS 7 rejects it.
+- **Time:** the Workers runtime has no Temporal yet, so use `temporal-polyfill` until it does. Store instants in
+  UTC and convert to `Asia/Ho_Chi_Minh` at the edges.
+- **Ids** are UUIDv7, from the `uuid` package's `v7()`. `crypto.randomUUID()` is v4 only.
 
-The Next.js MCP endpoint at `/_next/mcp` is on by default in Next 16. If it ever needs turning off, that is
-`experimental.mcpServer: false` in `next.config`.
+## Code style
 
-## Linting
+The bar is a principal engineer's, on current TypeScript. Compiling is not the standard.
 
-`@shadcn/lint` is an agent-first linter for Tailwind design systems: it is given the allowed styling rules and
-reports violations against the project's own components and theme. It is not an MCP server - it runs as a lint
-command. Set it up by pointing an agent at `https://github.com/shadcn-ui/lint/blob/main/SETUP.md`, then wire the
-command into `package.json` as `lint`.
+- No `any`: use `unknown` and narrow. No `!` non-null assertions. `as` only at a boundary that was just validated.
+- Immutable by default: `const`, `readonly`, `ReadonlyArray` and `ReadonlyMap` in signatures, `as const`.
+- Plain types and functions over classes, discriminated unions over class hierarchies. A class only when something
+  needs identity or mutable state.
+- No `enum` (`erasableSyntaxOnly` forbids it anyway). Literal unions and `as const` objects instead.
+- Exhaustive `switch` with a `never` check. Guard clauses and early returns over nesting.
+- Export only what another module uses. No barrel files.
+- One concern per module, one component per file. Named exports, except where the framework requires a default
+  export (pages, layouts, route files).
+- A function with more than two optional parameters takes one options object instead.
+- No floating promises and no `.then` chains.
+- Validate configuration and bindings with a schema at startup.
+- Fix a lint or type error properly. No `@ts-ignore`; `@ts-expect-error` only with a written reason. No blanket
+  rule disables.
+- No `Async` suffix on function names. It is a C# convention, not a TypeScript one.
 
-Needs Node 20.19+, and either ESLint 9.30+ or Oxlint 1.80+.
+## Linting and formatting
+
+- **Oxlint** with type-aware rules from `oxlint-tsgolint`, which is built on the TS 7 compiler.
+  `oxlint --type-aware --type-check` reports type errors in the same pass.
+- **`@shadcn/lint`** runs inside Oxlint as a JS plugin. It is given the allowed styling rules and reports
+  violations against the project's own components and theme. Oxlint's JS plugins are still alpha, with a known
+  out-of-memory problem on Windows; if that bites, run lint under WSL.
+- **Oxfmt** formats, including Tailwind class sorting. It is in beta.
 
 Run lint and fix what it reports before calling frontend work done.
+
+## MCP servers and skills
+
+| Source | What | Needs |
+|---|---|---|
+| `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
+| `.mcp.json`: `shadcn` | The component registry | a `components.json` |
+| `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
+
+For vinext work, follow the plugin's `nextjs-on-cloudflare` skill. `next-devtools-mcp` is left out on purpose: it
+talks to the Next.js dev server's own MCP endpoint, which vinext does not have.
 
 ## The one rule that governs the product
 
@@ -70,7 +151,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 
 ## Commands
 
-None yet. This section gets filled in when the stack lands.
+None yet. This section gets filled in at scaffolding.
 
 ## Style
 

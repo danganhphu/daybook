@@ -1,20 +1,8 @@
 {
   "mcpServers": {
-    "aspire": {
-      "command": "aspire",
-      "args": ["agent", "mcp"]
-    },
-    "next-devtools": {
-      "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"]
-    },
     "shadcn": {
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
-    },
-    "microsoft-learn": {
-      "type": "http",
-      "url": "https://learn.microsoft.com/api/mcp"
     },
     "chrome-devtools": {
       "command": "npx",

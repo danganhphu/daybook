@@ -1,39 +1,30 @@
-# Build output
-bin/
-obj/
-dist/
-build/
-out/
-
 # Dependencies
 node_modules/
+
+# Build output, and Cloudflare's generated types and local state
+dist/
+.cloudflare/
+.wrangler/
+*.tsbuildinfo
+coverage/
 
 # Environment and secrets
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 *.local
 
 # Editors
 .vs/
 .vscode/
 .idea/
-*.user
 
 # OS
 Thumbs.db
 .DS_Store
 
-# Aspire local state
-.aspire/
-.containers
-
-## Aspire's own agent skills, installed by `aspire agent init`. Not committed:
-## they ship with the Aspire CLI and are version matched to whichever one you
-## have, so a vendored copy drifts the moment anybody updates. AGENTS.md lists
-## the command as a setup step.
-.claude/skills/
-
-## Per-machine agent settings. .claude/settings.json is shared; this one holds
-## whatever must not be.
+# Per-machine Claude Code settings; .claude/settings.json is shared
 .claude/settings.local.json

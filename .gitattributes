@@ -1,71 +1,23 @@
-## LF everywhere, in the repo AND in the working tree. Plain `text=auto` would
-## leave the checkout to core.autocrlf, which is true on this machine, so the
-## editor would write the LF that .editorconfig asks for and git would hand back
-## CRLF on the next checkout - a phantom diff on every file, forever. The only
-## exception is further down: batch files, which genuinely want CRLF.
+## LF in the repo and the working tree. Plain `text=auto` defers to core.autocrlf (true on this machine): a phantom
+## CRLF diff on every file.
 * text=auto eol=lf
 
-## Source
-*.cs        text diff=csharp
-*.csx       text diff=csharp
-*.md        text diff=markdown
-*.json      text
-*.xml       text
-*.yml       text
-*.yaml      text
-*.editorconfig text
-
-## MSBuild and solution files
-*.csproj    text
-*.props     text
-*.targets   text
-*.slnx      text
-*.sln       text eol=crlf
-
-## Scripts. These must agree with the end_of_line rules in .editorconfig, or
-## every save fights the checkout normalisation.
-## PowerShell is LF: pwsh reads either, and the scripts run on Linux in CI.
-## Batch is CRLF: cmd.exe can behave differently reading a label or a goto
-## target that ends with a bare LF.
-*.ps1       text eol=lf
-*.psm1      text eol=lf
-*.psd1      text eol=lf
-*.cmd       text eol=crlf
-*.bat       text eol=crlf
-*.sh        text eol=lf
+## cmd.exe can misread a label or goto target that ends in a bare LF
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
 
 ## Binary - never diff, never normalise
-*.png       binary
-*.jpg       binary
-*.jpeg      binary
-*.gif       binary
-*.ico       binary
-*.pdf       binary
-*.zip       binary
-*.gz        binary
-*.7z        binary
-*.dll       binary
-*.exe       binary
-*.pdb       binary
-*.snk       binary
-*.pfx       binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.zip   binary
+*.gz    binary
 
-## Audio fixtures used by tests must survive byte identical.
-*.mp3       binary
-*.m4a       binary
-*.aac       binary
-*.wav       binary
-*.flac      binary
-*.ogg       binary
-*.opus      binary
-*.ts        binary
-
-## HLS playlists are text fixtures, but their exact bytes matter to the parser,
-## so keep them LF everywhere rather than letting Windows rewrite them.
-*.m3u8      text eol=lf
-
-## Keep generated and vendored files out of language stats and diffs.
-*.g.cs              linguist-generated=true -diff
-*.Designer.cs       linguist-generated=true -diff
-**/obj/**           linguist-generated=true
-**/bin/**           linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
