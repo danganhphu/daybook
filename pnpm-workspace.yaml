@@ -1,0 +1,12 @@
+# Hold new releases for a day, and fail if a package's publish trust ever drops
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+# Versions out for 30+ days predate provenance often enough that age is the better signal
+trustPolicyIgnoreAfter: 43200
+
+# An app pins exact versions; the lockfile is not the only record of what runs
+savePrefix: ""
+
+# Build scripts run only for packages reviewed here
+allowBuilds:
+  workerd: true
