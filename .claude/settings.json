@@ -1,4 +1,14 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/.dev.vars)",
+      "Read(./**/.dev.vars.*)",
+      "Read(./**/*.local.json)"
+    ]
+  },
   "extraKnownMarketplaces": {
     "cloudflare": {
       "source": {
