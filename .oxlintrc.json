@@ -10,7 +10,8 @@
     "react",
     "react-perf",
     "jsx-a11y",
-    "nextjs"
+    "nextjs",
+    "vitest"
   ],
   "categories": {
     "correctness": "error",

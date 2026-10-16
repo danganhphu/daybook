@@ -10,5 +10,7 @@ savePrefix: ""
 # Build scripts run only for packages reviewed here
 allowBuilds:
   workerd: true
+  # Checks its platform binary matches, fetching it only if the optional dependency is missing
+  esbuild: true
   # Only builds from source when no prebuilt binary exists; serves `sass --watch`, which Vite never uses
   "@parcel/watcher": false

@@ -52,7 +52,7 @@ The free-plan limits that shape the code:
 | Validation | Zod 4. One schema drives input validation, the LLM's `response_format` and the check on what it returns |
 | LLM | Workers AI binding, with Groq as the fallback |
 | Telegram | grammY in webhook mode, verified with `secret_token` |
-| Tests | Vitest 5 with `@cloudflare/vitest-plugin`; Playwright with axe for the few end-to-end flows that matter |
+| Tests | Vitest 4.1 with `@cloudflare/vitest-plugin`, running inside workerd against a real local D1; Playwright with axe for the few end-to-end flows that matter. Not Vitest 5: with plugin 1.4.2 every suite fails before running ("File path must be a file: URL") |
 | Language | TypeScript 7 |
 | Tooling runtime | Node 26 |
 | Package manager | pnpm |
@@ -181,10 +181,21 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm typecheck` | Generate binding types, then `tsc` |
 | `pnpm lint` | Oxlint, type-aware, then Stylelint |
 | `pnpm format` / `pnpm format:check` | Oxfmt |
+| `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |
 
-Before calling a change done: `format:check`, `lint`, `typecheck` and `build` all pass. There is no test runner
-yet; it arrives with the first feature worth testing.
+Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on `main`: the five commands above, then a check that
+the committed `*.module.scss.d.ts` files match what the build wrote. Actions are pinned to commit SHAs with the
+version in a comment; bump both together. `pnpm/setup` installs pnpm from `packageManager`, Node from
+`.node-version`, and runs a frozen install.
+
+Tests live next to the code they test as `*.test.ts`. `vitest.config.ts` declares bindings inline (the plugin's
+reader for `cloudflare.config.ts` is experimental) and imports the compatibility date and flags from
+`cloudflare.config.ts`, so tests and the app run on the same runtime behaviour.
 
 ## Style
 
