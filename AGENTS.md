@@ -40,21 +40,23 @@ The free-plan limits that shape the code:
 |---|---|
 | Platform | One Cloudflare Worker serving the PWA, the Telegram webhook and the cron jobs |
 | Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
-| Components | shadcn/ui, `base-nova` style on Base UI, Tailwind CSS 4 |
-| Font | Inter with the `vietnamese` subset. Geist, shadcn's default, has no Vietnamese glyphs |
+| Components | Base UI for behavior and accessibility; our own design system on top, in SCSS. See [docs/ui.md](docs/ui.md) |
+| Styling | Sass (`sass-embedded`) as CSS Modules beside each component, tokens in `styles/`. Not Tailwind: Tailwind 4 is not built to sit beside a preprocessor |
+| Icons | lucide-react |
+| Font | Inter with the `vietnamese` subset. Geist has no Vietnamese glyphs |
 | Browser-side server state | TanStack Query, once a screen needs client caching or optimistic updates. Not SWR: same job, less for mutations |
 | Client state | None until something needs it, then Zustand. Not Redux Toolkit: far more machinery than one user needs |
-| Tables | TanStack Table, through shadcn's data table |
+| Tables | TanStack Table (headless), styled by us |
 | Cloudflare CLI | `cf` with a typed `cloudflare.config.ts`. Not Wrangler |
 | Database | D1, through Drizzle ORM (1.0 release candidate, pinned to an exact version) |
 | Validation | Zod 4. One schema drives input validation, the LLM's `response_format` and the check on what it returns |
 | LLM | Workers AI binding, with Groq as the fallback |
 | Telegram | grammY in webhook mode, verified with `secret_token` |
-| Tests | Vitest 5 with `@cloudflare/vitest-plugin` |
+| Tests | Vitest 5 with `@cloudflare/vitest-plugin`; Playwright with axe for the few end-to-end flows that matter |
 | Language | TypeScript 7 |
 | Tooling runtime | Node 26 |
 | Package manager | pnpm |
-| Lint and format | Oxlint (type-aware) with `@shadcn/lint`, and Oxfmt |
+| Lint and format | Oxlint (type-aware), Stylelint, Oxfmt |
 
 A library arrives with the feature that needs it, not ahead of it. One per concern - never two that do the same job.
 
@@ -85,7 +87,9 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 - Claude Code: trust the folder when asked. `.claude/settings.json` declares the `cloudflare/skills` marketplace
   and enables its `cloudflare` plugin, which brings Cloudflare's skills and the Cloudflare MCP server. If Claude
   Code reports it as enabled but not installed, run `claude plugin install cloudflare@cloudflare --scope project`.
-- VS Code: install the TypeScript 7 extension (`TypeScriptTeam.native-preview`) until VS Code bundles it.
+- VS Code: trust the folder, then install what `.vscode/extensions.json` recommends - TypeScript 7
+  (`TypeScriptTeam.native-preview`), Oxc, Stylelint, EditorConfig. Prettier, ESLint and Tailwind IntelliSense are
+  listed as unwanted here; disable them for this workspace.
 
 ## Cloudflare tooling
 
@@ -137,15 +141,16 @@ The bar is a principal engineer's, on current TypeScript. Compiling is not the s
 
 - **Oxlint** with type-aware rules from `oxlint-tsgolint`, which is built on the TS 7 compiler.
   `oxlint --type-aware --type-check` reports type errors in the same pass.
-- **`@shadcn/lint`** runs inside Oxlint as a JS plugin. It is given the allowed styling rules and reports
-  violations against the project's own components and theme. Oxlint's JS plugins are still alpha, with a known
-  out-of-memory problem on Windows; if that bites, run lint under WSL.
-- **Oxfmt** formats code and config, sorting imports and Tailwind classes. It is in beta. Markdown is left out on
-  purpose: docs are wrapped by hand at about 120 columns, and Oxfmt pads tables far past that.
-- All six `@shadcn/lint` rules are errors, by the owner's choice: no restyling a component through `className`, no
-  raw palette colors, no arbitrary values, no inline styles, no classes Tailwind cannot generate, no dynamically
-  built classes on a component. A design need the theme cannot express goes into the theme or a variant. Until
-  the first component exists, it warns that `@/components/ui` does not resolve; that is expected.
+- **Stylelint** (`stylelint-config-standard-scss` plus `stylelint-declaration-strict-value`) keeps styles on the
+  design system: colors, spacing, radius, type and z-index must come from a token function or a custom property.
+  Only `styles/abstracts`, `styles/themes` and the reset may hold raw values. No hex or named colors, no
+  `!important`, no ids, nesting at most 3 deep.
+- **Sass guards tokens at build time:** `color(acent)` fails with the list of known roles.
+- **Oxfmt** formats code, config and SCSS, sorting imports. It is in beta. Markdown is left out on purpose: docs
+  are wrapped by hand at about 120 columns, and Oxfmt pads tables far past that.
+- **CSS Module types** (`*.module.scss.d.ts`) are written by the dev server and the build, and committed. After
+  changing a module's class names, run `pnpm dev` or `pnpm build` once so the types follow. Do not use the
+  `vite-css-modules` CLI: it never exits, because Vite's Sass compiler outlives the run.
 
 Run lint and fix what it reports before calling frontend work done.
 
@@ -154,11 +159,12 @@ Run lint and fix what it reports before calling frontend work done.
 | Source | What | Needs |
 |---|---|---|
 | `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
-| `.mcp.json`: `shadcn` | The component registry | a `components.json` |
 | `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
 
-For vinext work, follow the plugin's `nextjs-on-cloudflare` skill. `next-devtools-mcp` is left out on purpose: it
-talks to the Next.js dev server's own MCP endpoint, which vinext does not have.
+For vinext work, follow the plugin's `nextjs-on-cloudflare` skill, and Next.js's own docs
+(https://nextjs.org/docs/llms.txt) for anything vinext does not list as different. `next-devtools-mcp` is left out
+on purpose: its runtime tools need the Next.js dev server's `/_next/mcp` endpoint, which vinext does not have, and
+its docs tool points at `node_modules/next`, which this project does not install.
 
 ## The one rule that governs the product
 
@@ -173,7 +179,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm build` | Production build into `.cloudflare/output`, pre-rendering static routes |
 | `pnpm start` | Serve the production build locally |
 | `pnpm typecheck` | Generate binding types, then `tsc` |
-| `pnpm lint` | Oxlint, type-aware |
+| `pnpm lint` | Oxlint, type-aware, then Stylelint |
 | `pnpm format` / `pnpm format:check` | Oxfmt |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |
 

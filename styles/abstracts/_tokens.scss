@@ -1,0 +1,97 @@
+// Design tokens. Numbers come from Fluent 2, Cloudscape and Apple HIG; reasons live in docs/ui.md.
+// This file emits no CSS.
+
+// Color roles every theme must define. Components only ever ask for a role, never a value.
+$color-roles: (
+  canvas,
+  surface,
+  surface-subtle,
+  border,
+  border-strong,
+  text,
+  text-muted,
+  accent,
+  accent-hover,
+  on-accent,
+  danger
+);
+
+// 4px grid; steps are multiples of 4px
+$space: (
+  0: 0,
+  1: 4px,
+  2: 8px,
+  3: 12px,
+  4: 16px,
+  5: 20px,
+  6: 24px,
+  8: 32px,
+  10: 40px,
+  12: 48px,
+  16: 64px,
+);
+$radius: (
+  control: 8px,
+  surface: 12px,
+  full: 9999px,
+);
+
+// Nothing below 12px; body is 16px so iOS never zooms into an input. Two weights only.
+$text-styles: (
+  caption: (
+    size: 12px,
+    leading: 16px,
+    weight: 400,
+  ),
+  body-sm: (
+    size: 14px,
+    leading: 20px,
+    weight: 400,
+  ),
+  body: (
+    size: 16px,
+    leading: 24px,
+    weight: 400,
+  ),
+  label: (
+    size: 16px,
+    leading: 24px,
+    weight: 600,
+  ),
+  title: (
+    size: 20px,
+    leading: 28px,
+    weight: 600,
+  ),
+  display: (
+    size: 28px,
+    leading: 36px,
+    weight: 600,
+  ),
+);
+$font-sans: var(--font-sans), system-ui, sans-serif;
+
+// Controls meet the 44px touch minimum; primary actions and list rows get 48px
+$sizes: (
+  control: 44px,
+  control-lg: 48px,
+  icon: 20px,
+  content: 640px,
+);
+$duration: (
+  fast: 120ms,
+  slow: 240ms,
+);
+$easing: (
+  out: cubic-bezier(0, 0, 0, 1),
+);
+$z: (
+  base: 0,
+  sticky: 10,
+  overlay: 100,
+  toast: 200,
+);
+$breakpoints: (
+  md: 640px,
+  lg: 1024px,
+);

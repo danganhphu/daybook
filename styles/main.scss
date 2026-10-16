@@ -1,0 +1,6 @@
+// Global styles only. Component styles are CSS Modules next to their component, and stay unlayered,
+// so they always win over these layers without a specificity fight.
+@use "layers";
+@use "themes/light";
+@use "base/reset";
+@use "base/typography";

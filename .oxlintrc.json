@@ -12,7 +12,6 @@
     "jsx-a11y",
     "nextjs"
   ],
-  "jsPlugins": ["@shadcn/lint"],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -24,12 +23,6 @@
   },
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
-    "shadcn/no-restyle": "error",
-    "shadcn/no-raw-colors": "error",
-    "shadcn/no-arbitrary-values": "error",
-    "shadcn/no-inline-styles": "error",
-    "shadcn/no-unknown-classes": "error",
-    "shadcn/require-static-classes": "error"
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "**/*.scss"] }]
   }
 }

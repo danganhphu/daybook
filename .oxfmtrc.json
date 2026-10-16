@@ -1,8 +1,5 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "sortImports": true,
-  "sortTailwindcss": {
-    "stylesheet": "./app/globals.css"
-  },
-  "ignorePatterns": ["**/*.md"]
+  "ignorePatterns": ["**/*.md", "**/*.module.scss.d.ts"]
 }

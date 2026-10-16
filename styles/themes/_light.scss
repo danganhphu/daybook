@@ -1,0 +1,44 @@
+// Every pair used for text meets WCAG AA (4.5:1); border-strong and accent meet 3:1 as UI boundaries.
+// Ratios are recorded in docs/ui.md. Change a value here and re-check them.
+@use "sass:list";
+@use "sass:map";
+@use "../abstracts/tokens";
+
+$colors: (
+  canvas: oklch(97.5% 0.005 250deg),
+  surface: oklch(100% 0 0deg),
+  surface-subtle: oklch(96% 0.007 250deg),
+  border: oklch(92% 0.008 250deg),
+  border-strong: oklch(62% 0.016 250deg),
+  text: oklch(22% 0.02 255deg),
+  text-muted: oklch(48% 0.02 255deg),
+  accent: oklch(50% 0.14 255deg),
+  accent-hover: oklch(44% 0.14 255deg),
+  on-accent: oklch(100% 0 0deg),
+  danger: oklch(53% 0.2 27deg),
+);
+$shadow-overlay:
+  0 2px 6px oklch(22% 0.02 255deg / 8%),
+  0 12px 32px oklch(22% 0.02 255deg / 12%);
+
+@each $role in tokens.$color-roles {
+  @if not map.has-key($colors, $role) {
+    @error "The light theme does not define color role `#{$role}`";
+  }
+}
+
+@each $role, $value in $colors {
+  @if not list.index(tokens.$color-roles, $role) {
+    @error "The light theme defines `#{$role}`, which is not a color role";
+  }
+}
+
+:root {
+  color-scheme: light;
+
+  @each $role, $value in $colors {
+    --color-#{$role}: #{$value};
+  }
+
+  --shadow-overlay: #{$shadow-overlay};
+}

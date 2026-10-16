@@ -1,0 +1,11 @@
+@use "abstracts" as *;
+
+.page {
+  max-inline-size: size(content);
+  margin-inline: auto;
+  padding: space(4);
+}
+
+.page-title {
+  @include text(title);
+}

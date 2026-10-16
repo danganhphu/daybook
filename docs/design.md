@@ -4,7 +4,8 @@ Trạng thái: bản nháp đã thống nhất qua thảo luận ngày 2026-10-1
 
 Stack đã chốt: tất cả chạy trên gói free của **Cloudflare**. Một Worker duy nhất lo web, webhook Telegram và lịch
 nhắc; dữ liệu nằm ở **D1**; parse bằng **Workers AI**. Viết bằng **TypeScript**, web là **vinext** (API của Next.js
-chạy trên Vite) với **shadcn/ui**. Chi tiết kỹ thuật ở `AGENTS.md`.
+chạy trên Vite), giao diện là design system riêng viết bằng SCSS trên nền Base UI. Chi tiết kỹ thuật ở `AGENTS.md`,
+nguyên tắc giao diện ở `docs/ui.md`.
 
 Bản đầu của thiết kế này chọn Aspire và .NET. Đã đổi vì một ràng buộc đến sau: **chi phí phải bằng 0 và không nhập
 thẻ**. Xem mục Kiến trúc.
