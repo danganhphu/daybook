@@ -5,7 +5,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["vinext/types", "node"],
+    "types": ["vinext/types", "node", "@cloudflare/vitest-plugin/types"],
     "paths": {
       "@/*": ["./*"]
     },

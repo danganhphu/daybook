@@ -14,3 +14,6 @@ allowBuilds:
   esbuild: true
   # Only builds from source when no prebuilt binary exists; serves `sass --watch`, which Vite never uses
   "@parcel/watcher": false
+permissions:
+  drizzle-kit:
+    skills: true

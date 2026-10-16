@@ -14,7 +14,8 @@ decisions in it have reasons attached, and several of them are deliberate revers
 
 ## Status
 
-Scaffolded: an empty vinext app that type-checks, lints, builds and runs locally. No features yet.
+The core of quick capture is built and tested: recording, editing, deleting, restoring and listing a day's notes.
+Nothing calls it yet; the web app is still the empty scaffold.
 
 ## Hard constraint: $0, no card
 
@@ -75,6 +76,80 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 - **Never lose her words.** Every message is stored verbatim in `capture` before anything else happens, including
   when parsing fails or the LLM quota has run out. Re-parsing later is what makes a free LLM tier safe to rely on.
 - **Nothing polls.** Work happens on a request or on a cron trigger.
+
+## Core
+
+`core/` is the product; the adapters - pages and server actions now, the bot later - only call it. It is layered
+the way a .NET Clean Architecture solution is, in TypeScript idiom: types and functions, not classes.
+
+| Layer | Folder | Holds | May import |
+|---|---|---|---|
+| Domain | `core/domain/<aggregate>/` | Types, state transitions as pure functions, branded value schemas, repository interfaces. `shared/` has `Result`, `Content` and the Vietnamese day | the domain only, plus Zod, uuid, Temporal |
+| Application | `core/application/<aggregate>/` | One use case per file, dependencies as its first argument. The ports it owns (`Clock`, `UnitOfWork`) and the error catalogue | the domain |
+| Infrastructure | `core/infrastructure/` | Drizzle tables (`d1/*.table.ts`), row mapping, the repository and unit of work over D1, the system clock | application, domain |
+| Composition root | `core/app.ts` | `createApp(d1, clock)`: picks the implementation behind each port and returns the use cases | everything |
+
+- **Oxlint enforces the first two rows** (`overrides` in `.oxlintrc.json`): domain or application code that imports
+  Drizzle, `cloudflare:*`, infrastructure or UI fails lint. Application tests are exempt; they run the real app.
+- **Adapters receive an `App`** and call its use cases. They never import a repository, a table or Drizzle.
+- **An aggregate is a module.** `import * as Notes from ".../note/note"`, then `Notes.edit(note, ...)`.
+- **Domain values are immutable**; a transition returns a new value. States are discriminated unions
+  (`LiveNote | DeletedNote`), so a function that needs a live note says so in its type.
+- **Checked values are branded Zod types** (`Content`, `NoteId`): they can only be had by parsing, so nothing
+  downstream receives unchecked input. Rows read back from D1 are parsed into them too.
+- The model, its vocabulary and its rules are in [docs/domain.md](docs/domain.md). Propose a change to the data
+  model there before writing it.
+
+## Errors
+
+- **An outcome she can cause is a `Result`** (`core/domain/shared/result.ts`): a note that is gone, editing a
+  deleted note. The error is a code from `DaybookError` in `core/application/errors.ts`, and each use case narrows
+  its return type to the codes it can produce, so a caller handles exactly those.
+- **A fault throws**: D1 unreachable, a constraint the code should have prevented, a bug. Nothing below the adapter
+  catches it.
+- The reason is that a signature then says what can go wrong. Not speed: a throw costs microseconds next to a
+  network round trip.
+- **No Maybe type.** `T | undefined` under strict null checks is the Maybe, and the compiler checks it. No `null`
+  in domain types; it stays in the row mapping.
+- **Every code has the sentence she sees** in `errorMessages`, and `satisfies Record<DaybookError, string>` fails
+  the build if one is missing. Adapters show these; they do not word their own.
+
+## Database
+
+- **D1, one database** (`daybook`, APAC), bound as `DB` in `cloudflare.config.ts` with its real id.
+- **Writes go through a unit of work.** D1 has no interactive transactions, but a batch is atomic: a use case
+  queues its changes and `commit()` sends them as one batch, all or none. Repositories only read.
+- **Schema change:** edit `core/infrastructure/d1/*.table.ts`, run `pnpm db:generate --name <what_it_does>`, read
+  the generated `migrations/<timestamp>_<name>/migration.sql`, add what Drizzle cannot emit (below), then
+  `pnpm db:migrate` to apply it to the local database the dev server uses. The drizzle-kit skills cover the commands.
+- **Added by hand: `STRICT` on every table, and the triggers that make `capture` append-only.** Drizzle cannot emit
+  either and its snapshot does not know about them, so a migration that rebuilds a table drops them silently.
+  `core/infrastructure/d1/schema.test.ts` fails when that happens. Say what was hand-edited at the top of the file.
+- **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank
+  content, foreign keys, the triggers.
+- **`capture` is never updated or deleted**, by code or by hand. Corrections go to the note.
+- **Anything derived from a capture keeps its `capture_id`**, so every record traces back to what she typed.
+- **Times are epoch-millisecond integers** in the database and `Temporal.Instant` in code, converted in the row
+  mapping. Import Temporal from `temporal-polyfill/implementation`, never the bare package, so a broken native
+  Temporal in the runtime is never picked up.
+- **Ids are UUIDv7**, so they also sort by creation time.
+- **Deletes are soft** (`deleted_at`); Undo is an update.
+- Applying migrations to the remote database is a deploy-grade action: only when asked.
+
+## Tests
+
+- **Test first.** Write the test for a new behaviour, watch it fail, then make it pass.
+- **Names read as a sentence**: `given <state>, when <action>, then <outcome>`, inside a `describe` named after the
+  function or use case.
+- **Use cases run for real**: `testApp` in `tests/support/app.ts` is the real app over the test's D1, and time is
+  a `testClock` moved by hand. Do not mock our own code. Domain functions are tested directly, without a database.
+- **Every test starts on an empty, fully migrated database** (`tests/setup/d1.ts`).
+- **A test needs teeth.** Break the code it guards and see it fail before trusting it. Dropping `STRICT` fails
+  exactly the STRICT tests; committing writes one at a time instead of as a batch fails the atomicity test.
+- **Assert what matters, not someone else's wording**: that no row was stored, not the driver's error text.
+- Tests sit next to the code as `*.test.ts`. `vitest.config.ts` declares bindings inline (the plugin's reader for
+  `cloudflare.config.ts` is experimental) and imports the compatibility date and flags from `cloudflare.config.ts`,
+  so tests and the app run on the same runtime behaviour.
 
 ## Setup
 
@@ -160,6 +235,7 @@ Run lint and fix what it reports before calling frontend work done.
 |---|---|---|
 | `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
 | `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
+| `drizzle-kit` agent skills | How to run `generate`, read its JSON output, resolve its hints. Linked by pnpm into `.claude/skills/pnpm-drizzle-kit-*`, always matching the installed drizzle-kit | approved in `pnpm-workspace.yaml` under `permissions` |
 
 For vinext work, follow the plugin's `nextjs-on-cloudflare` skill, and Next.js's own docs
 (https://nextjs.org/docs/llms.txt) for anything vinext does not list as different. `next-devtools-mcp` is left out
@@ -182,6 +258,8 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm lint` | Oxlint, type-aware, then Stylelint |
 | `pnpm format` / `pnpm format:check` | Oxfmt |
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
+| `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
+| `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |
 
 Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass.
@@ -192,10 +270,6 @@ Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `b
 the committed `*.module.scss.d.ts` files match what the build wrote. Actions are pinned to commit SHAs with the
 version in a comment; bump both together. `pnpm/setup` installs pnpm from `packageManager`, Node from
 `.node-version`, and runs a frozen install.
-
-Tests live next to the code they test as `*.test.ts`. `vitest.config.ts` declares bindings inline (the plugin's
-reader for `cloudflare.config.ts` is experimental) and imports the compatibility date and flags from
-`cloudflare.config.ts`, so tests and the app run on the same runtime behaviour.
 
 ## Style
 
