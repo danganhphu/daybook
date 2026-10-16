@@ -25,5 +25,58 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "**/*.scss"] }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["core/domain/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*", "drizzle-kit"],
+                "message": "The domain knows nothing about persistence."
+              },
+              { "regex": "^cloudflare:", "message": "The domain knows nothing about the runtime." },
+              {
+                "group": ["**/application/**", "**/infrastructure/**", "**/app"],
+                "message": "The domain depends on nothing above it."
+              },
+              {
+                "group": ["react", "react-dom", "next", "next/*", "vinext", "vinext/*"],
+                "message": "The domain knows nothing about the UI."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["core/application/**"],
+      "excludeFiles": ["**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*", "drizzle-kit"],
+                "message": "Use cases reach storage through ports, not the ORM."
+              },
+              { "regex": "^cloudflare:", "message": "Use cases do not depend on the runtime." },
+              {
+                "group": ["**/infrastructure/**", "**/app"],
+                "message": "Use cases depend on ports; only core/app.ts wires infrastructure in."
+              },
+              {
+                "group": ["react", "react-dom", "next", "next/*", "vinext", "vinext/*"],
+                "message": "Use cases know nothing about the UI."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

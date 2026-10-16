@@ -178,11 +178,17 @@ Mô hình không dính gì tới ngành thuốc - đổi sang bán ngành khác 
 | `order` + `order_line` | đơn và các dòng hàng |
 | `interaction` | lần gọi, lần ghé, tin nhắn |
 | `reminder` | nội dung, hạn, đã xong chưa |
-| `capture` | **nguyên văn mọi tin nhắn** kèm kết quả parse và độ chắc chắn |
+| `capture` | **nguyên văn mọi tin nhắn**, không bao giờ sửa hay xoá |
+| `note` | ghi chú trong danh sách của bạn ấy, sinh từ một `capture`; sửa, xoá, khôi phục được |
+| `interpretation` | kết quả parse một `capture` và độ chắc chắn; parse lại thì thêm dòng mới |
 
 `capture` là bảng quan trọng nhất và dễ bị bỏ sót nhất. Nó giữ nguyên văn mọi thứ bạn ấy gõ, kể cả khi parse sai
 hoặc parse hỏng. Hai lợi ích: lần ngược lại được khi số liệu trông lạ, và sau này cải tiến cách parse thì chạy lại
-được trên toàn bộ dữ liệu cũ.
+được trên toàn bộ dữ liệu cũ. Mọi bản ghi suy ra từ tin nhắn đều giữ `capture_id` của nó.
+
+Bản đầu của bảng này để kết quả parse ngay trong `capture`. Đã tách ra (2026-10-16): parse lại bằng model tốt hơn
+thì phải ghi đè, tức là mất kết quả cũ và `capture` thôi là bản gốc không đổi. Tách ra thì `capture` chỉ thêm, không
+sửa, và database chặn luôn việc sửa. Mô hình chi tiết ở [domain.md](domain.md).
 
 ## Kiến trúc
 

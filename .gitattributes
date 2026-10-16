@@ -20,4 +20,7 @@
 *.zip   binary
 *.gz    binary
 
-pnpm-lock.yaml linguist-generated=true
+## Generated: collapsed in review, still diffable
+pnpm-lock.yaml                   linguist-generated=true
+migrations/**/snapshot.json      linguist-generated=true
+*.module.scss.d.ts               linguist-generated=true

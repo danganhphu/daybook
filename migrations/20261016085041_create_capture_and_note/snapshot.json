@@ -1,0 +1,188 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "c2d19333-f3eb-4a8b-83b8-0fc0ca3ad51e",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "ddl": [
+    {
+      "name": "capture",
+      "entityType": "tables"
+    },
+    {
+      "name": "note",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "received_at",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "capture_pk",
+      "table": "capture",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "note_pk",
+      "table": "note",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"note\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "note_live_by_created_at",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": [
+        {
+          "value": "capture_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "note_by_capture",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "value": "\"source\" in ('web', 'telegram')",
+      "name": "capture_source_known",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "capture_content_present",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "note_content_present",
+      "entityType": "checks",
+      "table": "note"
+    }
+  ],
+  "renames": []
+}

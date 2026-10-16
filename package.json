@@ -13,16 +13,22 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\""
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@vinext/cloudflare": "1.1.1",
+    "drizzle-orm": "1.0.0-rc.4",
     "lucide-react": "1.57.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-server-dom-webpack": "19.3.0",
-    "vinext": "1.2.0"
+    "temporal-polyfill": "1.0.6",
+    "uuid": "14.0.3",
+    "vinext": "1.2.0",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-c82c3efb3",
@@ -33,6 +39,7 @@
     "@vitejs/plugin-react": "6.1.2",
     "@vitejs/plugin-rsc": "0.5.37",
     "cf": "1.0.0-beta.17",
+    "drizzle-kit": "1.0.0-rc.4",
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
     "oxlint-tsgolint": "7.0.2004",
