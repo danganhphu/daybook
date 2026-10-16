@@ -11,7 +11,9 @@
     "typecheck": "cf workers types && tsc",
     "lint": "oxlint && stylelint \"**/*.scss\"",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-c82c3efb3",
+    "@cloudflare/vitest-plugin": "1.4.2",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -39,7 +42,8 @@
     "stylelint-declaration-strict-value": "1.12.1",
     "typescript": "7.0.2",
     "vite": "8.3.0",
-    "vite-css-modules": "1.16.0"
+    "vite-css-modules": "1.16.0",
+    "vitest": "4.1.11"
   },
   "engines": {
     "node": ">=26"

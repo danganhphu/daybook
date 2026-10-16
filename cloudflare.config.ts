@@ -1,15 +1,20 @@
 import { bindings, defineConfig, defineWorker } from "cf/config";
 
+// The newest date the local workerd supports; raise it when the Cloudflare packages update.
+// Shared with vitest.config.ts so tests run on the same runtime behaviour.
+export const compatibilityDate = "2026-09-28";
+export const compatibilityFlags = ["nodejs_compat"];
+
 export default defineConfig({
   worker: defineWorker({
     name: "daybook",
     entrypoint: "vinext/server/fetch-handler",
-    // The newest date the local workerd supports; raise it when the Cloudflare packages update
-    compatibilityDate: "2026-09-28",
-    compatibilityFlags: ["nodejs_compat"],
+    compatibilityDate,
+    compatibilityFlags,
     assets: { notFoundHandling: "none", runWorkerFirst: ["/_vinext/static-cache/*"] },
     env: {
       ASSETS: bindings.assets(),
+      DB: bindings.d1({ name: "daybook", id: "f116c00d-1ef3-4841-831b-e821c5f8a29b" }),
     },
   }),
 });
