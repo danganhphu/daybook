@@ -10,3 +10,5 @@ savePrefix: ""
 # Build scripts run only for packages reviewed here
 allowBuilds:
   workerd: true
+  # Only builds from source when no prebuilt binary exists; serves `sass --watch`, which Vite never uses
+  "@parcel/watcher": false

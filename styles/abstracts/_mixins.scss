@@ -1,0 +1,52 @@
+@use "sass:map";
+@use "functions" as fn;
+@use "tokens";
+
+@mixin text($style) {
+  @if not map.has-key(tokens.$text-styles, $style) {
+    @error "Unknown text style `#{$style}`. Known: #{map.keys(tokens.$text-styles)}";
+  }
+
+  $text: map.get(tokens.$text-styles, $style);
+
+  font-size: fn.rem(map.get($text, size));
+  font-weight: map.get($text, weight);
+  line-height: fn.rem(map.get($text, leading));
+}
+
+// Mobile first: styles inside apply from the named width up
+@mixin from($breakpoint) {
+  @if not map.has-key(tokens.$breakpoints, $breakpoint) {
+    @error "Unknown breakpoint `#{$breakpoint}`. Known: #{map.keys(tokens.$breakpoints)}";
+  }
+
+  @media (width >= map.get(tokens.$breakpoints, $breakpoint)) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid fn.color(accent);
+    outline-offset: 2px;
+  }
+}
+
+@mixin motion {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+@mixin tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@mixin visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,0 +1,49 @@
+// Token accessors. An unknown name fails the build instead of shipping a wrong value.
+@use "sass:list";
+@use "sass:map";
+@use "sass:math";
+@use "tokens";
+
+@function rem($px) {
+  @return math.div($px, 16px) * 1rem;
+}
+
+@function -lookup($map, $key, $kind) {
+  @if not map.has-key($map, $key) {
+    @error "Unknown #{$kind} token `#{$key}`. Known: #{map.keys($map)}";
+  }
+
+  @return map.get($map, $key);
+}
+
+@function color($role) {
+  @if not list.index(tokens.$color-roles, $role) {
+    @error "Unknown color role `#{$role}`. Known: #{tokens.$color-roles}";
+  }
+
+  @return var(--color-#{$role});
+}
+
+@function space($step) {
+  @return rem(-lookup(tokens.$space, $step, "space"));
+}
+
+@function radius($name) {
+  @return rem(-lookup(tokens.$radius, $name, "radius"));
+}
+
+@function size($name) {
+  @return rem(-lookup(tokens.$sizes, $name, "size"));
+}
+
+@function duration($name) {
+  @return -lookup(tokens.$duration, $name, "duration");
+}
+
+@function easing($name) {
+  @return -lookup(tokens.$easing, $name, "easing");
+}
+
+@function z($layer) {
+  @return -lookup(tokens.$z, $layer, "z-index");
+}

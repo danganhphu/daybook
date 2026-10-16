@@ -1,7 +1,9 @@
+import styles from "./page.module.scss";
+
 export default function HomePage() {
   return (
-    <main>
-      <h1>daybook</h1>
+    <main className={styles.page}>
+      <h1 className={styles.pageTitle}>daybook</h1>
     </main>
   );
 }
