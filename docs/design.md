@@ -154,15 +154,20 @@ quen, vừa là bảng chỉ dẫn cho người mới.
 
 | Lệnh | Việc |
 |---|---|
-| `/homnay` | đơn và việc của hôm nay |
-| `/tuan` | tổng kết tuần, đúng khối bot gửi chiều thứ 6 |
-| `/thang` | tổng kết tháng |
-| `/khach <tên>` | hồ sơ một phòng khám |
-| `/nhac` | danh sách việc cần nhắc đang mở |
-| `/sua` | sửa mục vừa ghi gần nhất |
+| `/start` | lời chào lần đầu và vài câu ví dụ |
+| `/today` | đơn và việc của hôm nay |
+| `/week` | tổng kết tuần, đúng khối bot gửi chiều thứ 6 |
+| `/month` | tổng kết tháng |
+| `/customer <tên>` | hồ sơ một phòng khám |
+| `/reminders` | danh sách việc cần nhắc đang mở |
+| `/edit` | sửa mục vừa ghi gần nhất |
 | `/web` | link mở PWA |
-| `/caidat` | giờ nhắn sáng, ngưỡng lâu chưa liên hệ |
-| `/trogiup` | ví dụ các câu gõ được |
+| `/settings` | giờ nhắn sáng, ngưỡng lâu chưa liên hệ |
+| `/help` | ví dụ các câu gõ được |
+
+Tên lệnh bằng tiếng Anh (chốt 2026-10-16; bản đầu là `/homnay`, `/trogiup`...). Telegram chỉ cho chữ Latin, số và
+`_` trong tên lệnh, nên tên tiếng Việt đằng nào cũng mất dấu; `/start`, `/help`, `/settings` là ba lệnh Telegram
+khuyên mọi bot đều có. Phần mô tả hiện cạnh mỗi lệnh trong menu vẫn viết tiếng Việt.
 
 Nguyên tắc: **mọi lệnh đều phải làm được bằng chữ thường.** Lệnh là lối tắt, không bao giờ là con đường duy nhất tới
 một tính năng.
