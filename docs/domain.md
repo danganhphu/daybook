@@ -31,7 +31,8 @@ parsing exists, the entries she sees are derived from captures the same way.
 
 ## Capture
 
-- Made by `receive(content, source, receivedAt)` in `core/domain/capture/capture.ts`. There is no other operation.
+- Made by `receive(content, source, receivedAt)` in `src/features/capture/domain/capture.ts`. There is no other
+  operation.
 - Never updated, never deleted. The type is readonly and has no function that changes it; in the database, two
   triggers abort any `UPDATE` or `DELETE` on `capture`, so a hand-written query cannot break the rule either.
 - `source` is a known value and `content` is not blank, checked by the type and again by `CHECK` constraints.
@@ -39,7 +40,7 @@ parsing exists, the entries she sees are derived from captures the same way.
 ## Note
 
 A note is either live or deleted: `LiveNote | DeletedNote`, discriminated by `status`. A function that needs a live
-note says so in its type. The transitions are pure functions in `core/domain/note/note.ts`:
+note says so in its type. The transitions are pure functions in `src/features/notes/domain/note.ts`:
 
 | Function | From | Gives |
 |---|---|---|
@@ -56,7 +57,8 @@ note says so in its type. The transitions are pure functions in `core/domain/not
 
 ## Use cases
 
-One file each in `core/application/`, reached through `createApp` in `core/app.ts`.
+One file each in the feature's `application/` folder (`src/features/capture/`, `src/features/notes/`), reached
+through `createApp` in `src/composition/create-app.ts`.
 
 | Use case | Does | Can refuse with |
 |---|---|---|
@@ -66,8 +68,9 @@ One file each in `core/application/`, reached through `createApp` in `core/app.t
 | `restoreNote` | Brings a deleted note back | `note_not_found`, `note_not_deleted` |
 | `listNotesForDay` | A day's live notes, newest first | - |
 
-The codes form one closed set, `DaybookError` in `core/application/errors.ts`, each with the Vietnamese sentence she
-sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
+Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts` - each
+with the Vietnamese sentence she sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that
+is down is a fault and throws.
 
 ## Tables
 
@@ -98,15 +101,18 @@ Indexes: `note_live_by_created_at` on `created_at`, partial on `deleted_at is nu
 ## Consistency
 
 D1 has no interactive transactions; a batch is atomic. A use case queues its writes on a unit of work and `commit()`
-sends them as one batch, so a capture is never stored without its note. Repositories only read.
+sends them as one batch, so a capture is never stored without its note. Each feature declares what it writes
+(`CaptureWrites`, `NoteWrites`) and `src/composition/unit-of-work.ts` puts them all on the same batch, so a write
+can span features without either knowing the other's tables. Repositories only read.
 
 There is no optimistic concurrency: two devices editing the same note at once means the last write wins. One user
 on a phone and maybe a laptop makes that rare; a `version` column is the fix if it stops being rare.
 
 ## Where feature 2 (parsing) attaches
 
-- A new aggregate, `Interpretation`, in `core/domain/interpretation/` with its own table carrying `capture_id`, the
-  model, the Zod-checked result and a confidence.
+- A new aggregate, `Interpretation`, in `src/features/capture/domain/` with its own table carrying `capture_id`,
+  the model, the Zod-checked result and a confidence. What it derives gets a feature of its own: `orders/`,
+  `reminders/`.
 - Recording does not change: the capture is stored first, always. Parsing runs afterwards in `ctx.waitUntil` and
   writes the interpretation and what it derives - an order, a reminder - in one unit of work.
 - A `CaptureReceived` domain event arrives then, when a capture has two things reacting to it. With one, an event

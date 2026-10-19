@@ -44,8 +44,9 @@ are one tap plus an Undo in the result toast; a confirmation dialog is only for 
 
 ## Tokens
 
-Defined in `styles/abstracts/_tokens.scss` (names) and `styles/themes/_light.scss` (color values). Components use
-them through functions - `color(text-muted)`, `space(4)`, `radius(control)` - and an unknown name fails the build.
+Defined in `src/shared/ui/styles/abstracts/_tokens.scss` (names) and `src/shared/ui/styles/themes/_light.scss`
+(color values). Components use them through functions - `color(text-muted)`, `space(4)`, `radius(control)` - and an
+unknown name fails the build.
 
 ### Color roles
 
@@ -68,7 +69,7 @@ values are oklch in the source; the hex is for reading. Change a value, re-check
 only when something needs a meaning the list does not have.
 
 There is no dark theme yet. Because components only ask for roles, a dark theme is one more file in
-`styles/themes/`.
+`src/shared/ui/styles/themes/`.
 
 ### Type
 
@@ -105,7 +106,7 @@ reduced motion turns it off.
 
 ## Components
 
-In `components/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
+In `src/shared/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
 a screen arranges components, it does not restyle them. Every component, in every state, is on `/dev/ui` while the
 dev server runs; production answers 404 there. A new component goes on that page in the same change.
 
@@ -130,7 +131,7 @@ dev server runs; production answers 404 there. A new component goes on that page
 - **Behavior comes from Base UI**, appearance from our SCSS. Base UI exposes state as data attributes, so styles
   read `&[data-open]`, `&[data-disabled]`.
 - **Every component's styles live next to it** as `name.module.scss`. Screens compose components from
-  `components/ui`; a screen never invents its own button or color.
+  `src/shared/ui`; a screen never invents its own button or color.
 - **Sass modules only:** `@use` and `@forward`, never `@import`. Each module starts with `@use "abstracts" as *;`.
 - **Class names are kebab-case** in SCSS and arrive camelCase in TypeScript (`.page-title` -> `styles.pageTitle`).
   The dev server and build write a typed `.module.scss.d.ts` beside each module; those files are committed, and a

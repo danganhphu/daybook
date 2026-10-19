@@ -12,7 +12,7 @@ export default defineConfig({
     modules: { localsConvention: "camelCaseOnly" },
     preprocessorOptions: {
       // Lets every module write `@use "abstracts" as *;`
-      scss: { loadPaths: [fileURLToPath(new URL("./styles", import.meta.url))] },
+      scss: { loadPaths: [fileURLToPath(new URL("./src/shared/ui/styles", import.meta.url))] },
     },
   },
   plugins: [
