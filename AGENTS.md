@@ -15,7 +15,7 @@ decisions in it have reasons attached, and several of them are deliberate revers
 ## Status
 
 The core of quick capture is built and tested: recording, editing, deleting, restoring and listing a day's notes.
-The UI components it needs are in `components/ui`, shown at `/dev/ui` in development. No screen uses either yet.
+The UI components it needs are in `src/shared/ui`, shown at `/dev/ui` in development. No screen uses either yet.
 
 ## Hard constraint: $0, no card
 
@@ -42,7 +42,7 @@ The free-plan limits that shape the code:
 | Platform | One Cloudflare Worker serving the PWA, the Telegram webhook and the cron jobs |
 | Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
 | Components | Base UI for behavior and accessibility; our own design system on top, in SCSS. See [docs/ui.md](docs/ui.md) |
-| Styling | Sass (`sass-embedded`) as CSS Modules beside each component, tokens in `styles/`. Not Tailwind: Tailwind 4 is not built to sit beside a preprocessor |
+| Styling | Sass (`sass-embedded`) as CSS Modules beside each component, tokens in `src/shared/ui/styles/`. Not Tailwind: Tailwind 4 is not built to sit beside a preprocessor |
 | Icons | lucide-react |
 | Font | Inter with the `vietnamese` subset. Geist has no Vietnamese glyphs |
 | Browser-side server state | TanStack Query, once a screen needs client caching or optimistic updates. Not SWR: same job, less for mutations |
@@ -77,22 +77,47 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
   when parsing fails or the LLM quota has run out. Re-parsing later is what makes a free LLM tier safe to rely on.
 - **Nothing polls.** Work happens on a request or on a cron trigger.
 
-## Core
+## Source layout
 
-`core/` is the product; the adapters - pages and server actions now, the bot later - only call it. It is layered
-the way a .NET Clean Architecture solution is, in TypeScript idiom: types and functions, not classes.
+Everything is under `src/`, organised by what the product does, not by framework: a vertical slice per feature, and
+Clean Architecture layers inside each slice, in TypeScript idiom - types and functions, not classes.
+
+```
+src/
+  app/            routes only (Next.js App Router): layout, pages, server actions, /dev/ui
+  features/
+    capture/      her words coming in: the Capture aggregate, recordCapture
+    notes/        the notes she keeps: the Note aggregate, edit, delete, restore, the day's list
+                  (later: orders/, reminders/, customers/ - one folder per feature)
+  shared/
+    domain/       Result, Content, the Vietnamese day
+    application/  Clock, the UnitOfWork type
+    infrastructure/  the D1 client and batch, the system clock, the schema tests
+    ui/           the design system: components and styles/
+  composition/    createApp and the unit of work: the one place that wires everything together
+  testing/        test setup and helpers
+```
+
+Inside a slice:
 
 | Layer | Folder | Holds | May import |
 |---|---|---|---|
-| Domain | `core/domain/<aggregate>/` | Types, state transitions as pure functions, branded value schemas, repository interfaces. `shared/` has `Result`, `Content` and the Vietnamese day | the domain only, plus Zod, uuid, Temporal |
-| Application | `core/application/<aggregate>/` | One use case per file, dependencies as its first argument. The ports it owns (`Clock`, `UnitOfWork`) and the error catalogue | the domain |
-| Infrastructure | `core/infrastructure/` | Drizzle tables (`d1/*.table.ts`), row mapping, the repository and unit of work over D1, the system clock | application, domain |
-| Composition root | `core/app.ts` | `createApp(d1, clock)`: picks the implementation behind each port and returns the use cases | everything |
+| Domain | `domain/` | Types, state transitions as pure functions, branded value schemas, repository interfaces | other domains and `shared/domain`, plus Zod, uuid, Temporal |
+| Application | `application/` | One use case per file, dependencies as its first argument. The ports it owns: what it writes (`NoteWrites`), its error codes | domains and `shared/application` |
+| Infrastructure | `infrastructure/` | Drizzle tables (`*.table.ts`), row mapping, the repository and writes over D1 | anything but `app`, `composition` |
+| Web | `web/` | The feature's web adapter: the commands server actions call, its view model, its React components | the feature, the `App` type, `shared/ui` |
 
 - **Oxlint enforces the first two rows** (`overrides` in `.oxlintrc.json`): domain or application code that imports
-  Drizzle, `cloudflare:*`, infrastructure or UI fails lint. Application tests are exempt; they run the real app.
+  Drizzle, `cloudflare:*`, infrastructure, `composition` or UI fails lint. Application tests are exempt; they run the
+  real app.
+- **A new feature is a new folder** in `src/features/`, with the same layers, wired up in `src/composition/`.
+  Routes in `src/app/` stay thin: a page or a server action calls into the feature's `web/`.
+- **Writes go through the unit of work.** Each feature declares what it writes (`CaptureWrites`, `NoteWrites`); a
+  use case names the stores it needs (`UnitOfWork<{ notes: NoteWrites }>`); `src/composition/unit-of-work.ts` puts
+  every store on one D1 batch. Shared code never knows a feature's tables.
 - **Adapters receive an `App`** and call its use cases. They never import a repository, a table or Drizzle.
-- **An aggregate is a module.** `import * as Notes from ".../note/note"`, then `Notes.edit(note, ...)`.
+- **An aggregate is a module.** `import * as Notes from "@/features/notes/domain/note"`, then
+  `Notes.edit(note, ...)`.
 - **Domain values are immutable**; a transition returns a new value. States are discriminated unions
   (`LiveNote | DeletedNote`), so a function that needs a live note says so in its type.
 - **Checked values are branded Zod types** (`Content`, `NoteId`): they can only be had by parsing, so nothing
@@ -102,29 +127,32 @@ the way a .NET Clean Architecture solution is, in TypeScript idiom: types and fu
 
 ## Errors
 
-- **An outcome she can cause is a `Result`** (`core/domain/shared/result.ts`): a note that is gone, editing a
-  deleted note. The error is a code from `DaybookError` in `core/application/errors.ts`, and each use case narrows
-  its return type to the codes it can produce, so a caller handles exactly those.
+- **An outcome she can cause is a `Result`** (`src/shared/domain/result.ts`): a note that is gone, editing a
+  deleted note. The error is a code from the feature's closed set (`NoteError` in
+  `src/features/notes/application/note-errors.ts`), and each use case narrows its return type to the codes it can
+  produce, so a caller handles exactly those.
 - **A fault throws**: D1 unreachable, a constraint the code should have prevented, a bug. Nothing below the adapter
   catches it.
 - The reason is that a signature then says what can go wrong. Not speed: a throw costs microseconds next to a
   network round trip.
 - **No Maybe type.** `T | undefined` under strict null checks is the Maybe, and the compiler checks it. No `null`
   in domain types; it stays in the row mapping.
-- **Every code has the sentence she sees** in `errorMessages`, and `satisfies Record<DaybookError, string>` fails
-  the build if one is missing. Adapters show these; they do not word their own.
+- **Every code has the sentence she sees** in the feature's messages (`noteErrorMessages`), and
+  `satisfies Record<NoteError, string>` fails the build if one is missing. Adapters show these; they do not word
+  their own.
 
 ## Database
 
 - **D1, one database** (`daybook`, APAC), bound as `DB` in `cloudflare.config.ts` with its real id.
 - **Writes go through a unit of work.** D1 has no interactive transactions, but a batch is atomic: a use case
   queues its changes and `commit()` sends them as one batch, all or none. Repositories only read.
-- **Schema change:** edit `core/infrastructure/d1/*.table.ts`, run `pnpm db:generate --name <what_it_does>`, read
+- **Schema change:** edit the feature's `infrastructure/*.table.ts`, run `pnpm db:generate --name <what_it_does>`, read
   the generated `migrations/<timestamp>_<name>/migration.sql`, add what Drizzle cannot emit (below), then
   `pnpm db:migrate` to apply it to the local database the dev server uses. The drizzle-kit skills cover the commands.
 - **Added by hand: `STRICT` on every table, and the triggers that make `capture` append-only.** Drizzle cannot emit
   either and its snapshot does not know about them, so a migration that rebuilds a table drops them silently.
-  `core/infrastructure/d1/schema.test.ts` fails when that happens. Say what was hand-edited at the top of the file.
+  `src/shared/infrastructure/d1/schema.test.ts` fails when that happens. Say what was hand-edited at the top of the
+  file.
 - **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank
   content, foreign keys, the triggers.
 - **`capture` is never updated or deleted**, by code or by hand. Corrections go to the note.
@@ -141,9 +169,10 @@ the way a .NET Clean Architecture solution is, in TypeScript idiom: types and fu
 - **Test first.** Write the test for a new behaviour, watch it fail, then make it pass.
 - **Names read as a sentence**: `given <state>, when <action>, then <outcome>`, inside a `describe` named after the
   function or use case.
-- **Use cases run for real**: `testApp` in `tests/support/app.ts` is the real app over the test's D1, and time is
-  a `testClock` moved by hand. Do not mock our own code. Domain functions are tested directly, without a database.
-- **Every test starts on an empty, fully migrated database** (`tests/setup/d1.ts`).
+- **Use cases run for real**: `testApp` in `src/testing/support/app.ts` is the real app over the test's D1, and
+  time is a `testClock` moved by hand. Do not mock our own code. Domain functions are tested directly, without a
+  database.
+- **Every test starts on an empty, fully migrated database** (`src/testing/setup/d1.ts`).
 - **A test needs teeth.** Break the code it guards and see it fail before trusting it. Dropping `STRICT` fails
   exactly the STRICT tests; committing writes one at a time instead of as a batch fails the atomicity test.
 - **Assert what matters, not someone else's wording**: that no row was stored, not the driver's error text.
@@ -202,7 +231,13 @@ The bar is a principal engineer's, on current TypeScript. Compiling is not the s
   needs identity or mutable state.
 - No `enum` (`erasableSyntaxOnly` forbids it anyway). Literal unions and `as const` objects instead.
 - Exhaustive `switch` with a `never` check. Guard clauses and early returns over nesting.
-- Export only what another module uses. No barrel files.
+- Export only what another module uses.
+- **Imports leave a folder through `@/`** (the tsconfig `paths` alias for `src/`, as Next.js documents it), never
+  `../`; Oxlint rejects a parent-relative import (`import/no-relative-parent-imports`). Files in the same folder use
+  `./`.
+- **No barrel `index.ts` files.** Import the module that defines the thing. Vite's performance guide asks for this -
+  a barrel makes Vite load and transform every file behind it - and it keeps server-only code (D1,
+  `cloudflare:workers`) from being dragged into the browser bundle through a shared index.
 - One concern per module, one component per file. Named exports, except where the framework requires a default
   export (pages, layouts, route files).
 - A function with more than two optional parameters takes one options object instead.
@@ -218,8 +253,8 @@ The bar is a principal engineer's, on current TypeScript. Compiling is not the s
   `oxlint --type-aware --type-check` reports type errors in the same pass.
 - **Stylelint** (`stylelint-config-standard-scss` plus `stylelint-declaration-strict-value`) keeps styles on the
   design system: colors, spacing, radius, type and z-index must come from a token function or a custom property.
-  Only `styles/abstracts`, `styles/themes` and the reset may hold raw values. No hex or named colors, no
-  `!important`, no ids, nesting at most 3 deep.
+  Only `src/shared/ui/styles/abstracts`, `src/shared/ui/styles/themes` and the reset may hold raw values. No hex or
+  named colors, no `!important`, no ids, nesting at most 3 deep.
 - **Sass guards tokens at build time:** `color(acent)` fails with the list of known roles.
 - **Oxfmt** formats code, config and SCSS, sorting imports. It is in beta. Markdown is left out on purpose: docs
   are wrapped by hand at about 120 columns, and Oxfmt pads tables far past that.

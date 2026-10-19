@@ -24,11 +24,12 @@
   },
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "**/*.scss"] }]
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "**/*.scss"] }],
+    "import/no-relative-parent-imports": "error"
   },
   "overrides": [
     {
-      "files": ["core/domain/**"],
+      "files": ["src/features/*/domain/**", "src/shared/domain/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -40,11 +41,26 @@
               },
               { "regex": "^cloudflare:", "message": "The domain knows nothing about the runtime." },
               {
-                "group": ["**/application/**", "**/infrastructure/**", "**/app"],
+                "group": [
+                  "@/features/*/application/**",
+                  "@/features/*/infrastructure/**",
+                  "@/shared/application/**",
+                  "@/shared/infrastructure/**",
+                  "@/composition/**"
+                ],
                 "message": "The domain depends on nothing above it."
               },
               {
-                "group": ["react", "react-dom", "next", "next/*", "vinext", "vinext/*"],
+                "group": [
+                  "react",
+                  "react-dom",
+                  "next",
+                  "next/*",
+                  "vinext",
+                  "vinext/*",
+                  "@/app/**",
+                  "@/shared/ui/**"
+                ],
                 "message": "The domain knows nothing about the UI."
               }
             ]
@@ -53,7 +69,7 @@
       }
     },
     {
-      "files": ["core/application/**"],
+      "files": ["src/features/*/application/**", "src/shared/application/**"],
       "excludeFiles": ["**/*.test.ts"],
       "rules": {
         "no-restricted-imports": [
@@ -66,11 +82,24 @@
               },
               { "regex": "^cloudflare:", "message": "Use cases do not depend on the runtime." },
               {
-                "group": ["**/infrastructure/**", "**/app"],
-                "message": "Use cases depend on ports; only core/app.ts wires infrastructure in."
+                "group": [
+                  "@/features/*/infrastructure/**",
+                  "@/shared/infrastructure/**",
+                  "@/composition/**"
+                ],
+                "message": "Use cases depend on ports; only src/composition wires infrastructure in."
               },
               {
-                "group": ["react", "react-dom", "next", "next/*", "vinext", "vinext/*"],
+                "group": [
+                  "react",
+                  "react-dom",
+                  "next",
+                  "next/*",
+                  "vinext",
+                  "vinext/*",
+                  "@/app/**",
+                  "@/shared/ui/**"
+                ],
                 "message": "Use cases know nothing about the UI."
               }
             ]

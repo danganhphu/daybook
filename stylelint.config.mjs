@@ -36,7 +36,11 @@ export default {
   overrides: [
     {
       // The only files allowed to hold raw values
-      files: ["styles/abstracts/**", "styles/themes/**", "styles/base/_reset.scss"],
+      files: [
+        "src/shared/ui/styles/abstracts/**",
+        "src/shared/ui/styles/themes/**",
+        "src/shared/ui/styles/base/_reset.scss",
+      ],
       rules: { "scale-unlimited/declaration-strict-value": null },
     },
   ],

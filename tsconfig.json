@@ -7,7 +7,7 @@
     "jsx": "react-jsx",
     "types": ["vinext/types", "node", "@cloudflare/vitest-plugin/types"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
 
     "strict": true,
