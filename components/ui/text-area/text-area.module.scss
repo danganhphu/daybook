@@ -1,0 +1,37 @@
+@use "abstracts" as *;
+
+.text-area {
+  display: block;
+  inline-size: 100%;
+  min-block-size: size(control-lg);
+  max-block-size: calc(8lh + #{space(3)} * 2);
+  padding: space(3);
+  color: color(text);
+  resize: none;
+  background: color(surface);
+  border: 1px solid color(border-strong);
+  border-radius: radius(control);
+  field-sizing: content;
+
+  @include text(body);
+
+  &::placeholder {
+    color: color(text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color(accent);
+    outline-offset: -1px;
+  }
+
+  &[aria-invalid="true"] {
+    border-color: color(danger);
+  }
+
+  &:disabled {
+    color: color(text-muted);
+    cursor: not-allowed;
+    background: color(surface-subtle);
+    border-color: color(border);
+  }
+}

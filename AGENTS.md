@@ -15,7 +15,7 @@ decisions in it have reasons attached, and several of them are deliberate revers
 ## Status
 
 The core of quick capture is built and tested: recording, editing, deleting, restoring and listing a day's notes.
-Nothing calls it yet; the web app is still the empty scaffold.
+The UI components it needs are in `components/ui`, shown at `/dev/ui` in development. No screen uses either yet.
 
 ## Hard constraint: $0, no card
 

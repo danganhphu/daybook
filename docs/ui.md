@@ -53,8 +53,8 @@ them through functions - `color(text-muted)`, `space(4)`, `radius(control)` - an
 |---|---|---|---|
 | `canvas` | `#f4f7fa` | Page background | |
 | `surface` | `#ffffff` | Cards, sheets, inputs | |
-| `surface-subtle` | `#eef2f6` | Hover and pressed rows, secondary buttons | |
-| `border` | `#e1e5ea` | Separators that carry no meaning | decorative |
+| `surface-subtle` | `#eef2f6` | Hover and pressed states, disabled controls | |
+| `border` | `#e1e5ea` | Separators and surface edges that carry no meaning | decorative |
 | `border-strong` | `#7f8790` | Input outlines and other control boundaries | 3.24:1 or more |
 | `text` | `#141b24` | Body text | 15.41:1 or more |
 | `text-muted` | `#565e69` | Secondary text, timestamps | 5.82:1 or more |
@@ -94,6 +94,7 @@ Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right 
 - **Elevation:** surfaces at rest are flat with a 1px border. A shadow only marks something that overlaps - popover,
   sheet, dialog, toast (Cloudscape's rule).
 - **Content width** stops at 640px; text never runs wider than about 60 characters.
+- **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
 - **Breakpoints:** mobile first; `md` from 640px, `lg` from 1024px.
 
 ### Motion
@@ -101,6 +102,28 @@ Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right 
 `fast` 120ms for overlays, toasts and inline errors; `slow` 240ms is the ceiling. Easing `out` is
 `cubic-bezier(0, 0, 0, 1)`, Cloudscape's responsive curve. Everything animated sits inside `@include motion`, so
 reduced motion turns it off.
+
+## Components
+
+In `components/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
+a screen arranges components, it does not restyle them. Every component, in every state, is on `/dev/ui` while the
+dev server runs; production answers 404 there. A new component goes on that page in the same change.
+
+| Component | For | Rules it holds |
+|---|---|---|
+| `Button` | An action with a text label | `variant` primary, secondary (default) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action and list rows |
+| `IconButton` | An action shown as an icon alone | Always quiet and square. `label` is required: it is the accessible name, the only one there is |
+| `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby` |
+| `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color |
+| `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right |
+| `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
+
+- **A disabled control says why.** Pass `focusableWhenDisabled` so keyboard and screen-reader users reach it, and
+  point `aria-describedby` at the sentence beneath it.
+- **Keyboard:** menus open with Enter and move with the arrow keys; Escape closes and returns focus to the trigger.
+  F6 moves into the toast region, Tab reaches the toast and its action. Checked on `/dev/ui`.
+- **Base UI hides a toast's close button from screen readers** (`aria-hidden`) until the toast is focused or
+  expanded. That is its design, not a bug of ours.
 
 ## How styles are written
 
@@ -125,3 +148,5 @@ reduced motion turns it off.
 - Cloudscape typography, spacing, colors, visual style, motion, delete pattern, validation, disabled states, empty
   states: https://cloudscape.design
 - Apple HIG typography, accessibility, buttons, alerts, motion, lists: https://developer.apple.com/design/human-interface-guidelines
+- Base UI button, menu, toast, field, composition, styling: https://base-ui.com/react (pages end in `.md` for plain text)
+- `field-sizing`: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing

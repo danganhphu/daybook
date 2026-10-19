@@ -1,0 +1,74 @@
+@use "abstracts" as *;
+
+.positioner {
+  z-index: z(overlay);
+  outline: 0;
+}
+
+.popup {
+  min-inline-size: size(menu);
+  padding: space(1);
+  color: color(text);
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+  outline: 0;
+  box-shadow: var(--shadow-overlay);
+  transform-origin: var(--transform-origin);
+
+  @include motion {
+    transition:
+      opacity duration(fast) easing(out),
+      transform duration(fast) easing(out);
+  }
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.item {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  min-block-size: size(control);
+  padding-inline: space(3);
+  cursor: default;
+  user-select: none;
+  border-radius: radius(control);
+  outline: 0;
+
+  @include text(body);
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+    color: color(text-muted);
+  }
+
+  &[data-highlighted] {
+    background: color(surface-subtle);
+  }
+
+  // The highlight alone is too faint to follow with a keyboard
+  &:focus-visible {
+    outline: 2px solid color(accent);
+    outline-offset: -2px;
+  }
+
+  &[data-tone="danger"] {
+    &,
+    svg {
+      color: color(danger);
+    }
+  }
+}
+
+.separator {
+  block-size: 1px;
+  margin: space(1) space(2);
+  background: color(border);
+}
