@@ -1,0 +1,85 @@
+@use "abstracts" as *;
+
+.button {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: space(2);
+  align-items: center;
+  justify-content: center;
+  min-block-size: size(control);
+  padding-inline: space(4);
+  color: color(text);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: radius(control);
+  touch-action: manipulation;
+
+  @include text(label);
+  @include focus-ring;
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+  }
+
+  &[data-size="lg"] {
+    min-block-size: size(control-lg);
+  }
+
+  &[data-icon-only] {
+    min-inline-size: size(control);
+    padding-inline: 0;
+
+    &[data-size="lg"] {
+      min-inline-size: size(control-lg);
+    }
+  }
+
+  &[data-variant="primary"] {
+    color: color(on-accent);
+    background: color(accent);
+  }
+
+  &[data-variant="secondary"] {
+    background: color(surface);
+    border-color: color(border-strong);
+  }
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+
+  &:active:not([data-disabled]) {
+    background: color(surface-subtle);
+
+    &[data-variant="primary"] {
+      background: color(accent-hover);
+    }
+  }
+
+  @media (hover: hover) {
+    &:hover:not([data-disabled]) {
+      background: color(surface-subtle);
+
+      &[data-variant="primary"] {
+        background: color(accent-hover);
+      }
+    }
+  }
+
+  &[data-disabled] {
+    color: color(text-muted);
+    cursor: not-allowed;
+    background: color(surface-subtle);
+    border-color: color(border);
+
+    &[data-variant="quiet"] {
+      background: transparent;
+      border-color: transparent;
+    }
+  }
+}

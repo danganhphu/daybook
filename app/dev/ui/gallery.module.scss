@@ -1,0 +1,119 @@
+@use "abstracts" as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: space(10);
+  max-inline-size: size(content);
+  padding: space(6) space(4) space(16);
+  margin-inline: auto;
+
+  @include from(md) {
+    padding-block-start: space(12);
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
+.page-title {
+  @include text(title);
+}
+
+.lead {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: space(6);
+  padding-block-start: space(6);
+  border-block-start: 1px solid color(border);
+}
+
+.section-title {
+  @include text(label);
+}
+
+.sample {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.caption {
+  color: color(text-muted);
+
+  @include text(caption);
+}
+
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  align-items: center;
+
+  > textarea,
+  > .stack,
+  > .frame,
+  > .row {
+    flex: 1 1 100%;
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: flex-start;
+}
+
+.hint {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}
+
+.frame {
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+}
+
+.row {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  padding: space(1) space(1) space(1) space(4);
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+}
+
+// Each first line is centred on the 44px menu button beside it
+.row-time {
+  flex-shrink: 0;
+  padding-block: rem(12px);
+  color: color(text-muted);
+
+  @include text(body-sm);
+  @include tabular-nums;
+}
+
+.row-text {
+  flex: 1;
+  min-inline-size: 0;
+  padding-block: rem(10px);
+}

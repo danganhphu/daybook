@@ -1,0 +1,119 @@
+@use "abstracts" as *;
+
+// Phone: full width at the bottom, clear of the home indicator. Wider screens: bottom-right, as Fluent places them.
+.viewport {
+  position: fixed;
+  inset-block-end: calc(#{space(4)} + env(safe-area-inset-bottom));
+  inset-inline: space(4);
+  z-index: z(toast);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: space(4);
+
+  @include from(md) {
+    inset-block-end: space(6);
+    inset-inline: auto space(6);
+    inline-size: size(toast);
+  }
+}
+
+.toast {
+  color: color(text);
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+  box-shadow: var(--shadow-overlay);
+  transform: translate(var(--toast-swipe-movement-x), var(--toast-swipe-movement-y));
+
+  // F6 then Tab lands on the toast itself
+  @include focus-ring;
+
+  @include motion {
+    transition:
+      opacity duration(fast) easing(out),
+      transform duration(fast) easing(out);
+  }
+
+  &[data-starting-style] {
+    opacity: 0;
+    transform: translateY(space(2));
+  }
+
+  &[data-ending-style] {
+    opacity: 0;
+  }
+
+  &[data-swiping] {
+    transition: none;
+  }
+
+  &[data-limited] {
+    display: none;
+  }
+}
+
+// Text and its action share the first column, so a phone-width toast keeps the full line for the description.
+// The close button falls into the free cell at the top right.
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: space(1);
+  align-items: start;
+  padding-block: space(1);
+  padding-inline: space(4) space(1);
+}
+
+// The title's first line is centred on the 44px close button
+.text {
+  display: flex;
+  flex-direction: column;
+  grid-row: 1;
+  grid-column: 1;
+  padding-block: rem(10px);
+}
+
+.title {
+  @include text(label);
+}
+
+.description {
+  overflow: hidden;
+  color: color(text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include text(body-sm);
+}
+
+// The toast's one action, so it carries the accent. No side padding: its text lines up under the title.
+.action {
+  grid-row: 2;
+  grid-column: 1;
+  justify-self: start;
+  min-block-size: size(control);
+  padding-inline: 0;
+
+  // Keeps the 44px target without a 20px gap between it and the description
+  margin-block-start: rem(-8px);
+  color: color(accent);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: radius(control);
+  touch-action: manipulation;
+
+  @include text(label);
+  @include focus-ring;
+
+  &:active {
+    color: color(accent-hover);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: color(accent-hover);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+}

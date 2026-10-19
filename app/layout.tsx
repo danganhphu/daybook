@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/toast/toaster";
+
 import "@/styles/main.scss";
 
 // Geist has no Vietnamese subset; Inter does, and is one variable file for every weight
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="vi" className={inter.variable}>
-      <body>{children}</body>
+      <body>
+        <Toaster>{children}</Toaster>
+      </body>
     </html>
   );
 }
