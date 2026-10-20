@@ -1,0 +1,26 @@
+@use "abstracts" as *;
+
+// Docked under the list. The bottom padding grows by the home indicator area when the page runs edge to edge.
+.composer {
+  --composer-padding-end: calc(#{space(2)} + env(safe-area-inset-bottom, 0px));
+
+  padding: space(2) space(4) var(--composer-padding-end);
+  background: color(surface);
+  border-block-start: 1px solid color(border);
+}
+
+.row {
+  display: flex;
+  gap: space(2);
+  align-items: flex-end;
+  max-inline-size: size(content);
+  margin-inline: auto;
+}
+
+.error {
+  max-inline-size: size(content);
+  margin: space(1) auto 0;
+  color: color(danger);
+
+  @include text(body-sm);
+}

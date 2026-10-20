@@ -1,9 +1,12 @@
 @use "abstracts" as *;
 
 // Phone: full width at the bottom, clear of the home indicator. Wider screens: bottom-right, as Fluent places them.
+// Either way above a docked bar, which reports its height as --toast-clearance (useToastClearance).
 .viewport {
   position: fixed;
-  inset-block-end: calc(#{space(4)} + env(safe-area-inset-bottom));
+  inset-block-end: calc(
+    #{space(4)} + max(var(--toast-clearance, 0px), env(safe-area-inset-bottom, 0px))
+  );
   inset-inline: space(4);
   z-index: z(toast);
   display: flex;
@@ -11,7 +14,7 @@
   gap: space(4);
 
   @include from(md) {
-    inset-block-end: space(6);
+    inset-block-end: calc(#{space(6)} + var(--toast-clearance, 0px));
     inset-inline: auto space(6);
     inline-size: size(toast);
   }

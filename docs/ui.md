@@ -113,10 +113,10 @@ dev server runs; production answers 404 there. A new component goes on that page
 | Component | For | Rules it holds |
 |---|---|---|
 | `Button` | An action with a text label | `variant` primary, secondary (default) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action and list rows |
-| `IconButton` | An action shown as an icon alone | Always quiet and square. `label` is required: it is the accessible name, the only one there is |
+| `IconButton` | An action shown as an icon alone | Square; quiet unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
 | `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby` |
 | `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color |
-| `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right |
+| `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
 | `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
 
 - **A disabled control says why.** Pass `focusableWhenDisabled` so keyboard and screen-reader users reach it, and

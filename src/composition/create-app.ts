@@ -7,6 +7,7 @@ import {
 import { deleteNote } from "@/features/notes/application/delete-note";
 import { editNote, type EditNoteInput } from "@/features/notes/application/edit-note";
 import { listNotesForDay } from "@/features/notes/application/list-notes-for-day";
+import { listNotesForToday } from "@/features/notes/application/list-notes-for-today";
 import { restoreNote } from "@/features/notes/application/restore-note";
 import type { NoteId } from "@/features/notes/domain/note";
 import { createNoteRepository } from "@/features/notes/infrastructure/note-repository";
@@ -31,5 +32,6 @@ export function createApp(d1: D1Database, clock: Clock = systemClock) {
     deleteNote: (id: NoteId) => deleteNote({ clock, notes, startUnitOfWork }, id),
     restoreNote: (id: NoteId) => restoreNote({ notes, startUnitOfWork }, id),
     listNotesForDay: (day: Temporal.PlainDate) => listNotesForDay({ notes }, day),
+    listNotesForToday: () => listNotesForToday({ clock, notes }),
   } as const;
 }

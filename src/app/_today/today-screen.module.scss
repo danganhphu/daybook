@@ -1,0 +1,55 @@
+@use "abstracts" as *;
+
+// One screen tall: the header and the box stay put, only the notes scroll
+.screen {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100dvh;
+}
+
+.header {
+  padding: space(4) space(4) space(3);
+  border-block-end: 1px solid color(border);
+}
+
+.header-inner {
+  display: flex;
+  gap: space(2);
+  align-items: baseline;
+  max-inline-size: size(content);
+  margin-inline: auto;
+}
+
+.title {
+  @include text(title);
+}
+
+.date {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+// Reversed, so the view starts at the bottom and stays there as notes are added, as a chat does
+.scroller {
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+// Wider than the column by its own padding, so the list lines up with the header and the box
+.content {
+  inline-size: 100%;
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  padding: space(4);
+  margin-inline: auto;
+}
+
+.list {
+  padding: 0;
+  list-style: none;
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+}

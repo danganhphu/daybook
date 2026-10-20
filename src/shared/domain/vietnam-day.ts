@@ -1,7 +1,6 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-// Her day is a Vietnamese calendar day. Going through the zone, not a fixed +07:00, keeps that from being an assumption.
-export const vietnamTimeZone = "Asia/Ho_Chi_Minh";
+import { vietnamTimeZone } from "./vietnam-time-zone";
 
 export type DayBounds = {
   readonly start: Temporal.Instant;
