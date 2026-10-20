@@ -67,8 +67,8 @@ export function TodayScreen({ label, notes }: TodayScreenProps) {
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <h1 className={styles.title}>Hôm nay</h1>
           <p className={styles.date}>{label}</p>
+          <h1 className={styles.title}>Hôm nay</h1>
         </div>
       </header>
       <main className={styles.scroller}>

@@ -1,38 +1,48 @@
 @use "abstracts" as *;
 
-.row {
+// Each note its own card, as a message is in a chat: flat white on the grey canvas.
+// Her words and the menu share the first row; the time sits in the bottom-right corner, as a chat puts it.
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: space(1);
+  align-items: start;
+  padding: space(1) space(1) space(2) space(4);
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+// While her words are being edited the editor takes the whole card
+.editing {
   display: flex;
-  gap: space(3);
-  align-items: flex-start;
   padding: space(1) space(1) space(1) space(4);
-
-  & + & {
-    border-block-start: 1px solid color(border);
-  }
+  background: color(surface);
+  border-radius: radius(surface);
 }
 
-// Each first line is centred on the 44px menu button beside it
-.time {
-  flex-shrink: 0;
-  padding-block: rem(12px);
-  color: color(text-muted);
-
-  @include text(body-sm);
-  @include tabular-nums;
-}
-
-// Her words as she typed them: line breaks kept, long words broken rather than overflowing
+// Her words as she typed them: line breaks kept, long words broken rather than overflowing.
+// The first line is centred on the 44px menu button beside it.
 .content {
-  flex: 1;
-  min-inline-size: 0;
-  padding-block: rem(10px);
+  grid-row: 1;
+  grid-column: 1;
+  padding-block-start: rem(10px);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
+.time {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  justify-self: end;
+  padding-inline-end: space(3);
+  color: color(text-muted);
+
+  @include text(caption);
+  @include tabular-nums;
+}
+
 // Holds the menu's place while a change is saving, so nothing moves
 .menu-space {
-  flex-shrink: 0;
   inline-size: size(control);
   block-size: size(control);
 }

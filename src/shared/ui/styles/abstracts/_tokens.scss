@@ -1,4 +1,4 @@
-// Design tokens. Numbers come from Fluent 2, Cloudscape and Apple HIG; reasons live in docs/ui.md.
+// Design tokens. Numbers come from Fluent 2, Cloudscape, Apple HIG and Material 3; reasons live in docs/ui.md.
 // This file emits no CSS.
 
 // Color roles every theme must define. Components only ever ask for a role, never a value.
@@ -30,9 +30,13 @@ $space: (
   12: 48px,
   16: 64px,
 );
+
+// Material 3's corner scale (medium 12, large 16), which reads as a phone app rather than an office suite.
+// `field` is half the 48px message field, so one line is a pill and more lines stay a soft rectangle.
 $radius: (
-  control: 8px,
-  surface: 12px,
+  control: 12px,
+  surface: 16px,
+  field: 24px,
   full: 9999px,
 );
 

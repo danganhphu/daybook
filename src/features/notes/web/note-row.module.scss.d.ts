@@ -6,16 +6,18 @@
  * https://npmjs.com/vite-css-modules
  */
 
-declare const row: string;
-declare const time: string;
+declare const card: string;
+declare const editing: string;
 declare const content: string;
+declare const time: string;
 declare const menuSpace: string;
 
 declare const __default_export__: {
-	row: typeof row;
-	time: typeof time;
+	card: typeof card;
+	editing: typeof editing;
 	content: typeof content;
+	time: typeof time;
 	menuSpace: typeof menuSpace;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZS1yb3cubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsibm90ZS1yb3cubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FFQTtjQVlBO2NBVUE7Y0FTQTs7O0NBL0JBO0NBWUE7Q0FVQTtDQVNBOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZS1yb3cubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsibm90ZS1yb3cubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FJQTtjQVdBO2NBU0E7Y0FRQTtjQVlBOzs7Q0F4Q0E7Q0FXQTtDQVNBO0NBUUE7Q0FZQTs7In0=

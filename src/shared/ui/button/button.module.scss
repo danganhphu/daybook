@@ -30,12 +30,19 @@
     min-block-size: size(control-lg);
   }
 
+  // Icon buttons are circles, as Material 3's are
   &[data-icon-only] {
     min-inline-size: size(control);
     padding-inline: 0;
+    border-radius: radius(full);
 
     &[data-size="lg"] {
       min-inline-size: size(control-lg);
+    }
+
+    // A quiet icon recedes, so a list of cards is not a column of dark dots
+    &[data-variant="quiet"][data-tone="neutral"] {
+      color: color(text-muted);
     }
   }
 

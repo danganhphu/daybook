@@ -1,8 +1,9 @@
 # UI guidelines
 
 daybook should look like a product from a team with a real design system - calm, quiet, obviously deliberate - and
-never like a generated app. Numbers below come from Microsoft Fluent 2, AWS Cloudscape and Apple's Human Interface
-Guidelines; where they disagree, the choice and the reason are stated.
+never like a generated app. It is a phone app first, so it should feel like one, not like office software. Numbers
+below come from Microsoft Fluent 2, AWS Cloudscape, Apple's Human Interface Guidelines and, for shape, Material 3;
+where they disagree, the choice and the reason are stated.
 
 ## Principles
 
@@ -52,21 +53,26 @@ unknown name fails the build.
 
 | Role | Value | Used for | Contrast |
 |---|---|---|---|
-| `canvas` | `#f4f7fa` | Page background | |
-| `surface` | `#ffffff` | Cards, sheets, inputs | |
-| `surface-subtle` | `#eef2f6` | Hover and pressed states, disabled controls | |
-| `border` | `#e1e5ea` | Separators and surface edges that carry no meaning | decorative |
-| `border-strong` | `#7f8790` | Input outlines and other control boundaries | 3.24:1 or more |
-| `text` | `#141b24` | Body text | 15.41:1 or more |
-| `text-muted` | `#565e69` | Secondary text, timestamps | 5.82:1 or more |
-| `accent` | `#2063b0` | Primary action, links, focus ring | 5.63:1 on canvas |
-| `accent-hover` | `#07519d` | Hover and pressed accent | |
-| `on-accent` | `#ffffff` | Text on accent | 6.05:1 |
-| `danger` | `#c51e21` | Destructive actions, errors | 5.21:1 or more |
+| `canvas` | `#f2f3f6` | Page background: a neutral grey, so white cards stand out without borders | |
+| `surface` | `#ffffff` | Cards, sheets, inputs | 1.11:1 on canvas, decorative |
+| `surface-subtle` | `#ebedf1` | Hover and pressed states, disabled controls | |
+| `border` | `#dfe1e6` | Separators that carry no meaning | decorative |
+| `border-strong` | `#82868f` | Input outlines and other control boundaries | 3.29:1 or more |
+| `text` | `#16181c` | Body text | 16.01:1 or more |
+| `text-muted` | `#60636a` | Secondary text, timestamps | 5.11:1 or more |
+| `accent` | `#0672e2` | Primary action, focus ring, accent text on a surface | 4.65:1 on surface; white on it 4.65:1 |
+| `accent-hover` | `#005ecc` | Hover and pressed accent; links, and any accent text on the canvas | 5.50:1 on canvas |
+| `on-accent` | `#ffffff` | Text on accent | 4.65:1 |
+| `danger` | `#cc2827` | Destructive actions, errors | 4.85:1 or more |
+
+The accent is the brightest blue that still passes AA with white text, close to Google's `#1a73e8`; Telegram's
+`#3390ec` would fail at 3.31:1. As text it passes on a white surface but not on the canvas (4.20:1), where links use
+`accent-hover`.
 
 Text pairs meet WCAG AA 4.5:1 and control boundaries 3:1, checked on every background each role is used on. The
-values are oklch in the source; the hex is for reading. Change a value, re-check the ratios. A new role is added
-only when something needs a meaning the list does not have.
+values are oklch in the source; the hex is for reading. Change a value, re-check the ratios (the script that
+computed these is kept with the project notes). A new role is added only when something needs a meaning the list
+does not have.
 
 There is no dark theme yet. Because components only ask for roles, a dark theme is one more file in
 `src/shared/ui/styles/themes/`.
@@ -91,9 +97,16 @@ Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right 
 - **Spacing** is a 4px grid: steps 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (4px to 64px). Page gutter `space(4)`.
 - **Touch targets** are at least 44px (HIG, Fluent); primary actions and list rows 48px; at least 8px between
   neighbours.
-- **Radius:** 8px on controls, 12px on cards and sheets. Nothing is a pill except chips.
-- **Elevation:** surfaces at rest are flat with a 1px border. A shadow only marks something that overlaps - popover,
-  sheet, dialog, toast (Cloudscape's rule).
+- **Radius** follows Material 3's corner scale: 12px on controls, 16px on cards, menus and toasts, 24px on the
+  message field (half its 48px height, so one line is a pill). Icon buttons are circles.
+- **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow, as in Telegram's
+  settings and profile. What floats over the page - the message field, later a tab bar or a floating button - takes a
+  soft, wide shadow (`--shadow-float`). Anything that overlaps - popover, sheet, dialog, toast - takes the overlay
+  shadow (Cloudscape's rule).
+- **Why these shapes, not Fluent's:** the first version took Fluent 2's 8px corners, one bordered list with divider
+  rows, and a boxed input. On the phone it read as office software ("hơi ERP, company, system, enterprise", the
+  owner, 2026-10-20). Shape now comes from Material 3 and the phone's own apps; colour, type and spacing stay as
+  they were.
 - **Content width** stops at 640px; text never runs wider than about 60 characters.
 - **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
 - **Breakpoints:** mobile first; `md` from 640px, `lg` from 1024px.
@@ -113,8 +126,8 @@ dev server runs; production answers 404 there. A new component goes on that page
 | Component | For | Rules it holds |
 |---|---|---|
 | `Button` | An action with a text label | `variant` primary, secondary (default) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action and list rows |
-| `IconButton` | An action shown as an icon alone | Square; quiet unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
-| `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby` |
+| `IconButton` | An action shown as an icon alone | A circle; quiet and muted unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
+| `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby`. `appearance="bare"` drops its own edge and focus ring to sit inside a field that draws them, such as the message field (which uses `:focus-within`) |
 | `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
 | `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
@@ -150,4 +163,6 @@ dev server runs; production answers 404 there. A new component goes on that page
   states: https://cloudscape.design
 - Apple HIG typography, accessibility, buttons, alerts, motion, lists: https://developer.apple.com/design/human-interface-guidelines
 - Base UI button, menu, toast, field, composition, styling: https://base-ui.com/react (pages end in `.md` for plain text)
+- Material 3 corner tokens, from Google's material-web:
+  https://github.com/material-components/material-web/blob/main/tokens/versions/v0_192/_md-sys-shape.scss
 - `field-sizing`: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing

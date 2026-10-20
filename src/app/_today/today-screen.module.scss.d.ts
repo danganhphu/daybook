@@ -9,8 +9,8 @@
 declare const screen: string;
 declare const header: string;
 declare const headerInner: string;
-declare const title: string;
 declare const date: string;
+declare const title: string;
 declare const scroller: string;
 declare const content: string;
 declare const list: string;
@@ -19,11 +19,11 @@ declare const __default_export__: {
 	screen: typeof screen;
 	header: typeof header;
 	headerInner: typeof headerInner;
-	title: typeof title;
 	date: typeof date;
+	title: typeof title;
 	scroller: typeof scroller;
 	content: typeof content;
 	list: typeof list;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidG9kYXktc2NyZWVuLm1vZHVsZS5zY3NzLmQudHMiLCJzb3VyY2VzIjpbInRvZGF5LXNjcmVlbi5tb2R1bGUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7OztjQUdBO2NBTUE7Y0FLQTtjQVFBO2NBSUE7Y0FPQTtjQVFBO2NBT0E7OztDQTdDQTtDQU1BO0NBS0E7Q0FRQTtDQUlBO0NBT0E7Q0FRQTtDQU9BOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidG9kYXktc2NyZWVuLm1vZHVsZS5zY3NzLmQudHMiLCJzb3VyY2VzIjpbInRvZGF5LXNjcmVlbi5tb2R1bGUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7OztjQUdBO2NBT0E7Y0FJQTtjQUtBO2NBTUE7Y0FLQTtjQVFBO2NBT0E7OztDQTFDQTtDQU9BO0NBSUE7Q0FLQTtDQU1BO0NBS0E7Q0FRQTtDQU9BOzsifQ==

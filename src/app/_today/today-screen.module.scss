@@ -7,27 +7,24 @@
   block-size: 100dvh;
 }
 
+// A large title, as on a phone's own apps: the date small above, the day big below, nothing boxed
 .header {
-  padding: space(4) space(4) space(3);
-  border-block-end: 1px solid color(border);
+  padding: space(6) space(4) space(2);
 }
 
 .header-inner {
-  display: flex;
-  gap: space(2);
-  align-items: baseline;
   max-inline-size: size(content);
   margin-inline: auto;
-}
-
-.title {
-  @include text(title);
 }
 
 .date {
   color: color(text-muted);
 
   @include text(body-sm);
+}
+
+.title {
+  @include text(display);
 }
 
 // Reversed, so the view starts at the bottom and stays there as notes are added, as a chat does
@@ -38,18 +35,18 @@
   overscroll-behavior: contain;
 }
 
-// Wider than the column by its own padding, so the list lines up with the header and the box
+// Wider than the column by its own padding, so the cards line up with the header and the box
 .content {
   inline-size: 100%;
   max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
-  padding: space(4);
+  padding: space(2) space(4);
   margin-inline: auto;
 }
 
 .list {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
   padding: 0;
   list-style: none;
-  background: color(surface);
-  border: 1px solid color(border);
-  border-radius: radius(surface);
 }
