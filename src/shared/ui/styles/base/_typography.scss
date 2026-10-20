@@ -9,8 +9,9 @@
     @include text(body);
   }
 
+  // The accent itself is 4.20:1 on the canvas; this one passes there and on white
   a {
-    color: color(accent);
+    color: color(accent-hover);
     text-underline-offset: 0.2em;
   }
 }

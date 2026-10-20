@@ -1,24 +1,40 @@
 @use "abstracts" as *;
 
-// Docked under the list. The bottom padding grows by the home indicator area when the page runs edge to edge.
+// Docked under the list on the canvas itself. The bottom padding grows by the home indicator area when the page
+// runs edge to edge.
 .composer {
-  --composer-padding-end: calc(#{space(2)} + env(safe-area-inset-bottom, 0px));
+  --composer-padding-end: calc(#{space(3)} + env(safe-area-inset-bottom, 0px));
 
   padding: space(2) space(4) var(--composer-padding-end);
-  background: color(surface);
-  border-block-start: 1px solid color(border);
 }
 
-.row {
+// One rounded field holding the text and the send button, as a messaging app's. It draws the focus ring for the
+// bare text area inside it.
+.field {
   display: flex;
-  gap: space(2);
+  gap: space(1);
   align-items: flex-end;
   max-inline-size: size(content);
+  padding: space(1);
   margin-inline: auto;
+  background: color(surface);
+  border: 1px solid transparent;
+  border-radius: radius(field);
+  box-shadow: var(--shadow-float);
+
+  &:focus-within {
+    outline: 2px solid color(accent);
+    outline-offset: -1px;
+  }
+
+  &:has([aria-invalid="true"]) {
+    border-color: color(danger);
+  }
 }
 
 .error {
   max-inline-size: size(content);
+  padding-inline: space(4);
   margin: space(1) auto 0;
   color: color(danger);
 

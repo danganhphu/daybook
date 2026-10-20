@@ -7,13 +7,13 @@
  */
 
 declare const composer: string;
-declare const row: string;
+declare const field: string;
 declare const error: string;
 
 declare const __default_export__: {
 	composer: typeof composer;
-	row: typeof row;
+	field: typeof field;
 	error: typeof error;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29tcG9zZXIubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsiY29tcG9zZXIubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FHQTtjQVFBO2NBUUE7OztDQWhCQTtDQVFBO0NBUUE7OyJ9
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29tcG9zZXIubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsiY29tcG9zZXIubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FJQTtjQVFBO2NBc0JBOzs7Q0E5QkE7Q0FRQTtDQXNCQTs7In0=

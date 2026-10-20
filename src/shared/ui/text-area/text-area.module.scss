@@ -34,4 +34,14 @@
     background: color(surface-subtle);
     border-color: color(border);
   }
+
+  // Inside a field that draws the edge and the focus ring
+  &[data-appearance="bare"] {
+    min-block-size: size(control);
+    padding: rem(10px) space(3);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+  }
 }

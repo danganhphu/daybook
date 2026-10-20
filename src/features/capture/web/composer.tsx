@@ -107,8 +107,9 @@ export function Composer({ record, onPending }: ComposerProps) {
 
   return (
     <form ref={form} className={styles.composer} onSubmit={submit}>
-      <div className={styles.row}>
+      <div className={styles.field}>
         <TextArea
+          appearance="bare"
           aria-label="Ghi chú mới"
           placeholder="Gõ đơn, việc cần nhắc, ghi chú..."
           value={text}
@@ -122,7 +123,6 @@ export function Composer({ record, onPending }: ComposerProps) {
           icon={SendHorizontal}
           label="Ghi"
           variant="primary"
-          size="lg"
           onMouseDown={keepFocus}
         />
       </div>

@@ -59,13 +59,13 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
   );
 
   return (
-    <li className={styles.row} aria-busy={note.saving}>
-      <time className={styles.time} dateTime={note.createdAt}>
-        {note.time}
-      </time>
+    <li className={editing === undefined ? styles.card : styles.editing} aria-busy={note.saving}>
       {editing === undefined ? (
         <>
           <p className={styles.content}>{note.content}</p>
+          <time className={styles.time} dateTime={note.createdAt}>
+            {note.time}
+          </time>
           {note.saving ? (
             <span className={styles.menuSpace} />
           ) : (
