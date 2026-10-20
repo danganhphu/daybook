@@ -14,8 +14,8 @@ decisions in it have reasons attached, and several of them are deliberate revers
 
 ## Status
 
-The core of quick capture is built and tested: recording, editing, deleting, restoring and listing a day's notes.
-The UI components it needs are in `src/shared/ui`, shown at `/dev/ui` in development. No screen uses either yet.
+Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment she sends,
+editable in place, deleted with one tap and an Undo. Nothing is deployed; sign-in comes before the first deploy.
 
 ## Hard constraint: $0, no card
 

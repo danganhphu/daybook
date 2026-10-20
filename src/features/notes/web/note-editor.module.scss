@@ -1,0 +1,23 @@
+@use "abstracts" as *;
+
+.editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: space(2);
+  min-inline-size: 0;
+  padding-block: space(1);
+  padding-inline-end: space(3);
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}
+
+.actions {
+  display: flex;
+  gap: space(2);
+  justify-content: flex-end;
+}

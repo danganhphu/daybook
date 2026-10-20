@@ -1,0 +1,38 @@
+@use "abstracts" as *;
+
+.row {
+  display: flex;
+  gap: space(3);
+  align-items: flex-start;
+  padding: space(1) space(1) space(1) space(4);
+
+  & + & {
+    border-block-start: 1px solid color(border);
+  }
+}
+
+// Each first line is centred on the 44px menu button beside it
+.time {
+  flex-shrink: 0;
+  padding-block: rem(12px);
+  color: color(text-muted);
+
+  @include text(body-sm);
+  @include tabular-nums;
+}
+
+// Her words as she typed them: line breaks kept, long words broken rather than overflowing
+.content {
+  flex: 1;
+  min-inline-size: 0;
+  padding-block: rem(10px);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+// Holds the menu's place while a change is saving, so nothing moves
+.menu-space {
+  flex-shrink: 0;
+  inline-size: size(control);
+  block-size: size(control);
+}

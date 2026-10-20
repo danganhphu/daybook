@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Pencil, Trash2, X } from "lucide-react";
+import { Ellipsis, Pencil, SendHorizontal, Trash2, X } from "lucide-react";
 import { useCallback, useMemo, type ReactNode } from "react";
 
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
@@ -78,11 +78,12 @@ export function Gallery() {
             </p>
           </div>
         </Sample>
-        <Sample caption="IconButton: quiet, square, label read aloud">
+        <Sample caption="IconButton: square, label read aloud; quiet, or primary for send">
           <IconButton icon={Ellipsis} label="Tuỳ chọn" />
           <IconButton icon={X} label="Đóng" />
           <IconButton icon={Trash2} label="Xoá" tone="danger" />
           <IconButton icon={Ellipsis} label="Tuỳ chọn" size="lg" />
+          <IconButton icon={SendHorizontal} label="Ghi" variant="primary" size="lg" />
         </Sample>
       </Section>
 
