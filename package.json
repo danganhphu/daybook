@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "bddgen && playwright test",
+    "icons": "node scripts/generate-icons.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\""
   },

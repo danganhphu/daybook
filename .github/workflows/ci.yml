@@ -50,8 +50,9 @@ jobs:
           cache: true
           require-lockfile: true
 
-      # Not cached: Playwright's docs say a restore is no faster than a download, and the Linux packages can't be cached
-      - run: pnpm exec playwright install --with-deps chromium webkit
+      # Not cached: Playwright's docs say a restore is no faster than a download, and the Linux packages can't be cached.
+      # No headless shell: the Chromium projects run real Chrome.
+      - run: pnpm exec playwright install --with-deps --no-shell chromium webkit
       - run: pnpm build
       - run: pnpm test:e2e
 

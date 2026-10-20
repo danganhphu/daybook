@@ -15,8 +15,9 @@ decisions in it have reasons attached, and several of them are deliberate revers
 ## Status
 
 Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment she sends,
-editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. Nothing is
-deployed; sign-in comes before the first deploy.
+editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
+to a phone's home screen as an app (a manifest and icons; no service worker yet). Nothing is deployed; sign-in comes
+before the first deploy.
 
 ## Hard constraint: $0, no card
 
@@ -85,7 +86,7 @@ Clean Architecture layers inside each slice, in TypeScript idiom - types and fun
 
 ```
 src/
-  app/            routes only (Next.js App Router): layout, pages, server actions, /dev/ui
+  app/            routes only (Next.js App Router): layout, pages, server actions, the manifest and icons, /dev/ui
   features/
     capture/      her words coming in: the Capture aggregate, recordCapture
     notes/        the notes she keeps: the Note aggregate, edit, delete, restore, the day's list
@@ -185,7 +186,10 @@ End-to-end tests cover the flows she would notice breaking; everything else is a
 
 - **Scenarios are Gherkin** in `e2e/*.feature`, with English keywords and Vietnamese steps, run by Playwright
   through playwright-bdd on an iPhone (WebKit), an Android phone (Chromium) and desktop Chrome. Tag a scenario
-  `@desktop-only` or `@phone-only` when the devices behave differently, like what Enter does.
+  `@desktop-only` or `@phone-only` when the devices behave differently, like what Enter does, and `@chromium-only`
+  when it asks Chrome itself over the DevTools protocol.
+- **Chromium is real Chrome** in its new headless mode (`channel: "chromium"`). Playwright's default headless shell
+  is not full Chrome: asked whether a page installs, it reports no errors even for a page with no manifest.
 - **They run the production build** on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts` empties and
   migrates it, then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by
   emptying the day through the screen, which is why they run one at a time.
@@ -310,6 +314,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm format` / `pnpm format:check` | Oxfmt |
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
 | `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
+| `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`. Commit the output |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |
@@ -323,7 +328,7 @@ changed, `test:e2e` too, after `build`.
 
 - `check`: the five commands above, then a check that the committed `*.module.scss.d.ts` files match what the
   build wrote.
-- `e2e`: installs Chromium and WebKit, builds, runs `pnpm test:e2e`. When it fails, the Playwright report, traces
+- `e2e`: installs Chromium (without the headless shell) and WebKit, builds, runs `pnpm test:e2e`. When it fails, the Playwright report, traces
   included, is kept as an artifact for 14 days.
 
 Actions are pinned to commit SHAs with the version in a comment; bump both together. `pnpm/setup` installs pnpm
