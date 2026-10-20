@@ -14,6 +14,7 @@
     "format:check": "oxfmt --check",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "bddgen && playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\""
   },
@@ -31,8 +32,10 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@cloudflare/vite-plugin": "2.0.0-beta.sha-c82c3efb3",
     "@cloudflare/vitest-plugin": "1.4.2",
+    "@playwright/test": "1.64.1",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -43,6 +46,7 @@
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
     "oxlint-tsgolint": "7.0.2004",
+    "playwright-bdd": "9.2.1",
     "sass-embedded": "1.105.1",
     "stylelint": "17.16.0",
     "stylelint-config-standard-scss": "17.0.0",

@@ -15,7 +15,8 @@ decisions in it have reasons attached, and several of them are deliberate revers
 ## Status
 
 Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment she sends,
-editable in place, deleted with one tap and an Undo. Nothing is deployed; sign-in comes before the first deploy.
+editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. Nothing is
+deployed; sign-in comes before the first deploy.
 
 ## Hard constraint: $0, no card
 
@@ -180,6 +181,19 @@ Inside a slice:
   `cloudflare.config.ts` is experimental) and imports the compatibility date and flags from `cloudflare.config.ts`,
   so tests and the app run on the same runtime behaviour.
 
+End-to-end tests cover the flows she would notice breaking; everything else is a Vitest test.
+
+- **Scenarios are Gherkin** in `e2e/*.feature`, with English keywords and Vietnamese steps, run by Playwright
+  through playwright-bdd on an iPhone (WebKit), an Android phone (Chromium) and desktop Chrome. Tag a scenario
+  `@desktop-only` or `@phone-only` when the devices behave differently, like what Enter does.
+- **They run the production build** on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts` empties and
+  migrates it, then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by
+  emptying the day through the screen, which is why they run one at a time.
+- **Find things the way she does**: by role and by the words on screen, never by class name or test id. The screen
+  is described once, in `e2e/today-page.ts`.
+- **A screen is checked with axe** against WCAG 2.2 A and AA, in the step `trang không có lỗi trợ năng`.
+- `bddgen` writes the specs into `.features-gen/`, which is gitignored and skipped by Vitest.
+
 ## Setup
 
 - Node 26 and pnpm. `.node-version` pins Node for version managers that read it; the pnpm version is pinned in
@@ -188,6 +202,7 @@ Inside a slice:
   trust fails the install, and dependency build scripts run only for packages listed under `allowBuilds`. Review a
   package before adding it there. Versions are pinned exactly.
 - `pnpm exec cf auth login`. It opens a browser to approve access, so a person does it, not an agent.
+- `pnpm exec playwright install chromium webkit` once, for the end-to-end tests. On Linux, add `--with-deps`.
 - Claude Code: trust the folder when asked. `.claude/settings.json` declares the `cloudflare/skills` marketplace
   and enables its `cloudflare` plugin, which brings Cloudflare's skills and the Cloudflare MCP server. If Claude
   Code reports it as enabled but not installed, run `claude plugin install cloudflare@cloudflare --scope project`.
@@ -293,18 +308,25 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm lint` | Oxlint, type-aware, then Stylelint |
 | `pnpm format` / `pnpm format:check` | Oxfmt |
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
+| `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |
 
-Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass.
+Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass. When a screen
+changed, `test:e2e` too, after `build`.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every pull request and on `main`: the five commands above, then a check that
-the committed `*.module.scss.d.ts` files match what the build wrote. Actions are pinned to commit SHAs with the
-version in a comment; bump both together. `pnpm/setup` installs pnpm from `packageManager`, Node from
-`.node-version`, and runs a frozen install.
+`.github/workflows/ci.yml` runs on every pull request and on `main`, in two jobs side by side:
+
+- `check`: the five commands above, then a check that the committed `*.module.scss.d.ts` files match what the
+  build wrote.
+- `e2e`: installs Chromium and WebKit, builds, runs `pnpm test:e2e`. When it fails, the Playwright report, traces
+  included, is kept as an artifact for 14 days.
+
+Actions are pinned to commit SHAs with the version in a comment; bump both together. `pnpm/setup` installs pnpm
+from `packageManager`, Node from `.node-version`, and runs a frozen install.
 
 ## Style
 

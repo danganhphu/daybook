@@ -6,6 +6,9 @@ import vinext from "vinext";
 import { defineConfig } from "vite";
 import { patchCssModules } from "vite-css-modules";
 
+// End-to-end tests point the local bindings at a state folder of their own, so they never touch the dev database
+const persistTo = process.env["DAYBOOK_PERSIST_TO"];
+
 export default defineConfig({
   css: {
     // Kebab-case in SCSS, camelCase keys in TypeScript
@@ -28,6 +31,7 @@ export default defineConfig({
         name: "rsc",
         childEnvironments: ["ssr"],
       },
+      ...(persistTo === undefined ? {} : { persistState: { path: persistTo } }),
     }),
   ],
 });
