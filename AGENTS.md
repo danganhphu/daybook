@@ -191,7 +191,8 @@ End-to-end tests cover the flows she would notice breaking; everything else is a
   emptying the day through the screen, which is why they run one at a time.
 - **Find things the way she does**: by role and by the words on screen, never by class name or test id. The screen
   is described once, in `e2e/today-page.ts`.
-- **A screen is checked with axe** against WCAG 2.2 A and AA, in the step `trang không có lỗi trợ năng`.
+- **A screen is checked with axe** against WCAG 2.2 A and AA, in the step `trang không có lỗi trợ năng`. It lets
+  running animations finish first: axe measures colour as painted, so a toast still fading in fails contrast.
 - `bddgen` writes the specs into `.features-gen/`, which is gitignored and skipped by Vitest.
 
 ## Setup
