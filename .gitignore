@@ -12,6 +12,12 @@ worker-configuration.d.ts
 *.tsbuildinfo
 coverage/
 
+# End-to-end tests: generated from the .feature files by bddgen, and Playwright's output
+.features-gen/
+playwright-report/
+test-results/
+blob-report/
+
 # Environment and secrets
 .env
 .env.*

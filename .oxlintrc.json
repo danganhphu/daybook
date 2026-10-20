@@ -29,6 +29,11 @@
   },
   "overrides": [
     {
+      // One person on one page: every step waits for the one before it
+      "files": ["e2e/**"],
+      "rules": { "no-await-in-loop": "off" }
+    },
+    {
       "files": ["src/features/*/domain/**", "src/shared/domain/**"],
       "rules": {
         "no-restricted-imports": [

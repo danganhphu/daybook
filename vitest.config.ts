@@ -1,5 +1,5 @@
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 import { compatibilityDate, compatibilityFlags } from "./cloudflare.config.ts";
 
@@ -26,5 +26,7 @@ export default defineConfig({
   ],
   test: {
     setupFiles: ["./src/testing/setup/d1.ts"],
+    // The end-to-end tests are Playwright's; bddgen writes them as *.spec.js, which Vitest would otherwise collect
+    exclude: [...configDefaults.exclude, ".features-gen/**", "e2e/**"],
   },
 });
