@@ -25,11 +25,24 @@ export default defineConfig({
     timezoneId: "Asia/Ho_Chi_Minh",
     trace: "retain-on-failure",
   },
-  // She may carry an iPhone or an Android phone; both are covered, and a desktop for the web app at a desk
+  // She may carry an iPhone or an Android phone; both are covered, and a desktop for the web app at a desk.
+  // Chromium is real Chrome (new headless): the default headless shell passes an install check with no manifest.
   projects: [
-    { name: "iphone", use: { ...devices["iPhone 15"] }, grepInvert: /@desktop-only/ },
-    { name: "android", use: { ...devices["Pixel 7"] }, grepInvert: /@desktop-only/ },
-    { name: "desktop", use: { ...devices["Desktop Chrome"] }, grepInvert: /@phone-only/ },
+    {
+      name: "iphone",
+      use: { ...devices["iPhone 15"] },
+      grepInvert: /@desktop-only|@chromium-only/,
+    },
+    {
+      name: "android",
+      use: { ...devices["Pixel 7"], channel: "chromium" },
+      grepInvert: /@desktop-only/,
+    },
+    {
+      name: "desktop",
+      use: { ...devices["Desktop Chrome"], channel: "chromium" },
+      grepInvert: /@phone-only/,
+    },
   ],
   webServer: {
     command: "node e2e/serve.ts",

@@ -117,6 +117,21 @@ Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right 
 `cubic-bezier(0, 0, 0, 1)`, Cloudscape's responsive curve. Everything animated sits inside `@include motion`, so
 reduced motion turns it off.
 
+### App icon
+
+The letters pn, lowercase and white on the accent, drawn as strokes - stems, a bowl and an arch - rather than set in
+a font, so the icon needs no font file and stays legible at 16px. `scripts/generate-icons.ts` is its only source: `pnpm icons` writes `src/app/icon.svg`
+(the browser tab), `src/app/apple-icon.png` (180px, the iPhone home screen) and the manifest's PNGs in
+`public/icons/`, and the output is committed.
+
+- **Rounded** where the icon is shown as drawn (the tab, the manifest's `any` icons); **square** where the phone cuts
+  its own shape out of it (Android's `maskable` icon, every icon on iOS).
+- The letters sit inside the maskable safe zone, a centred circle with a radius of 40% of the icon, so no launcher
+  mask crops them. The p's stem ends are the farthest points; the script's `scale` keeps them inside. `any` and `maskable` are separate files, as web.dev advises: a maskable icon used as `any` shows its
+  padding.
+- `theme_color` and `background_color` are the canvas, so on Android the status bar and the launch screen match the
+  page. iOS draws neither from the manifest the same way; how it looks there is unchecked.
+
 ## Components
 
 In `src/shared/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
@@ -166,3 +181,4 @@ dev server runs; production answers 404 there. A new component goes on that page
 - Material 3 corner tokens, from Google's material-web:
   https://github.com/material-components/material-web/blob/main/tokens/versions/v0_192/_md-sys-shape.scss
 - `field-sizing`: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing
+- Maskable icons and their safe zone: https://web.dev/articles/maskable-icon

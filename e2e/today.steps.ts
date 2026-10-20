@@ -12,6 +12,10 @@ Given("hôm nay chỉ có ghi chú {string}", async ({ today }, text: string) =>
   await today.expectSaved(today.note(text));
 });
 
+When("tôi mở trang Hôm nay", async ({ today }) => {
+  await today.open();
+});
+
 Given("mất kết nối mạng", async ({ context }) => {
   await context.setOffline(true);
 });

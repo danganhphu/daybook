@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Toaster } from "@/shared/ui/toast/toaster";
+
+import { appDescription, appName, canvasColor } from "./identity";
 
 import "@/shared/ui/styles/main.scss";
 
@@ -10,9 +12,13 @@ import "@/shared/ui/styles/main.scss";
 const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "daybook",
-  description: "Ghi đơn hàng, khách và việc cần nhắc",
+  title: appName,
+  description: appDescription,
+  // Dark status bar text on the light page, not drawn over it
+  appleWebApp: { title: appName, statusBarStyle: "default" },
 };
+
+export const viewport: Viewport = { themeColor: canvasColor };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
