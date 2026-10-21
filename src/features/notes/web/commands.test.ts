@@ -29,7 +29,7 @@ describe("todaysNotes", () => {
     expect(listed.map((note) => note.content)).toEqual(["sáng", "trưa"]);
   });
 
-  it("given a moment just after midnight in Vietnam, when labelled, then it names her new day", async () => {
+  it("given a moment just after midnight in Vietnam, when labelled, then it names the new day", async () => {
     const app = testApp(testClock("2026-10-18T17:30:00Z").clock); // 00:30 on Monday the 19th
 
     expect((await todaysNotes(app)).label).toBe("Thứ Hai, 19/10");
@@ -39,11 +39,11 @@ describe("todaysNotes", () => {
 describe("editNote", () => {
   it("given a note, when edited, then it carries the new words", async () => {
     const app = testApp(testClock("2026-10-19T01:00:00Z").clock);
-    const note = await recorded(app, "gel tê x2");
+    const note = await recorded(app, "giấy in x2");
 
-    const edited = expectOk(await editNote(app, note.id, "gel tê x3"));
+    const edited = expectOk(await editNote(app, note.id, "giấy in x3"));
 
-    expect(edited.content).toBe("gel tê x3");
+    expect(edited.content).toBe("giấy in x3");
   });
 
   it("given an id that is not a note id, when edited, then it says the note is gone", async () => {
@@ -55,7 +55,7 @@ describe("editNote", () => {
     });
   });
 
-  it("given a deleted note, when edited, then it says so in her words", async () => {
+  it("given a deleted note, when edited, then it says so in the user's words", async () => {
     const app = testApp(testClock("2026-10-19T01:00:00Z").clock);
     const note = await recorded(app, "cũ");
     await deleteNote(app, note.id);

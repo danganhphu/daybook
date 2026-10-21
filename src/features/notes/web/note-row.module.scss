@@ -1,7 +1,7 @@
 @use "abstracts" as *;
 
 // Each note its own card, as a message is in a chat: flat white on the grey canvas.
-// Her words and the menu share the first row; the time sits in the bottom-right corner, as a chat puts it.
+// The words and the menu share the first row; the time sits in the bottom-right corner, as a chat puts it.
 .card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -12,7 +12,7 @@
   border-radius: radius(surface);
 }
 
-// While her words are being edited the editor takes the whole card
+// While the words are being edited the editor takes the whole card
 .editing {
   display: flex;
   padding: space(1) space(1) space(1) space(4);
@@ -20,7 +20,7 @@
   border-radius: radius(surface);
 }
 
-// Her words as she typed them: line breaks kept, long words broken rather than overflowing.
+// The words as typed: line breaks kept, long words broken rather than overflowing.
 // The first line is centred on the 44px menu button beside it.
 .content {
   grid-row: 1;

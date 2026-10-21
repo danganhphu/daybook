@@ -18,7 +18,7 @@ export type TodaysNotes = {
   readonly notes: ReadonlyArray<LiveNote>;
 };
 
-// "Today" is her day in Vietnam by the injected clock, so it can be tested either side of midnight
+// "Today" is the user's day in Vietnam by the injected clock, so it can be tested either side of midnight
 export async function listNotesForToday(deps: ListNotesForTodayDeps): Promise<TodaysNotes> {
   const day = vietnamDate(deps.clock());
 

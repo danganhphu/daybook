@@ -25,7 +25,7 @@ import { currentDevice, enterSends } from "@/shared/web/enter-key";
 import styles from "./composer.module.scss";
 
 export type ComposerProps = {
-  // The server action that records her words
+  // The server action that records the user's words
   readonly record: (text: string) => Promise<NoteResult>;
   // Shows the note in the list before the server has answered
   readonly onPending: (change: NoteListChange) => void;
@@ -73,7 +73,7 @@ export function Composer({ record, onPending }: ComposerProps) {
 
       const result = await attempt(() => record(typed));
       if (!result.ok) {
-        // Never lose her words: put them back, ahead of anything typed since
+        // Never lose the user's words: put them back, ahead of anything typed since
         setText((current) => (current === "" ? typed : `${typed}\n${current}`));
         setError(result.error);
       }

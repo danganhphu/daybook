@@ -9,7 +9,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import { toNoteView, type NoteResult, type NoteView } from "./note-view";
 
 // What the web adapter does for each request, minus the framework: parse what the browser sent, call the app, and
-// answer with a view or the sentence she should read. Server actions wrap these; tests call them directly.
+// answer with a view or the sentence the user should read. Server actions wrap these; tests call them directly.
 
 export async function editNote(app: App, id: unknown, text: unknown): Promise<NoteResult> {
   const noteId = parseNoteId(id);
@@ -63,12 +63,12 @@ const dayFormat = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "UTC",
 });
 
-// The date is already hers; formatting its UTC midnight in UTC keeps the same calendar day
+// The date is already the user's; formatting its UTC midnight in UTC keeps the same calendar day
 function dayLabel(day: Temporal.PlainDate): string {
   return dayFormat.format(Date.UTC(day.year, day.month - 1, day.day));
 }
 
-// A malformed id cannot name a note, so to her it is simply gone
+// A malformed id cannot name a note, so to the user it is simply gone
 function parseNoteId(id: unknown): NoteId | undefined {
   const parsed = noteIdSchema.safeParse(id);
 

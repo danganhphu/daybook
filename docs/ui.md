@@ -7,7 +7,7 @@ where they disagree, the choice and the reason are stated.
 
 ## Principles
 
-**Design for what she needs right now.** Every screen has one main job and puts it first. On the phone that is one
+**Design for what the user needs right now.** Every screen has one main job and puts it first. On the phone that is one
 vertical flow; nothing is shrunk to fit.
 
 **Reflow, don't resize.** A desktop layout is rearranged for the phone, not scaled down. Change the representation
@@ -23,19 +23,20 @@ section or per category - categories are told apart by words and position.
 **Motion only when it explains something.** An overlay entering, a toast appearing, an error pointing at a field.
 Never decoration, never on frequent interactions, and none at all under reduced motion.
 
-**Never lose her words, and never make her confirm the obvious.** Save first, fix later. Common destructive actions
+**Never lose the user's words, and never make them confirm the obvious.** Save first, fix later. Common destructive
+actions
 are one tap plus an Undo in the result toast; a confirmation dialog is only for something irreversible.
 
 ## Interaction rules
 
 - **Validation:** nothing is validated on the first visit. Validate on blur once something was entered, and on
-  submit; show a hint, not an error, while she is still typing. Errors sit under the field. On submit, focus the
+  submit; show a hint, not an error, while still typing. Errors sit under the field. On submit, focus the
   first error.
 - **Destructive actions** are grouped apart from ordinary ones (a divider, danger color) and never take the filled
   primary style.
 - **Disabled controls** say why in one sentence and what unlocks them. If nothing can unlock it, hide it instead.
   A submit button is never disabled.
-- **Same names get a context line:** two clinics called "Lan" each show the district or last order beneath.
+- **Same names get a context line:** two customers called "Lan" each show the district or last order beneath.
 - **Active filters stay visible** as removable chips next to the results.
 - **Numbers:** amounts and quantities are right-aligned with tabular figures, formatted the Vietnamese way
   (`8.450.000đ`).
@@ -120,15 +121,15 @@ reduced motion turns it off.
 ### App icon
 
 The letters pn, lowercase and white on the accent, drawn as strokes - stems, a bowl and an arch - rather than set in
-a font, so the icon needs no font file and stays legible at 16px. `scripts/generate-icons.ts` is its only source: `pnpm icons` writes `src/app/icon.svg`
-(the browser tab), `src/app/apple-icon.png` (180px, the iPhone home screen) and the manifest's PNGs in
-`public/icons/`, and the output is committed.
+a font, so the icon needs no font file and stays legible at 16px. `scripts/generate-icons.ts` is its only source:
+`pnpm icons` writes `src/app/icon.svg` (the browser tab), `src/app/apple-icon.png` (180px, the iPhone home screen)
+and the manifest's PNGs in `public/icons/`, and the output is committed.
 
 - **Rounded** where the icon is shown as drawn (the tab, the manifest's `any` icons); **square** where the phone cuts
   its own shape out of it (Android's `maskable` icon, every icon on iOS).
 - The letters sit inside the maskable safe zone, a centred circle with a radius of 40% of the icon, so no launcher
-  mask crops them. The p's stem ends are the farthest points; the script's `scale` keeps them inside. `any` and `maskable` are separate files, as web.dev advises: a maskable icon used as `any` shows its
-  padding.
+  mask crops them. The p's stem ends are the farthest points; the script's `scale` keeps them inside. `any` and
+  `maskable` are separate files, as web.dev advises: a maskable icon used as `any` shows its padding.
 - `theme_color` and `background_color` are the canvas, so on Android the status bar and the launch screen match the
   page. iOS draws neither from the manifest the same way; how it looks there is unchecked.
 

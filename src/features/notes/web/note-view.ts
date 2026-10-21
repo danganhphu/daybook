@@ -8,11 +8,11 @@ export type NoteView = {
   readonly content: string;
   // ISO instant, for <time dateTime> and for ordering
   readonly createdAt: string;
-  // Her clock: "09:12"
+  // The user's clock: "09:12"
   readonly time: string;
 };
 
-// What a note action answers: the note as it now is, or the sentence she reads
+// What a note action answers: the note as it now is, or the sentence the user reads
 export type NoteResult = Result<NoteView, string>;
 
 const clock = new Intl.DateTimeFormat("vi-VN", {

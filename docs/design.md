@@ -1,280 +1,186 @@
-# daybook - thiết kế sản phẩm
+# daybook - product design
 
-Trạng thái: bản nháp đã thống nhất qua thảo luận ngày 2026-10-15. Chưa viết dòng code nào.
+A notebook for a salesperson on the move: orders, customers and things to follow up, typed the way you would text a
+friend. A Telegram bot is the main way in; this web app, installable as a PWA, is the second. Both sit on one core.
 
-Stack đã chốt: tất cả chạy trên gói free của **Cloudflare**. Một Worker duy nhất lo web, webhook Telegram và lịch
-nhắc; dữ liệu nằm ở **D1**; parse bằng **Workers AI**. Viết bằng **TypeScript**, web là **vinext** (API của Next.js
-chạy trên Vite), giao diện là design system riêng viết bằng SCSS trên nền Base UI. Chi tiết kỹ thuật ở `AGENTS.md`,
-nguyên tắc giao diện ở `docs/ui.md`.
+Everything runs on Cloudflare's free plan: one Worker, D1, Workers AI. Technical rules are in `AGENTS.md`, the
+interface in [ui.md](ui.md), the data model in [domain.md](domain.md).
 
-Bản đầu của thiết kế này chọn Aspire và .NET. Đã đổi vì một ràng buộc đến sau: **chi phí phải bằng 0 và không nhập
-thẻ**. Xem mục Kiến trúc.
+## The problem
 
-## Người dùng
+Forgetting, not reporting. Notes get scattered and follow-ups slip. A dashboard does not cure that - it waits to be
+opened. What cures it is the bot speaking first.
 
-Một người: bạn gái của chủ repo. Trình dược viên, bán vật tư và thuốc nha khoa cho các phòng khám. Không phải dân
-kỹ thuật. Một ngày của bạn ấy có đủ cả gọi điện, đi gặp khách tại phòng khám, và trả lời tin nhắn.
+## The real competitor
 
-Chủ repo cũng dùng (chốt 2026-10-21): **hai người, chung một sổ**. Cả hai thấy và sửa cùng ghi chú, đơn, khách; mỗi
-tin gõ vào ghi lại ai gõ. Không có vai trò hay phân quyền - hai người tin nhau. Không ai tự đăng ký: tài khoản đầu tiên
-tạo bằng lệnh, người sau được mời từ trong app.
+The notes app already on the phone. It opens instantly, takes anything, needs no fields and no network. If daybook is
+slower or asks for more taps, it loses. Every feature is weighed against that.
 
-Bạn ấy **chưa biết** về tool này - đây là món làm xong mới tặng. Nghĩa là toàn bộ thiết kế dưới đây đang dựa trên
-suy đoán về quy trình làm việc của bạn ấy, chưa được kiểm chứng. Hệ quả: làm nhỏ, và chuẩn bị tinh thần đoán sai ở
-vài chỗ. Phần giá trị nhất sẽ đến sau khi ngồi xem bạn ấy dùng thật.
+## Principles
 
-## Vấn đề
+One line: **type as if texting a person, not filling in a form for a machine.**
 
-Nguyên văn lời chủ repo: "thay vì mỗi lần phải mở note ra note, rồi quên trước quên sau".
+- **Free text is the main road.** Slash commands exist, as shortcuts.
+- **Never refuse input.** What cannot be parsed is still saved, word for word, as a note. Losing someone's words is the
+  worst thing this tool can do.
+- **Save first, fix later.** No confirmation step - see below.
+- **Undo is always there.** People type fast only when a mistake is cheap.
+- **Nothing to set up first.** No product catalogue to fill in; products are learned as they are typed.
+- **The bot speaks first.**
 
-Vấn đề là **quên**, không phải thống kê. Chi tiết này định hình mọi thứ, vì dashboard không chữa được bệnh quên -
-nó nằm im chờ người ta nhớ ra mà mở. Thứ chữa được quên là bot chủ động nhắn trước.
+## Decision: no confirmation per message
 
-Báo cáo nộp trưởng phòng thì bạn ấy vẫn tự viết tay. Tool không cần bám mẫu nào của công ty, chỉ cần trình bày số
-liệu đủ sạch để liếc vào là chép sang được.
+The first sketch showed a card with [Correct] [Edit] after every message, saving only on Correct. Rejected: fifteen
+messages a day is fifteen taps that carry no information, the kind of friction that makes people quit. A wrong line
+fixed later costs far less. So: save at once, show the result with Edit and Delete beside it, and ask only when truly
+unsure - a name that matches two customers.
 
-## Đối thủ thật sự
+## Conversations
 
-Không phải phần mềm nào cả, mà là **ứng dụng ghi chú trên điện thoại bạn ấy**.
+The bot and the app speak Vietnamese.
 
-Note thắng ở chỗ: mở ra gõ gì cũng được, không bắt điền đúng ô, không bắt chọn loại trước, không chờ mạng. Nếu
-daybook chậm hơn hoặc nhiều bước hơn note, bạn ấy sẽ lặng lẽ quay về note và mình ngồi nhìn cái dashboard rỗng.
-
-Đây là thước đo để cân mọi tính năng về sau.
-
-## Nguyên tắc giao diện
-
-Quy về một câu: **gõ như đang nhắn cho người thật, không phải điền đơn cho máy.**
-
-- **Chữ tự do là đường chính.** Lệnh gạch chéo có, nhưng là đường phụ.
-- **Không bao giờ từ chối đầu vào.** Parse không ra thì vẫn lưu nguyên câu thành ghi chú. Làm mất chữ của người
-  dùng là lỗi nặng nhất tool này có thể phạm.
-- **Lưu trước, sửa sau.** Không bắt xác nhận. Lý do ở mục dưới.
-- **Hoàn tác luôn có.** Người ta chỉ dám gõ nhanh khi biết lỡ sai thì sửa được.
-- **Không bắt khai báo gì trước khi dùng.** Không có màn hình nhập danh mục sản phẩm. Giá trị phải đến trước công sức.
-- **Bot nhắn trước**, không chờ được hỏi.
-
-## Quyết định: không bắt xác nhận từng tin
-
-Phương án đầu là mỗi tin nhắn hiện thẻ kèm nút [Đúng] [Sửa], bạn ấy chạm Đúng thì mới lưu. Đã bác bỏ.
-
-Một ngày mười lăm tin là mười lăm cú chạm không mang lại thông tin gì, và đó đúng là loại ma sát khiến người ta bỏ
-tool. Chi phí của một dòng sai được sửa sau thấp hơn nhiều chi phí bắt xác nhận cả ngày.
-
-Thay vào đó: lưu ngay, hiện thẻ kết quả kèm nút Sửa và Xoá nằm sẵn trong khung chat.
-
-Chỉ hỏi lại khi thật sự không chắc - ví dụ tên khách khớp với hai phòng khám.
-
-## Các màn hình hội thoại
-
-### Ghi đơn
+Recording an order:
 
 ```
-Bạn ấy:  bán 2 hộp gel tê cho PK chị Lan 500k
+Người dùng:  bán 2 thùng giấy in cho chị Lan 500k
 
 Bot:     Đã lưu đơn
-         PK Lan Anh - Gel tê x2 - 500.000đ
+         Cửa hàng Lan Anh - Giấy in x2 - 500.000đ
 
          Đơn thứ 12 tháng này, tổng 8.450.000đ
          [Sửa]  [Xoá]
 ```
 
-Dòng tổng cuối có hai tác dụng: xác nhận ngầm rằng số liệu đang chạy đúng, và cho bạn ấy cảm giác tiến triển.
-
-### Khi không chắc
+The running total confirms the numbers add up and shows progress. When unsure:
 
 ```
-Bot:     Gel tê x2 - 500.000đ. Nhưng "chị Lan" là chỗ nào?
-         [PK Lan Anh]  [NK Hương Lan]  [Thêm mới]
+Bot:     Giấy in x2 - 500.000đ. Nhưng "chị Lan" là chỗ nào?
+         [Cửa hàng Lan Anh]  [Hương Lan]  [Thêm mới]
 ```
 
-### Nuốt mọi loại nội dung
+One box takes everything; the bot sorts it:
 
-Một ô nhập duy nhất, bot tự phân loại:
-
-| Bạn ấy gõ | Bot hiểu thành |
+| Typed | Understood as |
 |---|---|
-| `bán 2 hộp gel tê cho PK chị Lan 500k` | đơn hàng |
-| `PK Minh Châu hẹn gọi lại thứ 5` | việc cần nhắc |
-| `chị Hà hỏi giá gel tê, chưa trả lời` | việc cần nhắc |
-| `PK Sao Việt đang dùng hàng hãng khác` | ghi chú về khách |
-| `nhớ mang catalogue` | ghi chú |
+| `bán 2 thùng giấy in cho chị Lan 500k` | an order |
+| `cửa hàng Minh Châu hẹn gọi lại thứ 5` | a reminder |
+| `chị Hà hỏi giá, chưa trả lời` | a reminder |
+| `nhớ mang catalogue` | a note |
 
-Phân loại không nổi:
+What it cannot sort is kept as a note, with [Ghi thành đơn] [Đặt nhắc nhở] [Để vậy].
 
-```
-Bot:     Mình chưa hiểu rõ nên lưu tạm thành ghi chú.
-         [Ghi thành đơn]  [Đặt nhắc nhở]  [Để vậy]
-```
+The bot speaks first: a morning list (follow-ups due, customers not contacted in a while) and a Friday summary (orders,
+revenue, top customers, who has gone quiet). The morning time and the "gone quiet" threshold are guesses - three weeks
+for now - and both are settings.
 
-### Bot nhắn trước
+Typing a customer's name shows their card: contact, last order, totals, notes.
 
-```
-7:30 sáng
-         Chào buổi sáng. Hôm nay có:
-           - Gọi lại PK Minh Châu (hẹn hôm nay)
-           - PK Lan Anh 3 tuần chưa ghé
-         [Xong rồi]  [Để mai]
-```
+## Slash commands
 
-```
-Chiều thứ 6
-         Tuần này (09-15/10)
-           12 đơn, 8.450.000đ
-           6 phòng khám
-           Nhiều nhất: PK Minh Châu (3 đơn)
+Telegram's menu lists the commands, which answers the empty chat box's question - "what can I type?".
 
-         Lâu chưa liên hệ:
-           PK Hoa Mai    24 ngày
-           PK Sao Việt   31 ngày
-```
-
-Khối thứ 6 chính là thứ bạn ấy chép tay sang báo cáo nộp trưởng phòng.
-
-Hai con số còn để ngỏ, chờ hỏi bạn ấy: giờ nhắn buổi sáng, và ngưỡng "lâu chưa liên hệ". Ngưỡng 3 tuần hiện là bịa
-ra, chưa biết chu kỳ ghé lại thật của nghề này. Cho chỉnh được trong phần cài đặt, mặc định 3 tuần.
-
-### Tra cứu
-
-Gõ tên khách là ra, không cần nút tìm kiếm:
-
-```
-Bạn ấy:  chị Lan
-
-Bot:     PK Lan Anh - 0909xxx
-         Gần nhất: 12/10, gel tê x2, 500.000đ
-         Tổng từ trước: 14 đơn, 11.200.000đ
-
-         Ghi chú: thích gọi buổi sáng, hay hỏi
-         chiết khấu theo lô
-         [Lịch sử đầy đủ]  [Ghi đơn mới]
-```
-
-## Lệnh gạch chéo
-
-Chữ tự do vẫn là đường chính, nhưng Telegram có nút menu hiện sẵn danh sách lệnh - thứ đó giải được điểm yếu lớn
-nhất của giao diện chat: khung chat trống trơn không cho biết gõ gì được. Nên lệnh vừa là đường tắt cho người đã
-quen, vừa là bảng chỉ dẫn cho người mới.
-
-| Lệnh | Việc |
+| Command | Does |
 |---|---|
-| `/start` | lời chào lần đầu và vài câu ví dụ |
-| `/today` | đơn và việc của hôm nay |
-| `/week` | tổng kết tuần, đúng khối bot gửi chiều thứ 6 |
-| `/month` | tổng kết tháng |
-| `/customer <tên>` | hồ sơ một phòng khám |
-| `/reminders` | danh sách việc cần nhắc đang mở |
-| `/edit` | sửa mục vừa ghi gần nhất |
-| `/web` | link mở PWA |
-| `/settings` | giờ nhắn sáng, ngưỡng lâu chưa liên hệ |
-| `/help` | ví dụ các câu gõ được |
+| `/start` | a first greeting and example messages |
+| `/today` | today's orders and follow-ups |
+| `/week`, `/month` | the summaries |
+| `/customer <name>` | a customer's card |
+| `/reminders` | open follow-ups |
+| `/edit` | edit the last entry |
+| `/web` | a link to the web app |
+| `/settings` | morning time, "gone quiet" threshold |
+| `/help` | examples |
 
-Tên lệnh bằng tiếng Anh (chốt 2026-10-16; bản đầu là `/homnay`, `/trogiup`...). Telegram chỉ cho chữ Latin, số và
-`_` trong tên lệnh, nên tên tiếng Việt đằng nào cũng mất dấu; `/start`, `/help`, `/settings` là ba lệnh Telegram
-khuyên mọi bot đều có. Phần mô tả hiện cạnh mỗi lệnh trong menu vẫn viết tiếng Việt.
+Names are English: Telegram allows only Latin letters, digits and `_` in command names. Their menu descriptions are
+Vietnamese. **Everything a command does can also be typed in plain words** - a command is never the only way.
 
-Nguyên tắc: **mọi lệnh đều phải làm được bằng chữ thường.** Lệnh là lối tắt, không bao giờ là con đường duy nhất tới
-một tính năng.
+## Data
 
-## Dữ liệu
+Nothing in the model is tied to one trade; another business needs only different products.
 
-Mô hình không dính gì tới ngành thuốc - đổi sang bán ngành khác thì không phải sửa gì ngoài danh mục sản phẩm.
-
-| Bảng | Giữ gì |
+| Table | Holds |
 |---|---|
-| `customer` | phòng khám, kèm các tên gọi khác ("chị Lan" -> PK Lan Anh) |
-| `product` | tên, giá gần nhất. Sinh ra từ lúc gõ, không khai báo trước |
-| `order` + `order_line` | đơn và các dòng hàng |
-| `interaction` | lần gọi, lần ghé, tin nhắn |
-| `reminder` | nội dung, hạn, đã xong chưa |
-| `capture` | **nguyên văn mọi tin nhắn**, không bao giờ sửa hay xoá |
-| `note` | ghi chú trong danh sách của bạn ấy, sinh từ một `capture`; sửa, xoá, khôi phục được |
-| `interpretation` | kết quả parse một `capture` và độ chắc chắn; parse lại thì thêm dòng mới |
+| `customer` | customers, with the other names people use for them |
+| `product` | name, latest price; created as typed |
+| `order`, `order_line` | orders and their lines |
+| `interaction` | calls, visits, messages |
+| `reminder` | what, when, done |
+| `capture` | **every message word for word**, never edited or deleted |
+| `note` | an entry in the list, made from a capture; editable, deletable, restorable |
+| `interpretation` | how a capture was parsed and how sure; parsing again adds a row |
 
-`capture` là bảng quan trọng nhất và dễ bị bỏ sót nhất. Nó giữ nguyên văn mọi thứ bạn ấy gõ, kể cả khi parse sai
-hoặc parse hỏng. Hai lợi ích: lần ngược lại được khi số liệu trông lạ, và sau này cải tiến cách parse thì chạy lại
-được trên toàn bộ dữ liệu cũ. Mọi bản ghi suy ra từ tin nhắn đều giữ `capture_id` của nó.
+`capture` matters most. It keeps exactly what was typed, even when parsing fails, so odd numbers can be traced back and
+a better parser can re-read everything. Everything derived from a message keeps its `capture_id`. Parse results live
+apart from the capture so re-parsing never overwrites the original.
 
-Bản đầu của bảng này để kết quả parse ngay trong `capture`. Đã tách ra (2026-10-16): parse lại bằng model tốt hơn
-thì phải ghi đè, tức là mất kết quả cũ và `capture` thôi là bản gốc không đổi. Tách ra thì `capture` chỉ thêm, không
-sửa, và database chặn luôn việc sửa. Mô hình chi tiết ở [domain.md](domain.md).
+## Architecture
 
-## Kiến trúc
-
-Hai cửa vào, một bộ não, tất cả nằm trong một Worker:
+Two ways in, one core, one Worker:
 
 ```
   Telegram  --webhook--+
-                       +--> core (parse, luu, nhac, thong ke) --> D1
+                       +--> core (parse, store, remind, sum up) --> D1
   PWA (web) -----------+         ^
-  Cron (7:30, thu 6) ------------+
+  Cron (morning, Friday) --------+
 ```
 
-Điều kiện bắt buộc: **không có logic nào nằm trong bot**. Bot nhận chữ, gọi core, hiện kết quả. Web cũng vậy. Giữ
-được kỷ luật này thì thêm cửa vào thứ ba sau này - Zalo, Messenger - chỉ là viết thêm một lớp mỏng.
+**No logic in the bot or the web pages.** They take input, call the core, show the result, so a third entrance later
+is a thin layer, not a rewrite.
 
-**Chi phí: 0 đồng, không nhập thẻ.** Ràng buộc này quyết định chọn nền tảng. AWS, Azure, Google Cloud đều đòi thẻ và
-không nhà nào chịu dừng ở mức 0 đồng - lố hạn mức là tự trừ tiền. Cloudflare thì chặn request chứ không tính tiền,
-và một người dùng chỉ chạm chưa tới 1% hạn mức free. Cái giá: Workers không chạy được .NET, nên stack chuyển sang
-TypeScript.
+**Cost: $0, no card.** AWS, Azure and Google Cloud all want a card and none stops at zero; Cloudflare refuses requests
+over a limit instead of billing. The price: Workers cannot run .NET, the first plan, so this is TypeScript.
 
-PWA nói ở trên là chính app web này - thêm manifest và service worker, không phải một app thứ hai.
+## The web app
 
-Zalo đã cân nhắc và loại cho bản đầu: Official Account API đòi xác minh doanh nghiệp, có phí, giới hạn số tin. Không
-hợp một món cá nhân. Bạn ấy có sẵn Telegram nên vấn đề này tạm không tồn tại.
+Not where the work happens - where it is reviewed and corrected:
 
-## Web làm gì
+- the same chat box as the bot, for a desk
+- an order table: filter, sort, edit in bulk
+- weekly and monthly numbers
+- a page per customer
 
-Không phải nơi làm việc - nơi xem và sửa:
+Installed to the home screen as a PWA; no app store.
 
-- một ô chat y hệt bot, cho lúc ngồi máy
-- bảng đơn hàng: lọc, sắp xếp, sửa hàng loạt. Đây là thứ chat làm dở
-- trang số liệu tuần và tháng
-- hồ sơ từng phòng khám
+## Sign-in
 
-PWA, thêm vào màn hình chính điện thoại, không qua chợ ứng dụng.
+Two people share one book: both see and edit the same data, and each message records who typed it. No roles. Nobody
+signs up: the first account comes from the command line, the second by invitation from inside the app.
 
-## Đăng nhập
+Signing in is a button and Face ID or a fingerprint - a **passkey**. Nothing to remember, no third-party account, and
+a fake page cannot use it because a passkey is bound to the site.
 
-Bình thường như mọi app trên điện thoại: bấm một nút, Face ID hoặc vân tay là vào. Đó là **passkey** - không có mật
-khẩu để nhớ, không có tài khoản Google hay bên thứ ba nào, và trang giả không lừa được vì passkey gắn với tên miền.
+- **A password is the fallback**, at least 15 characters (NIST SP 800-63B-4). A Worker on the free plan cannot hash
+  passwords to OWASP's standard (PBKDF2 capped at 100,000 iterations, 10 ms of CPU), so the browser runs Argon2id and
+  the server keeps an HMAC of the result.
+- **A sign-in lasts 30 days** from the moment it happened, however often the app is used (NIST AAL1). Opening the app
+  goes straight in; security settings - passkeys, the password, other devices, invites - ask for Face ID or the
+  password again.
+- **Invites and recovery links** work once, for ten minutes. Whoever loses every way in gets a recovery link from the
+  other user, in the app. The command line is for the first account and for when both are locked out.
+- The bot knows the two people by their Telegram user ids; there is no sign-in in the chat.
 
-- **Mật khẩu chỉ là đường dự phòng**, tối thiểu 15 ký tự (NIST SP 800-63B-4). Worker gói free không băm mật khẩu đúng
-  chuẩn OWASP được - PBKDF2 bị giới hạn 100.000 vòng, CPU 10 ms - nên trình duyệt chạy Argon2id, server chỉ giữ HMAC
-  của kết quả.
-- **Một lần đăng nhập giữ 30 ngày**, tính từ lúc đăng nhập, không kéo dài theo lần dùng (NIST, mức AAL1). Mở app là
-  vào thẳng như mở note; thao tác bảo mật - thêm hay xoá khoá đăng nhập, đổi mật khẩu, đăng xuất máy khác, mời người -
-  thì hỏi lại Face ID hoặc mật khẩu.
-- **Người mới vào bằng link mời** dùng một lần, sống 10 phút. Ai mất hết cách đăng nhập thì người kia tạo link khôi phục
-  ngay trong app. Dòng lệnh chỉ dùng cho tài khoản đầu tiên và khi cả hai cùng kẹt.
-- Bot Telegram nhận ra hai người bằng Telegram user id; trong chat không cần đăng nhập.
+Rejected: hosted sign-in services (Supabase pauses free projects after a week idle, Auth0 deletes idle free tenants
+after 150 days, Clerk's free plan has no passkeys), Cloudflare Access (needs a card), and signing in with Telegram or
+Google (a plain sign-in screen was wanted).
 
-Đã cân nhắc và loại: dịch vụ đăng nhập ngoài - gói free của Supabase tạm dừng project sau một tuần không dùng, Auth0
-xoá tenant sau 150 ngày, Clerk không có passkey; Cloudflare Access đòi nhập thẻ; đăng nhập bằng Telegram hay Google -
-chủ repo muốn một màn hình đăng nhập bình thường.
+## First release
 
-## Phạm vi bản đầu
+1. Telegram takes any message, an LLM parses it, it is saved at once, the result card has Edit and Delete
+2. Look-up by typing a customer's name
+3. The bot speaks first: mornings and Friday afternoons
+4. Web: the chat box, an editable order table, a page of numbers
+5. The slash commands above
 
-Làm:
+Deferred, with reasons:
 
-1. Telegram nhận mọi loại tin, parse bằng LLM, lưu ngay, thẻ kết quả có Sửa và Xoá
-2. Tra cứu bằng cách gõ tên khách
-3. Nhắc chủ động: sáng và chiều thứ 6
-4. Web: ô chat, bảng đơn sửa được, một trang số liệu
-5. Bộ lệnh gạch chéo ở trên
-
-Để sau, có lý do:
-
-| Hoãn | Vì sao |
+| Deferred | Why |
 |---|---|
-| Google Drive | kéo theo OAuth, token hết hạn, quyền truy cập. Khi database đã là nguồn sự thật thì Drive chỉ là bản sao |
-| Xuất Excel / docx | báo cáo chính thức bạn ấy viết tay. Chỉ cần số liệu dễ đọc, chưa cần file |
-| Phân quyền, nhiều sổ | hai người dùng chung một sổ. Đừng xây vai trò cho hai người tin nhau |
-| App mobile riêng | PWA đủ, và không phải qua kiểm duyệt chợ ứng dụng |
+| Google Drive | OAuth, expiring tokens, permissions - for what would only be a copy of the database |
+| Excel / Word export | nothing needs a file yet; readable numbers are enough |
+| Roles, several books | two people who trust each other share one book |
+| A native app | the PWA is enough, with no store review |
 
-## Những chỗ còn chưa biết
+## Unknowns
 
-- Chu kỳ ghé lại một phòng khám của nghề trình dược là bao lâu
-- Trưởng phòng chấm bạn ấy bằng gì ngoài doanh số. Nếu có đếm số lượt ghé thì `interaction` phải lên ngang hàng với
-  `order` về mức độ quan trọng, chứ không phải ghi chú phụ
-- Bạn ấy đang ghi chính xác những gì vào ứng dụng note. Đây là câu đáng giá nhất, và chỉ trả lời được sau khi tặng
+- How often a customer should be contacted before they count as "gone quiet"
+- What people actually type into their notes app today - the most valuable question, answered only by real use

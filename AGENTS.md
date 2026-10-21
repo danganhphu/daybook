@@ -2,19 +2,18 @@
 
 ## What this is
 
-A personal tool that helps one salesperson keep track of her own work. She sells dental supplies to clinics: she
-takes orders on the road, by phone and over chat, and today she keeps all of it in a notes app and forgets half
-of it.
+A notebook for a salesperson on the move: orders, customers and follow-ups, typed the way you would text a friend.
+The usual alternative is the phone's notes app, where things get scattered and half of them forgotten.
 
-Telegram is the main way in, because she already lives in it. A PWA covers the things chat is bad at - correcting
-an old entry, browsing, reading numbers off a table. Both are thin adapters over one core.
+Telegram is the main way in, because chat is where the day already happens. A PWA covers the things chat is bad at -
+correcting an old entry, browsing, reading numbers off a table. Both are thin adapters over one core.
 
 The design is in [docs/design.md](docs/design.md). Read it before proposing changes to the interaction model; the
 decisions in it have reasons attached, and several of them are deliberate reversals of the obvious choice.
 
 ## Status
 
-Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment she sends,
+Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment it is sent,
 editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
 to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in is being built: the access
 core - accounts, sessions, setup links, the audit trail - exists without a screen yet. Nothing is deployed; sign-in
@@ -76,7 +75,7 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
   entry, so a bot message never pays for React rendering. Everything else is handed to vinext's fetch handler.
   The same entry exports `scheduled` for the morning digest and the Friday summary.
 - **The webhook answers fast.** Long work - the LLM call - goes into `ctx.waitUntil`, which allows 30 seconds.
-- **Never lose her words.** Every message is stored verbatim in `capture` before anything else happens, including
+- **Never lose the user's words.** Every message is stored verbatim in `capture` before anything else happens, including
   when parsing fails or the LLM quota has run out. Re-parsing later is what makes a free LLM tier safe to rely on.
 - **Nothing polls.** Work happens on a request or on a cron trigger.
 
@@ -90,8 +89,8 @@ src/
   app/            routes only (Next.js App Router): layout, pages, server actions, the manifest and icons, /dev/ui
   features/
     access/       who is signing in: accounts, passkeys, sessions, setup links, the access events
-    capture/      her words coming in: the Capture aggregate, recordCapture
-    notes/        the notes she keeps: the Note aggregate, edit, delete, restore, the day's list
+    capture/      the user's words coming in: the Capture aggregate, recordCapture
+    notes/        the notes kept: the Note aggregate, edit, delete, restore, the day's list
                   (later: orders/, reminders/, customers/ - one folder per feature)
   shared/
     domain/       Result, Content, the Vietnamese day
@@ -131,7 +130,7 @@ Inside a slice:
 
 ## Errors
 
-- **An outcome she can cause is a `Result`** (`src/shared/domain/result.ts`): a note that is gone, editing a
+- **An outcome the user can cause is a `Result`** (`src/shared/domain/result.ts`): a note that is gone, editing a
   deleted note. The error is a code from the feature's closed set (`NoteError` in
   `src/features/notes/application/note-errors.ts`), and each use case narrows its return type to the codes it can
   produce, so a caller handles exactly those.
@@ -141,13 +140,13 @@ Inside a slice:
   network round trip.
 - **No Maybe type.** `T | undefined` under strict null checks is the Maybe, and the compiler checks it. No `null`
   in domain types; it stays in the row mapping.
-- **Every code has the sentence she sees** in the feature's messages (`noteErrorMessages`), and
+- **Every code has the sentence the user sees** in the feature's messages (`noteErrorMessages`), and
   `satisfies Record<NoteError, string>` fails the build if one is missing. Adapters show these; they do not word
   their own.
 
 ## Access
 
-Two people share one book and sign in with passkeys, a password being the fallback; `docs/design.md` "Đăng nhập" says
+Two people share one book and sign in with passkeys, a password being the fallback; `docs/design.md` "Sign-in" says
 why, `docs/domain.md` "Access" has the rules in full. What code must never get wrong:
 
 - **No secret is stored, logged or put in a query string as itself.** Session secrets, setup tokens and ceremony
@@ -180,7 +179,7 @@ why, `docs/domain.md` "Access" has the rules in full. What code must never get w
 - **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank
   content, foreign keys, the triggers.
 - **`capture` is never updated or deleted**, by code or by hand. Corrections go to the note.
-- **Anything derived from a capture keeps its `capture_id`**, so every record traces back to what she typed.
+- **Anything derived from a capture keeps its `capture_id`**, so every record traces back to what was typed.
 - **Times are epoch-millisecond integers** in the database and `Temporal.Instant` in code, converted in the row
   mapping. Import Temporal from `temporal-polyfill/implementation`, never the bare package, so a broken native
   Temporal in the runtime is never picked up.
@@ -204,7 +203,7 @@ why, `docs/domain.md` "Access" has the rules in full. What code must never get w
   `cloudflare.config.ts` is experimental) and imports the compatibility date and flags from `cloudflare.config.ts`,
   so tests and the app run on the same runtime behaviour.
 
-End-to-end tests cover the flows she would notice breaking; everything else is a Vitest test.
+End-to-end tests cover the flows a user would notice breaking; everything else is a Vitest test.
 
 - **Scenarios are Gherkin** in `e2e/*.feature`, with English keywords and Vietnamese steps, run by Playwright
   through playwright-bdd on an iPhone (WebKit), an Android phone (Chromium) and desktop Chrome. Tag a scenario
@@ -215,7 +214,7 @@ End-to-end tests cover the flows she would notice breaking; everything else is a
 - **They run the production build** on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts` empties and
   migrates it, then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by
   emptying the day through the screen, which is why they run one at a time.
-- **Find things the way she does**: by role and by the words on screen, never by class name or test id. The screen
+- **Find things the way a user does**: by role and by the words on screen, never by class name or test id. The screen
   is described once, in `e2e/today-page.ts`.
 - **A screen is checked with axe** against WCAG 2.2 A and AA, in the step `trang không có lỗi trợ năng`. It lets
   running animations finish first: axe measures colour as painted, so a toast still fading in fails contrast.
@@ -310,6 +309,7 @@ Run lint and fix what it reports before calling frontend work done.
 
 | Source | What | Needs |
 |---|---|---|
+| `.agents/skills` | This repo's own procedures: `sign-in`, `d1-migrations`, `e2e-tests`, `design-system`, `cloudflare-and-vinext`. Read the matching one before such a task | nothing |
 | `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
 | `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
 | `drizzle-kit` agent skills | How to run `generate`, read its JSON output, resolve its hints. Linked by pnpm into `.claude/skills/pnpm-drizzle-kit-*`, always matching the installed drizzle-kit | approved in `pnpm-workspace.yaml` under `permissions` |
@@ -321,7 +321,7 @@ its docs tool points at `node_modules/next`, which this project does not install
 
 ## The one rule that governs the product
 
-Her alternative is a notes app, and the notes app always wins on speed. Anything that makes capture slower than
+The user's alternative is a notes app, and the notes app always wins on speed. Anything that makes capture slower than
 typing a line into notes will lose, no matter how good the rest is. Weigh every feature against that.
 
 ## Commands
@@ -353,8 +353,8 @@ changed, `test:e2e` too, after `build`.
 
 - `check`: the five commands above, then a check that the committed `*.module.scss.d.ts` files match what the
   build wrote.
-- `e2e`: installs Chromium (without the headless shell) and WebKit, builds, runs `pnpm test:e2e`. When it fails, the Playwright report, traces
-  included, is kept as an artifact for 14 days.
+- `e2e`: installs Chromium (without the headless shell) and WebKit, builds, runs `pnpm test:e2e`. When it fails, the
+  Playwright report, traces included, is kept as an artifact for 14 days.
 
 Actions are pinned to commit SHAs with the version in a comment; bump both together. `pnpm/setup` installs pnpm
 from `packageManager`, Node from `.node-version`, and runs a frozen install.

@@ -14,7 +14,7 @@ export type NoteId = z.infer<typeof noteIdSchema>;
 
 type NoteFields = {
   readonly id: NoteId;
-  // The capture this note was filed from; it keeps her original words even after an edit
+  // The capture this note was filed from; it keeps the original words even after an edit
   readonly captureId: CaptureId;
   readonly content: Content;
   readonly createdAt: Temporal.Instant;

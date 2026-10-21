@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { createApp } from "./create-app";
 
-// Checked when the Worker loads this module, so a missing binding fails at once instead of on her first note
+// Checked when the Worker loads this module, so a missing binding fails at once instead of on the first note
 const bindings = z
   .object({
     DB: z.custom<D1Database>(

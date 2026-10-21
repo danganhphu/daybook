@@ -33,7 +33,7 @@ export function NoteEditor({ initial, initialError, onSave, onCancel }: NoteEdit
   const errorId = useId();
   const box = useRef<HTMLTextAreaElement>(null);
 
-  // Open with the cursor at the end of her words, ready to carry on typing
+  // Open with the cursor at the end of the words, ready to carry on typing
   useEffect(() => {
     const textArea = box.current;
     if (textArea !== null) {

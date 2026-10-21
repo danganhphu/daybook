@@ -2,7 +2,7 @@
 // code without a message below. Faults - a database that is down, a bug - are not here; they throw.
 export type NoteError = "note_not_found" | "note_deleted" | "note_not_deleted";
 
-// Phrased for her, the same in every adapter
+// Phrased for the user, the same in every adapter
 export const noteErrorMessages = {
   note_not_found: "Không tìm thấy ghi chú này nữa.",
   note_deleted: "Ghi chú này đã bị xoá, không sửa được.",

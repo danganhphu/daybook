@@ -25,7 +25,7 @@ export default defineConfig({
     timezoneId: "Asia/Ho_Chi_Minh",
     trace: "retain-on-failure",
   },
-  // She may carry an iPhone or an Android phone; both are covered, and a desktop for the web app at a desk.
+  // The user may carry an iPhone or an Android phone; both are covered, and a desktop for the web app at a desk.
   // Chromium is real Chrome (new headless): the default headless shell passes an install check with no manifest.
   projects: [
     {

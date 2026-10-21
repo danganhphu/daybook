@@ -1,0 +1,49 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // best-practices adds a three-day wait on new npm releases (pnpm's own wait is one day, so Renovate's pull requests
+  // never trip it), pins GitHub Actions to digests and keeps the lockfile fresh weekly
+  extends: ["config:best-practices"],
+
+  // An app: every version is exact, as pnpm's savePrefix "" already writes them
+  rangeStrategy: "pin",
+  postUpdateOptions: ["pnpmDedupe"],
+
+  timezone: "Asia/Ho_Chi_Minh",
+  schedule: ["before 9am on monday"],
+  assignees: ["danganhphu"],
+  labels: ["dependencies"],
+
+  // Dependabot only raises alerts here; Renovate opens the fixes, without waiting for Monday
+  vulnerabilityAlerts: {
+    labels: ["dependencies", "security"],
+    schedule: ["at any time"],
+  },
+
+  packageRules: [
+    {
+      groupName: "cloudflare",
+      matchPackageNames: ["cf", "workerd", "vinext", "@cloudflare/**", "@vinext/**"],
+    },
+    {
+      groupName: "vite",
+      matchPackageNames: ["vite", "@vitejs/**", "vite-css-modules", "sass-embedded"],
+    },
+    {
+      groupName: "testing",
+      matchPackageNames: ["vitest", "@playwright/test", "playwright-bdd", "@axe-core/playwright"],
+    },
+    {
+      groupName: "drizzle",
+      matchPackageNames: ["drizzle-orm", "drizzle-kit"],
+    },
+    {
+      groupName: "lint and format",
+      matchPackageNames: ["oxlint", "oxlint-tsgolint", "oxfmt", "stylelint", "stylelint-*"],
+    },
+    {
+      groupName: "github actions",
+      matchManagers: ["github-actions"],
+    },
+  ],
+}

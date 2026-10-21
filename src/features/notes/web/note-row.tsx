@@ -40,7 +40,7 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
         onPending({ kind: "edit", id: note.id, content: text });
         const result = await attempt(() => edit(note.id, text));
         if (!result.ok) {
-          // Reopen with what she wrote, and why it was not saved
+          // Reopen with what was written, and why it was not saved
           setEditing({ draft: text, error: result.error });
         }
       });

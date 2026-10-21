@@ -8,7 +8,7 @@ export type TextAreaProps = Omit<ComponentProps<"textarea">, "className" | "styl
   readonly appearance?: "boxed" | "bare";
 };
 
-// Grows with what she types through `field-sizing: content`. Browsers without it keep three rows and scroll.
+// Grows with what is typed through `field-sizing: content`. Browsers without it keep three rows and scroll.
 export function TextArea({ appearance = "boxed", ...props }: TextAreaProps) {
   return <textarea rows={3} {...props} className={styles.textArea} data-appearance={appearance} />;
 }

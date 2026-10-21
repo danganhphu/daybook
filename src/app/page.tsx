@@ -5,7 +5,7 @@ import { todaysNotes } from "@/features/notes/web/commands";
 
 import { TodayScreen } from "./_today/today-screen";
 
-// Her notes change with every visit; never prerender this page
+// The notes change with every visit; never prerender this page
 export const dynamic = "force-dynamic";
 
 // On Android the keyboard shrinks the page, so the box stays just above it instead of under it

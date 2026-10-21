@@ -5,11 +5,11 @@ file says how the data is shaped and which rules it keeps. A change to the data 
 
 ## Words
 
-| Term | She would say | Meaning |
+| Term | In the app | Meaning |
 |---|---|---|
-| Capture | tin gõ vào | What she sent, exactly as sent, with where it came from and when. Never changes |
-| Note | ghi chú | An entry in her list. Starts as a capture's words; she can edit, delete and restore it |
-| Content | nội dung | Her text. Not blank, at most 4,000 characters, otherwise kept exactly as typed: spaces, line breaks, diacritics |
+| Capture | tin gõ vào | What was sent, exactly as sent, with where it came from and when. Never changes |
+| Note | ghi chú | An entry in the list. Starts as a capture's words; it can be edited, deleted and restored |
+| Content | nội dung | The user's text. Not blank, at most 4,000 characters, otherwise kept exactly as typed: spaces, line breaks, diacritics |
 | Source | | Where a capture came in: `web` or `telegram` |
 | Day | ngày | A calendar day in `Asia/Ho_Chi_Minh`. A day's notes are those created from its first instant up to the next day's |
 | Account | tài khoản | One of the two people using the book. A lower-case username for the fallback password, a display name, a random WebAuthn user handle |
@@ -24,17 +24,17 @@ Planned, not built:
 
 | Term | Meaning |
 |---|---|
-| Interpretation | How a model read a capture: what it thinks she meant, which model, how sure. Many per capture - reading again with a better model adds one, never overwrites |
+| Interpretation | How a model read a capture: what it thinks was meant, which model, how sure. Many per capture - reading again with a better model adds one, never overwrites |
 | Order, Customer, Reminder, Interaction | What an interpretation turns into. Each keeps the `capture_id` it came from |
 
 ## Why a capture and a note, not one row
 
-Her words and the entry she works with obey different rules. As one row, editing an entry would destroy the only
-record of what she sent, and re-reading old messages with a better parser - the reason `capture` exists, see
-design.md "Dữ liệu" - would read her corrections instead of her words.
+The words and the entry worked with obey different rules. As one row, editing an entry would destroy the only
+record of what was sent, and re-reading old messages with a better parser - the reason `capture` exists, see
+design.md "Data" - would read the corrections instead of the words.
 
 So the capture is the evidence and the note is the working copy. Today a note is a plain copy of the capture; once
-parsing exists, the entries she sees are derived from captures the same way.
+parsing exists, the entries shown are derived from captures the same way.
 
 ## Capture
 
@@ -59,13 +59,13 @@ note says so in its type. The transitions are pure functions in `src/features/no
 | `restore` | deleted | live, exactly as it was before the delete |
 | `restore` | live | `note_not_deleted` |
 
-- `createdAt` never moves. It is the capture's `receivedAt`, so a note stays on the day she sent it.
+- `createdAt` never moves. It is the capture's `receivedAt`, so a note stays on the day it was sent.
 - Every note points at its capture through `capture_id`, a foreign key.
 
 ## Access
 
-Two people share one book (design.md, "Người dùng"); `src/features/access/` decides who is signing in. The decisions
-and their sources are in design.md, "Đăng nhập". The rules the code keeps:
+Two people share one book; `src/features/access/` decides who is signing in. The decisions and their sources are in
+design.md, "Sign-in". The rules the code keeps:
 
 - **No secret is stored as itself.** A session cookie is `<session id>.<secret>`; a setup link carries a token in its
   URL fragment; a ceremony is tied to a browser by a cookie. Each secret is 256 random bits, and only its SHA-256 is
@@ -102,8 +102,8 @@ through `createApp` in `src/composition/create-app.ts`.
 | `issueSetupLink` | A setup link and its token, shown once. Reached from the command line today, from Settings later | - |
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
-`AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence she sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that
-is down is a fault and throws.
+`AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence the user
+sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
 
 ## Tables
 
@@ -163,5 +163,5 @@ on their phones and maybe a laptop make that rare; a `version` column is the fix
 - A `CaptureReceived` domain event arrives then, when a capture has two things reacting to it. With one, an event
   would be indirection with nothing to show for it.
 - Re-parsing runs a newer model over old captures and adds interpretations. Captures are not touched.
-- Whether the note stays the entry she sees, or becomes one view beside orders and reminders, is decided with
-  feature 2, against what she actually types.
+- Whether the note stays the entry shown, or becomes one view beside orders and reminders, is decided with
+  feature 2, against what is actually typed.

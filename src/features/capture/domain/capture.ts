@@ -12,7 +12,7 @@ export const captureIdSchema = z.uuid().brand<"CaptureId">();
 
 export type CaptureId = z.infer<typeof captureIdSchema>;
 
-// What she sent, exactly, and when. Never edited, never deleted: everything she later sees is derived from it,
+// What the user sent, exactly, and when. Never edited, never deleted: everything they later see is derived from it,
 // and keeping it whole is what makes re-reading it with a better parser possible.
 export type Capture = {
   readonly id: CaptureId;
