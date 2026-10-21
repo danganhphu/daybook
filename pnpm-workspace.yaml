@@ -4,6 +4,15 @@ trustPolicy: no-downgrade
 # Versions out for 30+ days predate provenance often enough that age is the better signal
 trustPolicyIgnoreAfter: 43200
 
+# CI runs `pnpm audit`; each ignored advisory says why it cannot reach the app
+audit:
+  level: moderate
+  ignore:
+    # fflate, pinned by satori: only `next/og` loads it, and the app never imports that
+    - GHSA-px8p-9vwx-vf98
+    # braces, no fixed release: only build and lint tools match globs with it, on our own patterns
+    - GHSA-vfj7-8cjw-p6xm
+
 # An app pins exact versions; the lockfile is not the only record of what runs
 savePrefix: ""
 

@@ -28,6 +28,8 @@ jobs:
           cache: true
           require-lockfile: true
 
+      # The whole tree: GitHub's dependency graph sees only package.json, not this lockfile
+      - run: pnpm audit
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

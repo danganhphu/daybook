@@ -23,5 +23,8 @@ every change belongs in `AGENTS.md`.
 | `design-system` | adding or restyling a component or a screen |
 | `cloudflare-and-vinext` | a `cf` command, a binding, a server action or the build behaves unexpectedly |
 
+pnpm also links drizzle-kit's own skills in here as `pnpm-drizzle-kit-*`. They match the installed drizzle-kit and are
+ignored by git.
+
 `CLAUDE.md` forwards to `AGENTS.md`, and `.github/copilot-instructions.md` does the same, so every assistant reads one
 set of rules.
