@@ -312,7 +312,7 @@ Run lint and fix what it reports before calling frontend work done.
 | `.agents/skills` | This repo's own procedures: `sign-in`, `d1-migrations`, `e2e-tests`, `design-system`, `cloudflare-and-vinext`. Read the matching one before such a task | nothing |
 | `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
 | `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
-| `drizzle-kit` agent skills | How to run `generate`, read its JSON output, resolve its hints. Linked by pnpm into `.claude/skills/pnpm-drizzle-kit-*`, always matching the installed drizzle-kit | approved in `pnpm-workspace.yaml` under `permissions` |
+| `drizzle-kit` agent skills | How to run `generate`, read its JSON output, resolve its hints. Linked by pnpm into `.claude/skills/pnpm-drizzle-kit-*` and `.agents/skills/pnpm-drizzle-kit-*` (both ignored), always matching the installed drizzle-kit | approved in `pnpm-workspace.yaml` under `permissions` |
 
 For vinext work, follow the plugin's `nextjs-on-cloudflare` skill, and Next.js's own docs
 (https://nextjs.org/docs/llms.txt) for anything vinext does not list as different. `next-devtools-mcp` is left out
@@ -351,13 +351,27 @@ changed, `test:e2e` too, after `build`.
 
 `.github/workflows/ci.yml` runs on every pull request and on `main`, in two jobs side by side:
 
-- `check`: the five commands above, then a check that the committed `*.module.scss.d.ts` files match what the
-  build wrote.
+- `check`: `pnpm audit`, the five commands above, then a check that the committed `*.module.scss.d.ts` files match
+  what the build wrote.
 - `e2e`: installs Chromium (without the headless shell) and WebKit, builds, runs `pnpm test:e2e`. When it fails, the
   Playwright report, traces included, is kept as an artifact for 14 days.
 
 Actions are pinned to commit SHAs with the version in a comment; bump both together. `pnpm/setup` installs pnpm
 from `packageManager`, Node from `.node-version`, and runs a frozen install.
+
+Two more workflows run on pull requests: `conventional-commits.yml` checks the title, and `dependency-review.yml`
+fails a PR that adds a dependency with a known vulnerability.
+
+### Dependencies
+
+Renovate (`.github/renovate.json5`) opens update PRs on Monday mornings, security fixes at any time, and keeps SHA
+and version comment in step. Dependabot only raises alerts.
+
+GitHub's dependency graph reads only the first YAML document of `pnpm-lock.yaml`, the one pnpm 12 writes to install
+pnpm itself: its SBOM lists pnpm's own packages and none of the app's. Dependabot alerts and dependency review
+therefore see `package.json` and never a transitive package. `pnpm audit` in `check` covers the whole tree. An
+advisory that cannot be fixed goes in `audit.ignore` in `pnpm-workspace.yaml` with a one-line reason, and comes out
+once a fix lands.
 
 ## Style
 
