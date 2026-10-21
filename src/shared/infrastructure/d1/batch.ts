@@ -1,15 +1,19 @@
+import type { Query } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 
 import type { Database } from "./database";
 
+// A statement that can also show its SQL, which lets the operator's command record a batch instead of running it
+export type BatchStatement = BatchItem<"sqlite"> & { toSQL(): Query };
+
 // D1 has no interactive transactions; a batch is its transaction. Statements wait here and go as one on commit.
 export type Batch = {
-  enlist(statement: BatchItem<"sqlite">): void;
+  enlist(statement: BatchStatement): void;
   commit(): Promise<void>;
 };
 
 export function createBatch(db: Database): Batch {
-  const pending: BatchItem<"sqlite">[] = [];
+  const pending: BatchStatement[] = [];
 
   return {
     enlist(statement) {

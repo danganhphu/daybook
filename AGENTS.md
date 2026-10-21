@@ -16,8 +16,9 @@ decisions in it have reasons attached, and several of them are deliberate revers
 
 Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment she sends,
 editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
-to a phone's home screen as an app (a manifest and icons; no service worker yet). Nothing is deployed; sign-in comes
-before the first deploy.
+to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in is being built: the access
+core - accounts, sessions, setup links, the audit trail - exists without a screen yet. Nothing is deployed; sign-in
+comes before the first deploy.
 
 ## Hard constraint: $0, no card
 
@@ -88,6 +89,7 @@ Clean Architecture layers inside each slice, in TypeScript idiom - types and fun
 src/
   app/            routes only (Next.js App Router): layout, pages, server actions, the manifest and icons, /dev/ui
   features/
+    access/       who is signing in: accounts, passkeys, sessions, setup links, the access events
     capture/      her words coming in: the Capture aggregate, recordCapture
     notes/        the notes she keeps: the Note aggregate, edit, delete, restore, the day's list
                   (later: orders/, reminders/, customers/ - one folder per feature)
@@ -143,6 +145,25 @@ Inside a slice:
   `satisfies Record<NoteError, string>` fails the build if one is missing. Adapters show these; they do not word
   their own.
 
+## Access
+
+Two people share one book and sign in with passkeys, a password being the fallback; `docs/design.md` "Đăng nhập" says
+why, `docs/domain.md` "Access" has the rules in full. What code must never get wrong:
+
+- **No secret is stored, logged or put in a query string as itself.** Session secrets, setup tokens and ceremony
+  bindings are 256 random bits from `Secrets`; only their SHA-256 reaches D1, and presented secrets are checked with
+  `secretTokenMatches` (constant time). A setup token travels in a URL fragment and reaches the server in a POST body.
+- **Only a use case that has just authenticated someone opens a session**, through `enlistNewSession` on its own unit
+  of work. No adapter calls it, and nothing exposes it on the `App`.
+- **Security settings check step-up in the use case** (`Sessions.isFresh`), not only in the screen.
+- **Every access attempt is recorded** in `access_event`, successes and refusals alike. Never a token, secret,
+  challenge, credential response or derived key in it; the session id is the public half of a cookie and may appear.
+- **Rate limits count a client**, an IPv4 address or an IPv6 /64, in D1 (`createRateLimiter`), exact rather than the
+  approximate per-location binding.
+- **The command line is for two moments only**: the first account, and break-glass (`pnpm access:*`, below). It runs
+  the app's own use cases and writes against a batch that records SQL, and sends that through `cf d1 query`, which has
+  no local mode - so `--remote` or `--dry-run`.
+
 ## Database
 
 - **D1, one database** (`daybook`, APAC), bound as `DB` in `cloudflare.config.ts` with its real id.
@@ -151,10 +172,11 @@ Inside a slice:
 - **Schema change:** edit the feature's `infrastructure/*.table.ts`, run `pnpm db:generate --name <what_it_does>`, read
   the generated `migrations/<timestamp>_<name>/migration.sql`, add what Drizzle cannot emit (below), then
   `pnpm db:migrate` to apply it to the local database the dev server uses. The drizzle-kit skills cover the commands.
-- **Added by hand: `STRICT` on every table, and the triggers that make `capture` append-only.** Drizzle cannot emit
-  either and its snapshot does not know about them, so a migration that rebuilds a table drops them silently.
-  `src/shared/infrastructure/d1/schema.test.ts` fails when that happens. Say what was hand-edited at the top of the
-  file.
+- **Added by hand: `STRICT` on every table, and the triggers** that make `capture` and `access_event` append-only and
+  let a `setup_link` be redeemed once. Drizzle cannot emit either and its snapshot does not know about them, so a
+  migration that rebuilds a table drops them silently. `src/shared/infrastructure/d1/schema.test.ts` and
+  `src/features/access/infrastructure/access-schema.test.ts` fail when that happens. Say what was hand-edited at the
+  top of the file.
 - **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank
   content, foreign keys, the triggers.
 - **`capture` is never updated or deleted**, by code or by hand. Corrections go to the note.
@@ -315,6 +337,9 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
 | `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`. Commit the output |
+| `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then `--remote` or `--dry-run` |
+| `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, `--remote` or `--dry-run` |
+| `pnpm access:revoke` | Ends every session of an account: `--username`, `--remote` or `--dry-run` |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |

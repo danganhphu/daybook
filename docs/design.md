@@ -15,6 +15,10 @@ thẻ**. Xem mục Kiến trúc.
 Một người: bạn gái của chủ repo. Trình dược viên, bán vật tư và thuốc nha khoa cho các phòng khám. Không phải dân
 kỹ thuật. Một ngày của bạn ấy có đủ cả gọi điện, đi gặp khách tại phòng khám, và trả lời tin nhắn.
 
+Chủ repo cũng dùng (chốt 2026-10-21): **hai người, chung một sổ**. Cả hai thấy và sửa cùng ghi chú, đơn, khách; mỗi
+tin gõ vào ghi lại ai gõ. Không có vai trò hay phân quyền - hai người tin nhau. Không ai tự đăng ký: tài khoản đầu tiên
+tạo bằng lệnh, người sau được mời từ trong app.
+
 Bạn ấy **chưa biết** về tool này - đây là món làm xong mới tặng. Nghĩa là toàn bộ thiết kế dưới đây đang dựa trên
 suy đoán về quy trình làm việc của bạn ấy, chưa được kiểm chứng. Hệ quả: làm nhỏ, và chuẩn bị tinh thần đoán sai ở
 vài chỗ. Phần giá trị nhất sẽ đến sau khi ngồi xem bạn ấy dùng thật.
@@ -230,6 +234,25 @@ Không phải nơi làm việc - nơi xem và sửa:
 
 PWA, thêm vào màn hình chính điện thoại, không qua chợ ứng dụng.
 
+## Đăng nhập
+
+Bình thường như mọi app trên điện thoại: bấm một nút, Face ID hoặc vân tay là vào. Đó là **passkey** - không có mật
+khẩu để nhớ, không có tài khoản Google hay bên thứ ba nào, và trang giả không lừa được vì passkey gắn với tên miền.
+
+- **Mật khẩu chỉ là đường dự phòng**, tối thiểu 15 ký tự (NIST SP 800-63B-4). Worker gói free không băm mật khẩu đúng
+  chuẩn OWASP được - PBKDF2 bị giới hạn 100.000 vòng, CPU 10 ms - nên trình duyệt chạy Argon2id, server chỉ giữ HMAC
+  của kết quả.
+- **Một lần đăng nhập giữ 30 ngày**, tính từ lúc đăng nhập, không kéo dài theo lần dùng (NIST, mức AAL1). Mở app là
+  vào thẳng như mở note; thao tác bảo mật - thêm hay xoá khoá đăng nhập, đổi mật khẩu, đăng xuất máy khác, mời người -
+  thì hỏi lại Face ID hoặc mật khẩu.
+- **Người mới vào bằng link mời** dùng một lần, sống 10 phút. Ai mất hết cách đăng nhập thì người kia tạo link khôi phục
+  ngay trong app. Dòng lệnh chỉ dùng cho tài khoản đầu tiên và khi cả hai cùng kẹt.
+- Bot Telegram nhận ra hai người bằng Telegram user id; trong chat không cần đăng nhập.
+
+Đã cân nhắc và loại: dịch vụ đăng nhập ngoài - gói free của Supabase tạm dừng project sau một tuần không dùng, Auth0
+xoá tenant sau 150 ngày, Clerk không có passkey; Cloudflare Access đòi nhập thẻ; đăng nhập bằng Telegram hay Google -
+chủ repo muốn một màn hình đăng nhập bình thường.
+
 ## Phạm vi bản đầu
 
 Làm:
@@ -246,7 +269,7 @@ Làm:
 |---|---|
 | Google Drive | kéo theo OAuth, token hết hạn, quyền truy cập. Khi database đã là nguồn sự thật thì Drive chỉ là bản sao |
 | Xuất Excel / docx | báo cáo chính thức bạn ấy viết tay. Chỉ cần số liệu dễ đọc, chưa cần file |
-| Nhiều người dùng | đúng một người dùng. Đừng xây phân quyền cho một người |
+| Phân quyền, nhiều sổ | hai người dùng chung một sổ. Đừng xây vai trò cho hai người tin nhau |
 | App mobile riêng | PWA đủ, và không phải qua kiểm duyệt chợ ứng dụng |
 
 ## Những chỗ còn chưa biết

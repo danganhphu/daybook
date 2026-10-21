@@ -1,5 +1,17 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
+import { authenticate } from "@/features/access/application/authenticate";
+import { endOtherSessions } from "@/features/access/application/end-other-sessions";
+import { listSessions } from "@/features/access/application/list-sessions";
+import { redeemSetupLink } from "@/features/access/application/redeem-setup-link";
+import { signOut } from "@/features/access/application/sign-out";
+import type { RequestOrigin } from "@/features/access/domain/access-event";
+import type { AccountId } from "@/features/access/domain/account";
+import type { Session } from "@/features/access/domain/session";
+import { createRateLimiter } from "@/features/access/infrastructure/d1-rate-limiter";
+import { createSessionRepository } from "@/features/access/infrastructure/session-repository";
+import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
+import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import {
   recordCapture,
   type RecordCaptureInput,
@@ -24,6 +36,10 @@ export type App = ReturnType<typeof createApp>;
 export function createApp(d1: D1Database, clock: Clock = systemClock) {
   const db = createDatabase(d1);
   const notes = createNoteRepository(db);
+  const sessions = createSessionRepository(db);
+  const setupLinks = createSetupLinkRepository(db);
+  const rateLimiter = createRateLimiter(db);
+  const secrets = webCryptoSecrets;
   const startUnitOfWork = () => createUnitOfWork(db);
 
   return {
@@ -33,5 +49,15 @@ export function createApp(d1: D1Database, clock: Clock = systemClock) {
     restoreNote: (id: NoteId) => restoreNote({ notes, startUnitOfWork }, id),
     listNotesForDay: (day: Temporal.PlainDate) => listNotesForDay({ notes }, day),
     listNotesForToday: () => listNotesForToday({ clock, notes }),
+
+    authenticate: (cookie: string | undefined) =>
+      authenticate({ clock, secrets, sessions, startUnitOfWork }, cookie),
+    redeemSetupLink: (token: string, origin: RequestOrigin) =>
+      redeemSetupLink({ clock, secrets, rateLimiter, setupLinks, startUnitOfWork }, token, origin),
+    signOut: (session: Session, origin: RequestOrigin) =>
+      signOut({ clock, startUnitOfWork }, session, origin),
+    endOtherSessions: (session: Session, origin: RequestOrigin) =>
+      endOtherSessions({ clock, sessions, startUnitOfWork }, session, origin),
+    listSessions: (accountId: AccountId) => listSessions({ sessions }, accountId),
   } as const;
 }

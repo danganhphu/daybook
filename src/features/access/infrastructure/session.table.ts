@@ -1,0 +1,41 @@
+import { sql } from "drizzle-orm";
+import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+import { authenticationMethods } from "@/features/access/domain/session";
+
+import { accountTable } from "./account.table";
+import { passkeyTable } from "./passkey.table";
+
+const methodList = sql.raw(authenticationMethods.map((method) => `'${method}'`).join(", "));
+
+// verifier is the SHA-256 of the cookie's secret, base64url; the secret itself is never stored. Times are epoch ms.
+export const sessionTable = sqliteTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => accountTable.id),
+    verifier: text("verifier").notNull(),
+    method: text("method", { enum: authenticationMethods }).notNull(),
+    passkeyId: text("passkey_id").references(() => passkeyTable.id, { onDelete: "set null" }),
+    authenticatedAt: integer("authenticated_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    lastSeenAt: integer("last_seen_at").notNull(),
+    deviceLabel: text("device_label").notNull(),
+  },
+  (table) => [
+    check("session_method_known", sql`${table.method} in (${methodList})`),
+    check("session_verifier_length", sql`length(${table.verifier}) = 43`),
+    check(
+      "session_password_names_no_passkey",
+      sql`${table.method} = 'passkey' or ${table.passkeyId} is null`,
+    ),
+    check("session_ends_after_it_starts", sql`${table.expiresAt} > ${table.authenticatedAt}`),
+    check(
+      "session_device_label_present",
+      sql`length(trim(${table.deviceLabel})) between 1 and 100`,
+    ),
+    index("session_by_account").on(table.accountId),
+  ],
+);
