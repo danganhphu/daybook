@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#cloudflare-config": "./cloudflare.config.ts"
+  },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -17,7 +20,10 @@
     "test:e2e": "bddgen && playwright test",
     "icons": "node scripts/generate-icons.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\""
+    "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\"",
+    "access:account": "node --import ./scripts/register-source-paths.ts scripts/access.ts account",
+    "access:setup-link": "node --import ./scripts/register-source-paths.ts scripts/access.ts setup-link",
+    "access:revoke": "node --import ./scripts/register-source-paths.ts scripts/access.ts revoke"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
