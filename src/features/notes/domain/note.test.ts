@@ -12,12 +12,12 @@ const later = Temporal.Instant.from("2026-10-16T02:00:00Z");
 const latest = Temporal.Instant.from("2026-10-16T03:00:00Z");
 
 function aLiveNote() {
-  return Notes.fromCapture(Captures.receive(contentSchema.parse("gel tê x2"), "web", received));
+  return Notes.fromCapture(Captures.receive(contentSchema.parse("giấy in x2"), "web", received));
 }
 
 describe("Notes.fromCapture", () => {
   it("given a capture, when filed as a note, then the note has its words and time and points back at it", () => {
-    const capture = Captures.receive(contentSchema.parse("bán 2 hộp gel tê"), "web", received);
+    const capture = Captures.receive(contentSchema.parse("bán 2 thùng giấy in"), "web", received);
 
     const note = Notes.fromCapture(capture);
 
@@ -31,9 +31,9 @@ describe("Notes.fromCapture", () => {
 
 describe("Notes.edit", () => {
   it("given a live note, when edited, then the content is replaced and only updatedAt moves", () => {
-    const edited = expectOk(Notes.edit(aLiveNote(), contentSchema.parse("gel tê x3"), later));
+    const edited = expectOk(Notes.edit(aLiveNote(), contentSchema.parse("giấy in x3"), later));
 
-    expect(edited.content).toBe("gel tê x3");
+    expect(edited.content).toBe("giấy in x3");
     expect(edited.createdAt).toBe(received);
     expect(edited.updatedAt).toBe(later);
   });

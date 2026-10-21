@@ -9,26 +9,26 @@ describe("editNote", () => {
   it("given a live note, when edited, then it carries the new words and only updatedAt moves", async () => {
     const time = testClock("2026-10-16T01:00:00Z");
     const app = testApp(time.clock);
-    const note = await app.recordCapture({ content: content("gel tê x2"), source: "web" });
+    const note = await app.recordCapture({ content: content("giấy in x2"), source: "web" });
     time.setTo("2026-10-16T03:00:00Z");
 
-    const edited = expectOk(await app.editNote({ id: note.id, content: content("gel tê x3") }));
+    const edited = expectOk(await app.editNote({ id: note.id, content: content("giấy in x3") }));
 
-    expect(edited.content).toBe("gel tê x3");
+    expect(edited.content).toBe("giấy in x3");
     expect(edited.createdAt.toString()).toBe("2026-10-16T01:00:00Z");
     expect(edited.updatedAt.toString()).toBe("2026-10-16T03:00:00Z");
   });
 
-  it("given a note that was edited, when its capture is read, then her original words are still there", async () => {
+  it("given a note that was edited, when its capture is read, then the original words are still there", async () => {
     const app = testApp(testClock("2026-10-16T01:00:00Z").clock);
-    const note = await app.recordCapture({ content: content("gel tê x2"), source: "web" });
+    const note = await app.recordCapture({ content: content("giấy in x2"), source: "web" });
 
-    await app.editNote({ id: note.id, content: content("gel tê x3") });
+    await app.editNote({ id: note.id, content: content("giấy in x3") });
     const capture = await env.DB.prepare("select content from capture where id = ?")
       .bind(note.captureId)
       .first();
 
-    expect(capture).toEqual({ content: "gel tê x2" });
+    expect(capture).toEqual({ content: "giấy in x2" });
   });
 
   it("given a deleted note, when edited, then it refuses with note_deleted", async () => {

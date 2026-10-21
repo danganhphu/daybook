@@ -4,7 +4,7 @@ import { contentMaxLength, contentSchema, parseContent } from "./content";
 
 describe("contentSchema", () => {
   it("given text with spaces, line breaks and diacritics, when parsed, then it is kept exactly as typed", () => {
-    const typed = "  bán 2 hộp gel tê\ncho PK chị Lan 500k  ";
+    const typed = "  bán 2 thùng giấy in\ncho chị Lan 500k  ";
 
     expect(contentSchema.parse(typed)).toBe(typed);
   });
@@ -23,11 +23,11 @@ describe("contentSchema", () => {
 });
 
 describe("parseContent", () => {
-  it("given her words, when parsed, then they come back unchanged", () => {
-    expect(parseContent(" gel tê x2 ")).toEqual({ ok: true, value: " gel tê x2 " });
+  it("given the user's words, when parsed, then they come back unchanged", () => {
+    expect(parseContent(" giấy in x2 ")).toEqual({ ok: true, value: " giấy in x2 " });
   });
 
-  it("given blank input, when parsed, then the reason is the sentence she reads", () => {
+  it("given blank input, when parsed, then the reason is the sentence the user reads", () => {
     expect(parseContent("  ")).toEqual({ ok: false, error: "Chưa có nội dung" });
   });
 

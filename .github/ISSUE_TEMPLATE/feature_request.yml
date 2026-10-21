@@ -1,0 +1,25 @@
+name: Feature request
+description: Something the app should be able to do and cannot.
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Every feature is weighed against the notes app already on the phone: anything that makes writing something
+        down slower than typing it there is unlikely to be taken.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were trying to do, and where it stopped.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like instead
+    validations:
+      required: true

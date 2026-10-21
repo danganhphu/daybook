@@ -8,7 +8,7 @@ async function expectSaved(row: Locator) {
   await expect(row).toHaveAttribute("aria-busy", "false");
 }
 
-// The today screen as she sees it: found by role and by the words on screen, never by class names
+// The today screen as the user sees it: found by role and by the words on screen, never by class names
 export function todayPage(page: Page) {
   const box = page.getByRole("textbox", { name: "Ghi chú mới" });
   const send = page.getByRole("button", { name: "Ghi", exact: true });

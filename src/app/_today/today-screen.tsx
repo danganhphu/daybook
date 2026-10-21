@@ -20,7 +20,7 @@ export type TodayScreenProps = {
   readonly notes: ReadonlyArray<NoteView>;
 };
 
-// Today as a chat: her notes above, oldest first, and the box at the bottom where her thumb is
+// Today as a chat: the notes above, oldest first, and the box at the bottom where the thumb is
 export function TodayScreen({ label, notes }: TodayScreenProps) {
   const toast = useToast();
   const saved = useMemo<ReadonlyArray<ShownNote>>(

@@ -21,7 +21,7 @@ export type RecordCaptureInput = {
   readonly source: CaptureSource;
 };
 
-// Keeps her words as a capture and, until there is a parser, files them as a note - both or neither
+// Keeps the user's words as a capture and, until there is a parser, files them as a note - both or neither
 export async function recordCapture(
   deps: RecordCaptureDeps,
   input: RecordCaptureInput,

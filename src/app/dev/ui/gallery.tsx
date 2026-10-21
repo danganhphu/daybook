@@ -12,7 +12,7 @@ import { useToast } from "@/shared/ui/toast/use-toast";
 
 import styles from "./gallery.module.scss";
 
-const sampleNote = "Giao 2 hộp gel tê cho PK Minh Tâm, thu 850.000đ";
+const sampleNote = "Giao 2 thùng giấy in cho cửa hàng Minh Tâm, thu 850.000đ";
 
 const sampleActions: ReadonlyArray<MenuAction> = [
   { label: "Sửa", icon: Pencil, onSelect: () => undefined },
@@ -88,7 +88,7 @@ export function Gallery() {
       </Section>
 
       <Section title="TextArea">
-        <Sample caption="empty: one line, grows as she types">
+        <Sample caption="empty: one line, grows while typing">
           <TextArea aria-label="Ghi chú" placeholder="Gõ đơn, việc cần nhắc, ghi chú..." />
         </Sample>
         <Sample caption="filled: grows to 8 lines, then scrolls">
