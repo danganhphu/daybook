@@ -3,6 +3,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { startTransition, useCallback, useMemo, useState } from "react";
 
+import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { attempt } from "@/shared/web/attempt";
 
@@ -49,12 +50,12 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
   );
 
   const actions = useMemo<ReadonlyArray<MenuAction>>(
-    () => [{ label: "Sửa", icon: Pencil, onSelect: startEditing }],
+    () => [{ label: actionLabels.edit, icon: Pencil, onSelect: startEditing }],
     [startEditing],
   );
 
   const destructive = useMemo<MenuAction>(
-    () => ({ label: "Xoá", icon: Trash2, onSelect: () => onDelete(note) }),
+    () => ({ label: actionLabels.remove, icon: Trash2, onSelect: () => onDelete(note) }),
     [note, onDelete],
   );
 
@@ -70,7 +71,7 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
             <span className={styles.menuSpace} />
           ) : (
             <ActionMenu
-              label={`Tuỳ chọn cho ghi chú "${preview(note.content)}"`}
+              label={optionsFor(`ghi chú "${preview(note.content)}"`)}
               actions={actions}
               destructive={destructive}
             />

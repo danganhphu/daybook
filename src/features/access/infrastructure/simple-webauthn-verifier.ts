@@ -31,6 +31,11 @@ export type RelyingParty = {
   readonly name: string;
 };
 
+// The app's own origin, as configured, decides both: the host is the RP ID
+export function relyingPartyFor(appOrigin: URL, name: string): RelyingParty {
+  return { id: appOrigin.hostname, origin: appOrigin.origin, name };
+}
+
 const timeout = ceremonyLifetime.total("milliseconds");
 
 // The shape navigator.credentials.create() and .get() answer with, checked before the library sees it. The library

@@ -72,7 +72,7 @@ describe("STRICT on every access table", () => {
     ],
     [
       "ceremony",
-      "insert into ceremony values ('c', 'setup', ?, null, 'l', null, 'soon', 2)",
+      "insert into ceremony values ('c', 'setup', ?, null, 'l', null, null, 'soon', 2)",
       [hash],
     ],
     [
@@ -86,6 +86,11 @@ describe("STRICT on every access table", () => {
       [],
     ],
     ["rate_limit", "insert into rate_limit values ('k', 'soon', 1)", []],
+    [
+      "password",
+      "insert into password values ('a', ?, 19456, 2, 1, ?, 1, 0, null, 'soon')",
+      ["S".repeat(22), hash],
+    ],
   ])(
     "given text in an integer column of %s, when inserted, then STRICT refuses it",
     async (_, sql, values) => {
@@ -227,5 +232,44 @@ describe("passkey table", () => {
         accountId,
       ),
     ).rejects.toThrow(/passkey_algorithm_offered/);
+  });
+});
+
+function insertPassword(memoryKib: number, iterations: number, salt = "S".repeat(22)) {
+  return run(
+    "insert into password values (?, ?, ?, ?, 1, ?, 1, 0, null, 1)",
+    accountId,
+    salt,
+    memoryKib,
+    iterations,
+    hash,
+  );
+}
+
+describe("password table", () => {
+  it.each([
+    ["less memory than OWASP's minimum", 19_455, 2],
+    ["a single pass", 19_456, 1],
+  ])("given %s, when stored, then the check refuses it", async (_, memoryKib, iterations) => {
+    await insertAccount(accountId, "lan");
+
+    await expect(insertPassword(memoryKib, iterations)).rejects.toThrow(
+      /password_argon2_at_least_owasp/,
+    );
+  });
+
+  it("given a salt of the wrong length, when stored, then the check refuses it", async () => {
+    await insertAccount(accountId, "lan");
+
+    await expect(insertPassword(19_456, 2, "short")).rejects.toThrow(/password_salt_length/);
+  });
+
+  it("given a second password for one account, when stored, then the primary key refuses it", async () => {
+    await insertAccount(accountId, "lan");
+    await insertPassword(19_456, 2);
+
+    await expect(insertPassword(19_456, 2)).rejects.toThrow(
+      /UNIQUE constraint failed: password\.account_id/,
+    );
   });
 });

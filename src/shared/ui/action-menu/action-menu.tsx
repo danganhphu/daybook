@@ -2,27 +2,30 @@
 
 import { Menu } from "@base-ui/react/menu";
 import { Ellipsis, type LucideIcon } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
 import { IconButton } from "@/shared/ui/button/icon-button";
 
 import styles from "./action-menu.module.scss";
 
-export type MenuAction = {
-  readonly label: string;
-  readonly icon: LucideIcon;
-  readonly onSelect: () => void;
-};
+// An item does something here, or goes to another page; a page is a real link, so it can open in a new tab
+export type MenuAction = { readonly label: string; readonly icon: LucideIcon } & (
+  | { readonly onSelect: () => void }
+  | { readonly href: string }
+);
 
 export type ActionMenuProps = {
   // Names the trigger for screen readers, e.g. "Tuỳ chọn cho ghi chú"
   readonly label: string;
-  readonly actions: ReadonlyArray<MenuAction>;
+  readonly actions?: ReadonlyArray<MenuAction>;
   // Always last, below a divider and in the danger color, so it is never hit by mistake
   readonly destructive?: MenuAction;
 };
 
-export function ActionMenu({ label, actions, destructive }: ActionMenuProps) {
+const noActions: ReadonlyArray<MenuAction> = [];
+
+export function ActionMenu({ label, actions = noActions, destructive }: ActionMenuProps) {
   const trigger = useMemo(() => <IconButton icon={Ellipsis} label={label} />, [label]);
 
   return (
@@ -55,15 +58,38 @@ function MenuItem({
   readonly danger?: boolean;
 }) {
   const Icon = action.icon;
+  const tone = danger ? "danger" : "neutral";
+
+  if ("href" in action) {
+    return <MenuLink label={action.label} icon={Icon} href={action.href} tone={tone} />;
+  }
 
   return (
-    <Menu.Item
-      className={styles.item}
-      data-tone={danger ? "danger" : "neutral"}
-      onClick={action.onSelect}
-    >
+    <Menu.Item className={styles.item} data-tone={tone} onClick={action.onSelect}>
       <Icon />
       {action.label}
     </Menu.Item>
+  );
+}
+
+// The framework's link, so the page opens without a full load
+function MenuLink({
+  label,
+  icon: Icon,
+  href,
+  tone,
+}: {
+  readonly label: string;
+  readonly icon: LucideIcon;
+  readonly href: string;
+  readonly tone: "danger" | "neutral";
+}) {
+  const link = useMemo(() => <Link href={href} />, [href]);
+
+  return (
+    <Menu.LinkItem className={styles.item} data-tone={tone} render={link} closeOnClick>
+      <Icon />
+      {label}
+    </Menu.LinkItem>
   );
 }

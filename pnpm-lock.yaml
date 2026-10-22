@@ -169,6 +169,12 @@ importers:
       '@base-ui/react':
         specifier: 1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@noble/hashes':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@simplewebauthn/browser':
+        specifier: 14.0.0
+        version: 14.0.0
       '@simplewebauthn/server':
         specifier: 14.0.3
         version: 14.0.3
@@ -224,6 +230,9 @@ importers:
       '@types/react-dom':
         specifier: 19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-basic-ssl':
+        specifier: 2.3.0
+        version: 2.3.0(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.51.2))
       '@vitejs/plugin-react':
         specifier: 6.1.2
         version: 6.1.2(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.51.2))
@@ -1053,6 +1062,10 @@ packages:
   '@levischuck/tiny-cbor@0.2.11':
     resolution: {integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==}
 
+  '@noble/hashes@2.4.0':
+    resolution: {integrity: sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==}
+    engines: {node: '>= 20.19.0'}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -1614,6 +1627,9 @@ packages:
     engines: {node: '>= 8.0.0'}
     hasBin: true
 
+  '@simplewebauthn/browser@14.0.0':
+    resolution: {integrity: sha512-1odWVqeEBTl7lJ9zMKLEsmTlnyrDO5iRcTvfMKKk1WThUnp/i8JJdffdj2icP+tty159s4PgwE3BiMoEW9NFow==}
+
   '@simplewebauthn/server@14.0.3':
     resolution: {integrity: sha512-D39/0fiDiYmGV+nraY9s63D1Ho2AX/waMLy22/9gUadTUuvbAnstfb4bpbHYbwZuV5ZLDYN1SmzDKuiHzKAA4Q==}
     engines: {node: '>=20.0.0'}
@@ -1813,6 +1829,12 @@ packages:
   '@vinext/types@1.0.1':
     resolution: {integrity: sha512-zH4WbVl47rNGxG8Y7XoWJAc8e0VQFQ+r8Cuh0crv1L2SuNovDD3jMtxQDjzoS1b9hYaZXbds0CjRo5tSm7F9Zw==}
     engines: {node: '>=22'}
+
+  '@vitejs/plugin-basic-ssl@2.3.0':
+    resolution: {integrity: sha512-bdyo8rB3NnQbikdMpHaML9Z1OZPBu6fFOBo+OtxsBlvMJtysWskmBcnbIDhUqgC8tcxNv/a+BcV5U+2nQMm1OQ==}
+    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+    peerDependencies:
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@vitejs/plugin-react@6.1.2':
     resolution: {integrity: sha512-fhJNGUdscQa4HkI0xFxwonWyhnVReCPDbXI7FH7jmzpnVCrFQI7PRrhWecO263610vOrs9tr2Y4xcf8uAdFxbw==}
@@ -4527,6 +4549,8 @@ snapshots:
 
   '@levischuck/tiny-cbor@0.2.11': {}
 
+  '@noble/hashes@2.4.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -4922,6 +4946,8 @@ snapshots:
       fflate: 0.7.3
       string.prototype.codepointat: 0.2.1
 
+  '@simplewebauthn/browser@14.0.0': {}
+
   '@simplewebauthn/server@14.0.3':
     dependencies:
       '@hexagon/base64': 1.1.28
@@ -5056,6 +5082,10 @@ snapshots:
       cf: 1.0.0-beta.18(@types/node@26.6.5)
 
   '@vinext/types@1.0.1': {}
+
+  '@vitejs/plugin-basic-ssl@2.3.0(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.51.2))':
+    dependencies:
+      vite: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.51.2)
 
   '@vitejs/plugin-react@6.1.2(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.1)(sass@1.105.1)(terser@5.51.2))':
     dependencies:

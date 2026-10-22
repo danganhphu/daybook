@@ -3,15 +3,9 @@ import { env } from "cloudflare:workers";
 import { createUnitOfWork } from "@/composition/unit-of-work";
 import { enlistNewSession } from "@/features/access/application/enlist-new-session";
 import { issueSetupLink } from "@/features/access/application/issue-setup-link";
-import { newRandomValue } from "@/features/access/application/secret-tokens";
+import { newAccount } from "@/features/access/application/new-account";
 import { ipAddressSchema, type RequestOrigin } from "@/features/access/domain/access-event";
-import * as Accounts from "@/features/access/domain/account";
-import {
-  displayNameSchema,
-  userHandleSchema,
-  usernameSchema,
-  type Account,
-} from "@/features/access/domain/account";
+import { displayNameSchema, usernameSchema, type Account } from "@/features/access/domain/account";
 import { deviceLabelSchema, type SessionId } from "@/features/access/domain/session";
 import type { SetupLinkGrant } from "@/features/access/domain/setup-link";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
@@ -24,12 +18,9 @@ export function origin(ip = "203.0.113.7", device = "Chrome trên Android"): Req
 
 // An account stored straight through the unit of work, as the operator's command or an invite would leave it
 export async function seedAccount(clock: Clock, username = "lan", name = "Lan"): Promise<Account> {
-  const account = Accounts.create(
-    {
-      username: usernameSchema.parse(username),
-      displayName: displayNameSchema.parse(name),
-      userHandle: userHandleSchema.parse(newRandomValue(webCryptoSecrets)),
-    },
+  const account = newAccount(
+    webCryptoSecrets,
+    { username: usernameSchema.parse(username), displayName: displayNameSchema.parse(name) },
     clock(),
   );
   const work = createUnitOfWork(createDatabase(env.DB));

@@ -2,15 +2,13 @@ import { eq, type Query } from "drizzle-orm";
 import { z } from "zod";
 
 import { issueSetupLink } from "@/features/access/application/issue-setup-link";
-import { newRandomValue } from "@/features/access/application/secret-tokens";
+import { newAccount } from "@/features/access/application/new-account";
 import type { Secrets } from "@/features/access/application/secrets";
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
-import * as Accounts from "@/features/access/domain/account";
 import {
   accountIdSchema,
   displayNameSchema,
-  userHandleSchema,
   type Account,
   type AccountId,
   type DisplayName,
@@ -90,10 +88,7 @@ export function createOperatorConsole(
     }): Promise<Recorded<IssuedLink & { readonly account: Account }>> {
       const { statements, startUnitOfWork } = recorder();
       const now = clock();
-      const account = Accounts.create(
-        { ...details, userHandle: userHandleSchema.parse(newRandomValue(secrets)) },
-        now,
-      );
+      const account = newAccount(secrets, details, now);
 
       const work = startUnitOfWork();
       work.accounts.add(account);

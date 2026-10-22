@@ -1,0 +1,118 @@
+@use "abstracts" as *;
+
+// A group of rows, as the phone's own settings draw one: a small heading, one white card, a note beneath
+.section {
+  display: grid;
+  gap: space(2);
+}
+
+.heading,
+.footer {
+  padding-inline: space(4);
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.list {
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  list-style: none;
+  background: color(surface);
+  border-radius: radius(surface);
+
+  // Rows are split by a hairline that starts where the text does, not at the card's edge
+  > li {
+    position: relative;
+  }
+
+  > li + li::before {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: space(4) 0;
+    block-size: 1px;
+    content: "";
+    background: color(border);
+  }
+}
+
+.row {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  min-block-size: size(control-lg);
+  padding: space(2) space(2) space(2) space(4);
+}
+
+.text {
+  display: grid;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+// Anything that needs the whole row, such as a field being edited
+.content {
+  display: grid;
+  gap: space(3);
+  padding: space(3) space(4) space(4);
+}
+
+// A row that is itself the action: the accent text says it can be tapped
+.action {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: size(control-lg);
+  padding-inline: space(4);
+  color: color(accent);
+  text-align: start;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: 0;
+  touch-action: manipulation;
+
+  @include text(body);
+
+  &:focus-visible {
+    outline: 2px solid color(accent);
+    outline-offset: -2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+  }
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+
+  &:active:not([data-disabled]) {
+    background: color(surface-subtle);
+  }
+
+  @media (hover: hover) {
+    &:hover:not([data-disabled]) {
+      background: color(surface-subtle);
+    }
+  }
+
+  &[data-disabled] {
+    color: color(text-muted);
+    cursor: not-allowed;
+  }
+}

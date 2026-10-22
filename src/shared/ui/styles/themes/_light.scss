@@ -18,6 +18,8 @@ $colors: (
   accent-hover: oklch(50% 0.19 256deg),
   on-accent: oklch(100% 0 0deg),
   danger: oklch(55% 0.2 27deg),
+  // Dims the page behind a dialog; a tint, not a colour anything is read on
+  scrim: oklch(21% 0.008 265deg / 40%),
 );
 
 // Cards at rest are flat. What floats over the page - the message field, later a tab bar - takes a soft, wide

@@ -35,6 +35,8 @@
   align-items: center;
   min-block-size: size(control);
   padding-inline: space(3);
+  color: color(text);
+  text-decoration: none;
   cursor: default;
   user-select: none;
   border-radius: radius(control);

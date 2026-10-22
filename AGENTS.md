@@ -15,9 +15,10 @@ decisions in it have reasons attached, and several of them are deliberate revers
 
 Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment it is sent,
 editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
-to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in is being built: the access
-core - accounts, sessions, setup links, the audit trail - and passkey setup, sign-in and step-up exist as use cases,
-without a screen yet. Nothing is deployed; sign-in comes before the first deploy.
+to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in works locally: every page
+and action needs a session; a passkey (Face ID, a fingerprint) is the way in, a password the fallback; Settings
+(`/settings`) covers the account, its passkeys and password, its devices, its activity, and the people - invites and
+recovery links - with step-up for every security setting. Nothing is deployed; the first deploy is the next step.
 
 ## Hard constraint: $0, no card
 
@@ -127,6 +128,10 @@ Inside a slice:
   downstream receives unchecked input. Rows read back from D1 are parsed into them too.
 - The model, its vocabulary and its rules are in [docs/domain.md](docs/domain.md). Propose a change to the data
   model there before writing it.
+- **A value used twice has one name.** Paths are `routes` (`src/shared/web/routes.ts`); words every screen shares
+  are `actionLabels` (`src/shared/ui/action-labels.ts`); a feature's terms and copy sit with it (`access-terms.ts`,
+  `access-copy.ts`); limits and lengths live in the domain (`access-policy.ts`, `usernameLength`) and the tables'
+  `CHECK`s read them through `sqlNumber`/`sqlTextList`. Grep before typing a literal a second time.
 
 ## Errors
 
@@ -155,7 +160,15 @@ why, `docs/domain.md` "Access" has the rules in full. What code must never get w
 - **Only a use case that has just authenticated someone opens a session**, through `enlistNewSession` on its own unit
   of work. No adapter calls it, and nothing exposes it on the `App`.
 - **Security settings check step-up in the use case** (`Sessions.isFresh`), not only in the screen. A step-up is a
-  passkey sign-in for the same account: a fresh session replaces the old one.
+  passkey sign-in for the same account, or a password sign-in for an account with no passkey: a fresh session
+  replaces the old one. The page asks only when the server answers `step_up_required` (`useStepUp` in
+  `src/app/settings/`), then runs the action once more.
+- **The password never reaches the server.** The browser normalises it, checks its length and Pwned Passwords, and
+  sends only an Argon2id key derived with a salt the server chose (`browser-password.ts`); the server keeps an HMAC
+  of it under the versioned `PASSWORD_PEPPER`. Unknown usernames get a decoy salt; every answer reads the same.
+- **The page never decides who someone is.** Every page and server action calls `requireSession` first, except the
+  named public ones; `src/testing/access-boundary.test.ts` fails on one that does not. `src/proxy.ts` refuses
+  cross-site writes (Fetch Metadata, then Origin against `APP_ORIGIN`) and sets the CSP with a per-request nonce.
 - **A WebAuthn challenge is spent before its response is verified**, in one statement
   (`CeremonyRepository.spendChallenge`), so two answers to one prompt cannot both pass. Never verify first.
 - **WebAuthn goes through the `PasskeyVerifier` port.** Only `simple-webauthn-verifier.ts` imports
@@ -170,8 +183,12 @@ why, `docs/domain.md` "Access" has the rules in full. What code must never get w
 - **Rate limits count a client**, an IPv4 address or an IPv6 /64, in D1 (`createRateLimiter`), exact rather than the
   approximate per-location binding.
 - **The command line is for two moments only**: the first account, and break-glass (`pnpm access:*`, below). It runs
-  the app's own use cases and writes against a batch that records SQL, and sends that through `cf d1 query`, which has
-  no local mode - so `--remote` or `--dry-run`.
+  the app's own use cases and writes against a batch that records SQL, then sends it through `cf d1 query` with
+  `--remote`, or straight into the dev database's SQLite file with `--local` (cf has no local query), in one
+  transaction; `--dry-run` prints it. Everything else - invites, recovery, passwords, usernames - is in Settings.
+- **Configuration:** `APP_ORIGIN` (the relying party and the Origin check) and `PASSWORD_PEPPER` (32 random bytes,
+  base64url) are text bindings in development and Worker secrets otherwise (`cloudflare.config.ts`). The real URL and
+  pepper never enter the repository.
 
 ## Database
 
@@ -221,11 +238,17 @@ End-to-end tests cover the flows a user would notice breaking; everything else i
   when it asks Chrome itself over the DevTools protocol.
 - **Chromium is real Chrome** in its new headless mode (`channel: "chromium"`). Playwright's default headless shell
   is not full Chrome: asked whether a page installs, it reports no errors even for a page with no manifest.
-- **They run the production build** on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts` empties and
-  migrates it, then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by
-  emptying the day through the screen, which is why they run one at a time.
-- **Find things the way a user does**: by role and by the words on screen, never by class name or test id. The screen
-  is described once, in `e2e/today-page.ts`.
+- **They run the production build** over HTTPS on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts`
+  empties and migrates it, seeds it (`e2e/seed.ts`, with the app's own code for secrets and a random pepper per run),
+  then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by emptying the day
+  through the screen, which is why they run one at a time.
+- **The seed** signs Lan in (fresh, and several sessions old enough to need step-up), gives her a password, and gives
+  Minh setup links. What can be spent - setup links, stale sessions - is counted in a file, so a retry never gets a
+  used one. A step that finds something for a later step keeps it in the scenario's `remembered` fixture.
+- **Every page fails its scenario** on a CSP violation or an uncaught error (the `page` fixture in `e2e/fixtures.ts`).
+- **Find things the way a user does**: by role and by the words on screen, never by class name or test id. The today
+  screen is described once, in `e2e/today-page.ts`. Passkeys come from Chrome's virtual authenticator
+  (`e2e/face-id.ts`); the breach check is answered by the run, never by the real service.
 - **A screen is checked with axe** against WCAG 2.2 A and AA, in the step `trang không có lỗi trợ năng`. It lets
   running animations finish first: axe measures colour as painted, so a toast still fading in fails contrast.
 - `bddgen` writes the specs into `.features-gen/`, which is gitignored and skipped by Vitest.
@@ -347,9 +370,9 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
 | `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`. Commit the output |
-| `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then `--remote` or `--dry-run` |
-| `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, `--remote` or `--dry-run` |
-| `pnpm access:revoke` | Ends every session of an account: `--username`, `--remote` or `--dry-run` |
+| `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
+| `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
+| `pnpm access:revoke` | Ends every session of an account: `--username`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm deploy` | Deploy to Cloudflare. Only when asked |

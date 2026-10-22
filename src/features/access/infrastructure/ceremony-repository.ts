@@ -24,5 +24,14 @@ export function createCeremonyRepository(db: Database): CeremonyRepository {
 
       return spent.length === 1;
     },
+
+    async take(id) {
+      const taken = await db
+        .delete(ceremonyTable)
+        .where(eq(ceremonyTable.id, id))
+        .returning({ id: ceremonyTable.id });
+
+      return taken.length === 1;
+    },
   };
 }

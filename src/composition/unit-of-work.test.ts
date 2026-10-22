@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import * as Captures from "@/features/capture/domain/capture";
 import * as Notes from "@/features/notes/domain/note";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
-import { content } from "@/testing/support/app";
+import { content, theAuthor } from "@/testing/support/app";
 
 import { createUnitOfWork } from "./unit-of-work";
 
@@ -21,7 +21,7 @@ async function countRows(table: "capture" | "note") {
 
 describe("createUnitOfWork", () => {
   it("given a capture and its note, when committed, then both are stored", async () => {
-    const capture = Captures.receive(content("giấy in"), "web", received);
+    const capture = Captures.receive(content("giấy in"), "web", await theAuthor(), received);
     const work = createUnitOfWork(createDatabase(env.DB));
     work.captures.add(capture);
     work.notes.add(Notes.fromCapture(capture));
@@ -33,9 +33,11 @@ describe("createUnitOfWork", () => {
   });
 
   it("given a write from one feature that fails after a write from another succeeds, when committed, then neither is stored", async () => {
-    const capture = Captures.receive(content("giấy in"), "web", received);
+    const capture = Captures.receive(content("giấy in"), "web", await theAuthor(), received);
     // A note pointing at a capture that was never added: the foreign key fails the second statement
-    const orphan = Notes.fromCapture(Captures.receive(content("lạc"), "web", received));
+    const orphan = Notes.fromCapture(
+      Captures.receive(content("lạc"), "web", await theAuthor(), received),
+    );
     const work = createUnitOfWork(createDatabase(env.DB));
     work.captures.add(capture);
     work.notes.add(orphan);

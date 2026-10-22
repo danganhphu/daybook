@@ -14,6 +14,8 @@ const inter = Inter({ subsets: ["latin", "vietnamese"], variable: "--font-sans" 
 export const metadata: Metadata = {
   title: appName,
   description: appDescription,
+  // A private book: no page of it belongs in a search engine, and setup links are personal
+  robots: { index: false, follow: false },
   // Dark status bar text on the light page, not drawn over it
   appleWebApp: { title: appName, statusBarStyle: "default" },
 };

@@ -2,6 +2,7 @@ import type { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import type { AccountId } from "@/features/access/domain/account";
 import type { Content } from "@/shared/domain/content";
 
 export const captureSources = ["web", "telegram"] as const;
@@ -18,13 +19,16 @@ export type Capture = {
   readonly id: CaptureId;
   readonly content: Content;
   readonly source: CaptureSource;
+  // Who typed it: two people share one book
+  readonly authorId: AccountId;
   readonly receivedAt: Temporal.Instant;
 };
 
 export function receive(
   content: Content,
   source: CaptureSource,
+  authorId: AccountId,
   receivedAt: Temporal.Instant,
 ): Capture {
-  return { id: captureIdSchema.parse(uuidv7()), content, source, receivedAt };
+  return { id: captureIdSchema.parse(uuidv7()), content, source, authorId, receivedAt };
 }

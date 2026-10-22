@@ -1,6 +1,9 @@
 Feature: Cài lên màn hình chính
-  Bạn ấy thêm daybook vào màn hình chính điện thoại, không qua chợ ứng dụng, rồi mở nó như một app:
+  Bạn ấy thêm daybook ra màn hình chính điện thoại, không cần App Store hay CH Play, rồi mở như một app:
   có tên, có icon, không có thanh địa chỉ.
+
+  Background:
+    Given tôi đã đăng nhập
 
   @chromium-only
   Scenario: Chrome cài được như một app

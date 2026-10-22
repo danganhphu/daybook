@@ -40,13 +40,30 @@ Every secret a browser holds - a session's secret, a setup token, a ceremony bin
 - Tests use the software authenticator in `src/testing/support/authenticator.ts`: real keys (ES256, Ed25519, RS256)
   and a `Tampering` option for every field a test wants wrong. Each refusal is tested for its reason.
 
+## The password
+
+- The browser does the work (`web/browser-password.ts`): NFKC, 15-128 code points, Pwned Passwords by range with
+  `Add-Padding`, then Argon2id with the salt and cost the server handed out. Only the derived key is sent.
+- The server keeps `HMAC-SHA256(pepper, key)` with the pepper's version (`password-keys.ts`); a username with no
+  password gets a decoy salt from the pepper and is checked against `unmatchableVerifier`, so both paths do the same
+  work. Lock at 100 failures; passkeys keep working.
+
 ## Security settings
 
 Anything that changes an authenticator, the username or another device, or creates an invite or recovery link, checks
 `Sessions.isFresh` **in the use case** and returns `step_up_required`. The screen asking first is a courtesy, not the
-control. The step-up itself is `startPasskeySignIn` with `stepUp`, then `finishPasskeySignIn`: a fresh session for
-the same account replaces the old one. Record the outcome in `access_event`, with `actorId` set when one user acts on
-the other's account.
+control. The step-up itself is `startPasskeySignIn` with `stepUp`, then `finishPasskeySignIn`, or a password sign-in for
+an account with no passkey: a fresh session for the same account replaces the old one. On the page, wrap the action
+in `useStepUp().run`; it asks only after the server refuses, then retries once. Record the outcome in `access_event`,
+with `actorId` set when one user acts on the other's account.
+
+## Invites and recovery
+
+- An invite has no account until the newcomer names it (`nameInvitedAccount`); the account goes on the setup
+  ceremony, never on the redeemed link row, whose trigger refuses updates.
+- A recovery link is for the other account only. Using it ends all of that account's sessions and leaves its old
+  passkeys alone.
+- A link is shown once, as a URL with the token in the fragment (`setupLinkUrl`), and never stored on the page.
 
 ## Rate limits
 
@@ -62,7 +79,8 @@ tell a prober something - an expired link versus an unknown one - share one code
 
 `pnpm access:account`, `access:setup-link`, `access:revoke`: the first account, and break-glass. They run the app's
 use cases through `src/composition/operator-console.ts`, which records SQL instead of running it, and send it with
-`cf d1 query`. That has no local mode: `--remote` or `--dry-run`, and `--remote` only when asked.
+`cf d1 query --remote`, or into the dev database's SQLite file with `--local` (stop the dev server first). `--remote`
+only when asked.
 
 ## Tests
 

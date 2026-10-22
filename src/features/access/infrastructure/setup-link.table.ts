@@ -1,11 +1,12 @@
 import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+import { digestByteLength } from "@/features/access/domain/access-policy";
 import { setupLinkPurposes } from "@/features/access/domain/setup-link";
+import { base64UrlLength } from "@/shared/domain/base64url";
+import { sqlNumber, sqlTextList } from "@/shared/infrastructure/d1/sql-literals";
 
 import { accountTable } from "./account.table";
-
-const purposeList = sql.raw(setupLinkPurposes.map((purpose) => `'${purpose}'`).join(", "));
 
 // token_hash is the SHA-256 of the token in the link's fragment. The migration adds a trigger that lets a link be
 // redeemed once. Times are epoch milliseconds.
@@ -22,8 +23,11 @@ export const setupLinkTable = sqliteTable(
     redeemedAt: integer("redeemed_at"),
   },
   (table) => [
-    check("setup_link_purpose_known", sql`${table.purpose} in (${purposeList})`),
-    check("setup_link_token_hash_length", sql`length(${table.tokenHash}) = 43`),
+    check("setup_link_purpose_known", sql`${table.purpose} in (${sqlTextList(setupLinkPurposes)})`),
+    check(
+      "setup_link_token_hash_length",
+      sql`length(${table.tokenHash}) = ${sqlNumber(base64UrlLength(digestByteLength))}`,
+    ),
     // An invite names its account only once redeemed; every other link names it from the start
     check(
       "setup_link_account_by_purpose",

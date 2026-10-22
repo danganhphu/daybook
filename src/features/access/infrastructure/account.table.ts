@@ -1,6 +1,11 @@
 import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+import { secretByteLength } from "@/features/access/domain/access-policy";
+import { displayNameMaxLength, usernameLength } from "@/features/access/domain/account";
+import { base64UrlLength } from "@/shared/domain/base64url";
+import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
+
 // Usernames arrive lower-cased, so the unique index already treats "Lan" and "lan" as one. Times are epoch ms.
 export const accountTable = sqliteTable(
   "account",
@@ -15,9 +20,15 @@ export const accountTable = sqliteTable(
   (table) => [
     check(
       "account_username_format",
-      sql`length(${table.username}) between 3 and 32 and ${table.username} not glob '*[^a-z0-9._-]*'`,
+      sql`length(${table.username}) between ${sqlNumber(usernameLength.minimum)} and ${sqlNumber(usernameLength.maximum)} and ${table.username} not glob '*[^a-z0-9._-]*'`,
     ),
-    check("account_display_name_present", sql`length(trim(${table.displayName})) between 1 and 60`),
-    check("account_user_handle_length", sql`length(${table.webauthnUserHandle}) = 43`),
+    check(
+      "account_display_name_present",
+      sql`length(trim(${table.displayName})) between 1 and ${sqlNumber(displayNameMaxLength)}`,
+    ),
+    check(
+      "account_user_handle_length",
+      sql`length(${table.webauthnUserHandle}) = ${sqlNumber(base64UrlLength(secretByteLength))}`,
+    ),
   ],
 );

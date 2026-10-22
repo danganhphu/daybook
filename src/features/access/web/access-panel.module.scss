@@ -1,0 +1,59 @@
+@use "abstracts" as *;
+
+// One screen tall on a phone: the words in the middle, the action at the bottom where the thumb is
+.screen {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-block-size: 100dvh;
+  inline-size: 100%;
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  padding: space(6) space(4) space(8);
+  margin-inline: auto;
+
+  // A desk has no thumb: words and action sit together in the middle
+  @include from(md) {
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: space(8);
+  }
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.mark {
+  margin-block-end: space(4);
+  border-radius: radius(surface);
+}
+
+.title {
+  @include text(display);
+}
+
+.description {
+  max-inline-size: 36ch;
+  color: color(text-muted);
+
+  @include text(body);
+}
+
+// The fields and buttons of a form inside the panel, a little further apart than the panel's own actions
+.form {
+  display: grid;
+  gap: space(4);
+}
+
+// Grid so the button takes the full width without being restyled
+.actions {
+  display: grid;
+  gap: space(3);
+  inline-size: 100%;
+  max-inline-size: size(panel);
+  margin-inline: auto;
+}

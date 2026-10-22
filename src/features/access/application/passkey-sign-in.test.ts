@@ -7,7 +7,7 @@ import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-se
 import { origin, rows, seedAccount, seedSetupLink } from "@/testing/support/access";
 import { testApp, testClock } from "@/testing/support/app";
 import type { SoftwarePasskey, Tampering } from "@/testing/support/authenticator";
-import { anAuthenticator, ceremonyIdIn, passkeyUseCases } from "@/testing/support/passkeys";
+import { anAuthenticator, ceremonyIdIn } from "@/testing/support/passkeys";
 import { expectOk } from "@/testing/support/result";
 
 import { formatCeremonyCookie } from "./ceremony-cookie";
@@ -29,7 +29,7 @@ async function aPersonWithAPasskey(time: Time, username = "lan") {
     accountId: account.id,
   });
   const grant = expectOk(await testApp(time.clock).redeemSetupLink(token, origin()));
-  const passkeys = passkeyUseCases(time.clock);
+  const passkeys = testApp(time.clock);
   const options = expectOk(await passkeys.startPasskeySetup(grant.cookie));
   const { response, passkey } = await authenticator.create(options);
   const finished = expectOk(
@@ -53,7 +53,7 @@ async function aSignIn(
     readonly current?: Session;
   } = {},
 ) {
-  const passkeys = passkeyUseCases(time.clock);
+  const passkeys = testApp(time.clock);
   const prompt = expectOk(
     await passkeys.startPasskeySignIn({
       origin: origin(),
@@ -83,9 +83,7 @@ describe("startPasskeySignIn", () => {
   it("given a sign-in screen, when it asks for a prompt, then any passkey for this site may answer, user-verified", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
 
-    const prompt = expectOk(
-      await passkeyUseCases(time.clock).startPasskeySignIn({ origin: origin() }),
-    );
+    const prompt = expectOk(await testApp(time.clock).startPasskeySignIn({ origin: origin() }));
 
     expect(prompt.options).toMatchObject({ allowCredentials: [], userVerification: "required" });
     expect(await rows("select kind, challenge, account_id from ceremony")).toEqual([
@@ -98,7 +96,7 @@ describe("startPasskeySignIn", () => {
     const { account, stored, session } = await aPersonWithAPasskey(time);
 
     const prompt = expectOk(
-      await passkeyUseCases(time.clock).startPasskeySignIn({ origin: origin(), stepUp: session }),
+      await testApp(time.clock).startPasskeySignIn({ origin: origin(), stepUp: session }),
     );
 
     expect(prompt.options.allowCredentials).toEqual([
@@ -109,7 +107,7 @@ describe("startPasskeySignIn", () => {
 
   it("given prompts abandoned more than five minutes ago, when a new one is asked for, then they are swept", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
     await passkeys.startPasskeySignIn({ origin: origin() });
     time.setTo("2026-10-22T01:05:00Z");
 
@@ -122,7 +120,7 @@ describe("startPasskeySignIn", () => {
 
   it("given thirty prompts from one address, when a thirty-first is asked for, then it is refused as rate limited", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
     const thirty = await Promise.all(
       Array.from({ length: 30 }, () =>
         passkeys.startPasskeySignIn({ origin: origin("198.51.100.4") }),
@@ -323,7 +321,7 @@ describe("finishPasskeySignIn", () => {
     const before = await rows("select id from access_event");
 
     expect(
-      await passkeyUseCases(time.clock).finishPasskeySignIn({
+      await testApp(time.clock).finishPasskeySignIn({
         ceremonyCookie: "junk",
         response: { anything: true },
         origin: origin(),

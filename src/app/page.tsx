@@ -1,6 +1,7 @@
 import type { Viewport } from "next";
 
 import { daybook } from "@/composition/daybook";
+import { requireSession } from "@/features/access/web/session-gate";
 import { todaysNotes } from "@/features/notes/web/commands";
 
 import { TodayScreen } from "./_today/today-screen";
@@ -12,7 +13,9 @@ export const dynamic = "force-dynamic";
 export const viewport: Viewport = { interactiveWidget: "resizes-content" };
 
 export default async function TodayPage() {
-  const today = await todaysNotes(daybook());
+  const app = daybook();
+  await requireSession(app);
+  const today = await todaysNotes(app);
 
   return <TodayScreen label={today.label} notes={today.notes} />;
 }

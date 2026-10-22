@@ -65,6 +65,7 @@ unknown name fails the build.
 | `accent-hover` | `#005ecc` | Hover and pressed accent; links, and any accent text on the canvas | 5.50:1 on canvas |
 | `on-accent` | `#ffffff` | Text on accent | 4.65:1 |
 | `danger` | `#cc2827` | Destructive actions, errors | 4.85:1 or more |
+| `scrim` | `text` at 40% | Dims the page behind a dialog | not read on |
 
 The accent is the brightest blue that still passes AA with white text, close to Google's `#1a73e8`; Telegram's
 `#3390ec` would fail at 3.31:1. As text it passes on a white surface but not on the canvas (4.20:1), where links use
@@ -110,6 +111,7 @@ Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right 
   they were.
 - **Content width** stops at 640px; text never runs wider than about 60 characters.
 - **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
+- **Sign-in and setup** put their one action at the bottom of a phone screen, at most 400px wide (`size(panel)`).
 - **Breakpoints:** mobile first; `md` from 640px, `lg` from 1024px.
 
 ### Motion
@@ -136,7 +138,8 @@ and the manifest's PNGs in `public/icons/`, and the output is committed.
 ## Components
 
 In `src/shared/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
-a screen arranges components, it does not restyle them. Every component, in every state, is on `/dev/ui` while the
+a screen arranges components, it does not restyle them. Words that mean the same everywhere - Lưu, Huỷ, Xoá, Tuỳ
+chọn - come from `src/shared/ui/action-labels.ts`, never typed again. Every component, in every state, is on `/dev/ui` while the
 dev server runs; production answers 404 there. A new component goes on that page in the same change.
 
 | Component | For | Rules it holds |
@@ -144,7 +147,11 @@ dev server runs; production answers 404 there. A new component goes on that page
 | `Button` | An action with a text label | `variant` primary, secondary (default) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action and list rows |
 | `IconButton` | An action shown as an icon alone | A circle; quiet and muted unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
 | `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby`. `appearance="bare"` drops its own edge and focus ring to sit inside a field that draws them, such as the message field (which uses `:focus-within`) |
-| `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color |
+| `TextField` | One line of text, or a password | A label above, an optional `description` hint and an `error` below, both read out with the field. A password field has a show/hide button instead of a second "confirm" field (NIST 800-63B-4) |
+| `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color. An action with `href` is a real link (`Menu.LinkItem` over `next/link`) |
+| `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One white card per group, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does. `ListRow` shows a value large and what it is beneath, with what can be done to it as children. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
+| `Dialog`, `ConfirmDialog` | A question that must be answered before going on | A sheet at the bottom on a phone, a card in the middle from `md`; focus stays inside until it closes. `ConfirmDialog` is only for what cannot be undone: a question as the title, the verb on the button, never "OK" |
+| `Status` | The outcome of an action, in one line | An `<output>`, so a new message is read out without moving focus. Keeps its line when empty, so nothing below jumps |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
 | `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
 

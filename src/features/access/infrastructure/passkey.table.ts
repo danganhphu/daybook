@@ -1,6 +1,9 @@
 import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+import { passkeyAlgorithms } from "@/features/access/domain/passkey";
+import { sqlNumberList } from "@/shared/infrastructure/d1/sql-literals";
+
 import { accountTable } from "./account.table";
 
 // Filled from step 2 of the sign-in plan; here now because sessions name the passkey they came from.
@@ -25,8 +28,11 @@ export const passkeyTable = sqliteTable(
     lastUsedAt: integer("last_used_at"),
   },
   (table) => [
-    // ES256, Ed25519, RS256: what the registration options offer
-    check("passkey_algorithm_offered", sql`${table.algorithm} in (-7, -8, -257)`),
+    // What the registration options offer
+    check(
+      "passkey_algorithm_offered",
+      sql`${table.algorithm} in (${sqlNumberList(passkeyAlgorithms)})`,
+    ),
     check("passkey_sign_count_not_negative", sql`${table.signCount} >= 0`),
     check(
       "passkey_transports_array",
