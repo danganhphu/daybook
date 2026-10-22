@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 import { chromium } from "@playwright/test";
 
-// The accent and on-accent roles from docs/ui.md as hex; an image file cannot read the SCSS tokens
+// The accent and on-accent roles from docs/ui/design-system.md as hex; an image file cannot read the SCSS tokens
 const accent = "#0672e2";
 const onAccent = "#ffffff";
 

@@ -1,7 +1,7 @@
 # Domain
 
-The model behind the product, in the words the code uses. [design.md](design.md) says what the product does; this
-file says how the data is shaped and which rules it keeps. A change to the data model is proposed here first.
+The model behind the product, in the words the code uses. [design.md](../product/design.md) says what the product
+does; this file says how the data is shaped and which rules it keeps. A change to the data model is proposed here first.
 
 ## Words
 

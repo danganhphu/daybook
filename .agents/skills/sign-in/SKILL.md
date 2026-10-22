@@ -5,8 +5,8 @@ description: How sign-in works in this repo and what must never go wrong - where
 
 # Sign-in
 
-Two people share one book. Passkeys are the way in, a password the fallback; `docs/design.md` "Sign-in" has the
-reasons, `docs/domain.md` "Access" the rules. The code is the `access` slice: `src/features/access/`.
+Two people share one book. Passkeys are the way in, a password the fallback; `docs/product/design.md` "Sign-in" has the
+reasons, `docs/architecture/domain.md` "Access" the rules. The code is the `access` slice: `src/features/access/`.
 
 ## Secrets
 

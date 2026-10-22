@@ -17,7 +17,8 @@ export type ConfirmDialogProps = {
   readonly onClose: () => void;
 };
 
-// Only for what cannot be undone; anything that can be takes one tap and an Undo in the toast (docs/ui.md)
+// Only for what cannot be undone; anything that can be takes one tap and an Undo in the toast
+// (docs/ui/design-system.md)
 export function ConfirmDialog({
   open,
   title,

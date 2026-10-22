@@ -139,8 +139,9 @@ and the manifest's PNGs in `public/icons/`, and the output is committed.
 
 In `src/shared/ui/<name>/`, one component per file with its styles beside it. They take no `className` or `style`:
 a screen arranges components, it does not restyle them. Words that mean the same everywhere - Lưu, Huỷ, Xoá, Tuỳ
-chọn - come from `src/shared/ui/action-labels.ts`, never typed again. Every component, in every state, is on `/dev/ui` while the
-dev server runs; production answers 404 there. A new component goes on that page in the same change.
+chọn - come from `src/shared/ui/action-labels.ts`, never typed again. Every component, in every state, is on
+`/dev/ui` while the dev server runs; production answers 404 there. A new component goes on that page in the same
+change.
 
 | Component | For | Rules it holds |
 |---|---|---|
