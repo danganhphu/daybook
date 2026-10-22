@@ -61,7 +61,7 @@
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vite-css-modules": "1.16.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "engines": {
     "node": ">=26"
