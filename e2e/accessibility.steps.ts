@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 
 import { Then } from "./fixtures";
 
-// WCAG 2.2 A and AA, the level docs/ui.md holds the design system to
+// WCAG 2.2 A and AA, the level docs/ui/design-system.md holds the design system to
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 Then("trang không có lỗi trợ năng", async ({ page }) => {

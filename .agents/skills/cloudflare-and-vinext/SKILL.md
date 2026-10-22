@@ -36,4 +36,4 @@ vinext implements the Next.js App Router on Vite. Next's docs apply unless vinex
 ## Limits that shape code
 
 10 ms of CPU per request on the free plan. Waiting on I/O does not count; hashing does - which is why passwords are
-hashed in the browser (`docs/design.md`, "Sign-in").
+hashed in the browser (`docs/product/design.md`, "Sign-in").

@@ -1,5 +1,5 @@
-// Design tokens. Numbers come from Fluent 2, Cloudscape, Apple HIG and Material 3; reasons live in docs/ui.md.
-// This file emits no CSS.
+// Design tokens. Numbers come from Fluent 2, Cloudscape, Apple HIG and Material 3; reasons live in
+// docs/ui/design-system.md. This file emits no CSS.
 
 // Color roles every theme must define. Components only ever ask for a role, never a value.
 $color-roles: (

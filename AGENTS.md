@@ -8,8 +8,9 @@ The usual alternative is the phone's notes app, where things get scattered and h
 Telegram is the main way in, because chat is where the day already happens. A PWA covers the things chat is bad at -
 correcting an old entry, browsing, reading numbers off a table. Both are thin adapters over one core.
 
-The design is in [docs/design.md](docs/design.md). Read it before proposing changes to the interaction model; the
-decisions in it have reasons attached, and several of them are deliberate reversals of the obvious choice.
+The design is in [docs/product/design.md](docs/product/design.md). Read it before proposing changes to the
+interaction model; the decisions in it have reasons attached, and several of them are deliberate reversals of the
+obvious choice. [docs/README.md](docs/README.md) lists every document.
 
 ## Status
 
@@ -44,7 +45,7 @@ The free-plan limits that shape the code:
 |---|---|
 | Platform | One Cloudflare Worker serving the PWA, the Telegram webhook and the cron jobs |
 | Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
-| Components | Base UI for behavior and accessibility; our own design system on top, in SCSS. See [docs/ui.md](docs/ui.md) |
+| Components | Base UI for behavior and accessibility; our own design system on top, in SCSS. See [docs/ui/design-system.md](docs/ui/design-system.md) |
 | Styling | Sass (`sass-embedded`) as CSS Modules beside each component, tokens in `src/shared/ui/styles/`. Not Tailwind: Tailwind 4 is not built to sit beside a preprocessor |
 | Icons | lucide-react |
 | Font | Inter with the `vietnamese` subset. Geist has no Vietnamese glyphs |
@@ -126,8 +127,8 @@ Inside a slice:
   (`LiveNote | DeletedNote`), so a function that needs a live note says so in its type.
 - **Checked values are branded Zod types** (`Content`, `NoteId`): they can only be had by parsing, so nothing
   downstream receives unchecked input. Rows read back from D1 are parsed into them too.
-- The model, its vocabulary and its rules are in [docs/domain.md](docs/domain.md). Propose a change to the data
-  model there before writing it.
+- The model, its vocabulary and its rules are in [docs/architecture/domain.md](docs/architecture/domain.md).
+  Propose a change to the data model there before writing it.
 - **A value used twice has one name.** Paths are `routes` (`src/shared/web/routes.ts`); words every screen shares
   are `actionLabels` (`src/shared/ui/action-labels.ts`); a feature's terms and copy sit with it (`access-terms.ts`,
   `access-copy.ts`); limits and lengths live in the domain (`access-policy.ts`, `usernameLength`) and the tables'
@@ -151,8 +152,8 @@ Inside a slice:
 
 ## Access
 
-Two people share one book and sign in with passkeys, a password being the fallback; `docs/design.md` "Sign-in" says
-why, `docs/domain.md` "Access" has the rules in full. What code must never get wrong:
+Two people share one book and sign in with passkeys, a password being the fallback; `docs/product/design.md`
+"Sign-in" says why, `docs/architecture/domain.md` "Access" has the rules in full. What code must never get wrong:
 
 - **No secret is stored, logged or put in a query string as itself.** Session secrets, setup tokens and ceremony
   bindings are 256 random bits from `Secrets`; only their SHA-256 reaches D1, and presented secrets are checked with
@@ -418,5 +419,5 @@ Conventional Commits. No AI attribution lines, no co-author trailers.
 
 ## Docs
 
-`docs/design.md` is the product design and is kept current. When a decision in it is reversed, edit the file and
+`docs/product/design.md` is the product design and is kept current. When a decision in it is reversed, edit the file and
 say why it changed - the reasoning is the valuable part, not the conclusion.

@@ -4,7 +4,7 @@ A notebook for a salesperson on the move: orders, customers and things to follow
 friend. A Telegram bot is the main way in; this web app, installable as a PWA, is the second. Both sit on one core.
 
 Everything runs on Cloudflare's free plan: one Worker, D1, Workers AI. Technical rules are in `AGENTS.md`, the
-interface in [ui.md](ui.md), the data model in [domain.md](domain.md).
+interface in [the design system](../ui/design-system.md), the data model in [domain.md](../architecture/domain.md).
 
 ## The problem
 

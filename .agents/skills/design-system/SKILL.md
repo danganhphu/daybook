@@ -5,7 +5,7 @@ description: Building UI in this repo - tokens through Sass functions, CSS Modul
 
 # The design system
 
-The rules and the numbers are in `docs/ui.md`. This is how to work with them.
+The rules and the numbers are in `docs/ui/design-system.md`. This is how to work with them.
 
 ## A component
 
