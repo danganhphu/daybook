@@ -79,8 +79,19 @@ design.md, "Sign-in". The rules the code keeps:
   reveals nothing. The database refuses a second redemption too, in case two arrive at once.
 - **What a link carries depends on its purpose**: an invite names no account until it is redeemed; a first-setup link
   has no author, since only the command line issues one.
-- **Every attempt is counted and recorded.** Redeeming a link is limited to 10 tries per client in 10 minutes, a client
-  being an IPv4 address or an IPv6 /64. Successes, refusals and limits all land in `access_event`.
+- **A passkey is discoverable and user-verified**, signed for this app's origin and RP ID, with no attestation asked
+  for. The person never types a username to use one: the passkey says whose it is.
+- **A passkey prompt is answered once.** Each prompt carries a 32-byte challenge; the first answer spends it before
+  it is checked, and a second answer finds nothing. A setup asks for a new prompt each time, until the setup expires;
+  a sign-in prompt lasts five minutes. Prompts left unanswered are swept when the next one starts.
+- **A setup ends in a signed-in session** with the new passkey. A recovery setup also ends every other session of the
+  account. An invite cannot set up a passkey until the newcomer has named the account.
+- **The signature counter is a signal, not a lock.** One that did not move forward is noted on the session's
+  `session_opened` event and accepted: synced passkeys always report 0.
+- **Every attempt is counted and recorded.** Redeeming a link is limited to 10 tries per client in 10 minutes, and
+  asking for a sign-in prompt to 30, a client being an IPv4 address or an IPv6 /64. Successes, refusals and limits
+  land in `access_event`, with the reason a passkey was refused. A request with no prompt behind it is refused
+  without an entry.
 
 ## Use cases
 
@@ -96,10 +107,17 @@ through `createApp` in `src/composition/create-app.ts`.
 | `listNotesForDay` | A day's live notes, newest first | - |
 | `authenticate` | The session behind a cookie; records its use at most hourly | `unauthenticated` |
 | `redeemSetupLink` | Spends a setup link and starts a setup ceremony bound to this browser | `setup_link_unusable`, `rate_limited` |
+| `startPasskeySetup` | The passkey prompt for a setup, with a new challenge | `setup_link_unusable` |
+| `finishPasskeySetup` | Stores the new passkey and signs in with it | `setup_link_unusable`, `passkey_not_accepted` |
+| `startPasskeySignIn` | A sign-in prompt for any passkey, or for one account's in a step-up | `rate_limited` |
+| `finishPasskeySignIn` | Checks the passkey's answer and opens a session, replacing the browser's old one | `passkey_not_accepted` |
 | `signOut` | Ends this session | - |
 | `endOtherSessions` | Ends every other session of the account | `step_up_required` |
 | `listSessions` | The account's sessions, most recently used first | - |
 | `issueSetupLink` | A setup link and its token, shown once. Reached from the command line today, from Settings later | - |
+
+The four passkey use cases join `createApp` with the sign-in screens, which bring the relying party's configuration;
+until then the tests reach them through `src/testing/support/passkeys.ts`.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence the user
@@ -136,10 +154,10 @@ The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets a
 | Table | Holds | Rules the database keeps |
 |---|---|---|
 | `account` | username, display name, WebAuthn user handle | username unique, lower-case `a-z0-9._-`, 3-32 long |
-| `passkey` | a credential's id, public key, algorithm, counter, transports, backup flags | algorithm one of those offered; filled from step 2 of the sign-in plan |
+| `passkey` | a credential's id, public key, algorithm, counter, transports, backup flags, name, last use | credential id unique; algorithm ES256, Ed25519 or RS256 |
 | `session` | the verifier, how it signed in, when it started, ends and was last seen, the device label | a password session names no passkey; it ends after it starts |
 | `setup_link` | purpose, account, author, token hash, expiry, redemption | an unredeemed invite names no account; a first-setup link has no author; trigger `setup_link_redeemed_once` |
-| `ceremony` | kind, browser binding, account, setup link, expiry | a setup ceremony names its link; deleted when used |
+| `ceremony` | kind, browser binding, account, setup link, the challenge waiting for an answer, expiry | a setup ceremony names its link; a challenge is 43 characters; deleted when finished |
 | `access_event` | kind, whose account, who acted, session, passkey, IP, device, small JSON detail | known kinds only; triggers `access_event_no_update` and `access_event_no_delete` |
 | `rate_limit` | attempts per key and fixed window | windows long over are dropped on the next hit |
 

@@ -8,6 +8,16 @@ import { setupLinkTable } from "./setup-link.table";
 
 export function createSetupLinkRepository(db: Database): SetupLinkRepository {
   return {
+    async get(id) {
+      const [row] = await db
+        .select()
+        .from(setupLinkTable)
+        .where(eq(setupLinkTable.id, id))
+        .limit(1);
+
+      return row === undefined ? undefined : toSetupLink(row);
+    },
+
     async findByTokenHash(tokenHash) {
       const [row] = await db
         .select()

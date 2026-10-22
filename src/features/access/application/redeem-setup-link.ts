@@ -13,6 +13,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, CeremonyWrites, SetupLinkWrites } from "./access-writes";
+import { formatCeremonyCookie } from "./ceremony-cookie";
 import { clientNetwork } from "./rate-limit-keys";
 import type { RateLimiter } from "./rate-limiter";
 import { hashSecretToken, newSecretToken } from "./secret-tokens";
@@ -35,6 +36,8 @@ export type SetupGrant = {
   readonly purpose: SetupLinkPurpose;
   // For the browser's ceremony cookie; the ceremony keeps only its hash
   readonly binding: SecretToken;
+  // The cookie's value: the ceremony's id and the binding
+  readonly cookie: string;
 };
 
 // Turns a setup link into a setup ceremony bound to this browser. The token arrives untrusted, from the page.
@@ -89,6 +92,7 @@ export async function redeemSetupLink(
   // A second redemption racing this one is refused by the database (setup_link_redeemed_once) and throws
   const work = deps.startUnitOfWork();
   work.setupLinks.markRedeemed(redeemed.value);
+  work.ceremonies.removeExpired(now);
   work.ceremonies.add(ceremony);
   work.accessEvents.add(
     AccessEvents.record(
@@ -100,5 +104,10 @@ export async function redeemSetupLink(
   );
   await work.commit();
 
-  return ok({ ceremony, purpose: redeemed.value.purpose, binding });
+  return ok({
+    ceremony,
+    purpose: redeemed.value.purpose,
+    binding,
+    cookie: formatCeremonyCookie({ ceremonyId: ceremony.id, binding }),
+  });
 }

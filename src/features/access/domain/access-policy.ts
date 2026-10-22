@@ -25,3 +25,10 @@ export const setupLinkAttempts = {
   limit: 10,
   window: Temporal.Duration.from({ minutes: 10 }),
 } as const;
+
+// A passkey cannot be guessed either. Every sign-in screen asks for a prompt before the tap (Safari needs it ready),
+// so this is loose enough for reloads and only caps the rows one address can make.
+export const passkeySignInAttempts = {
+  limit: 30,
+  window: Temporal.Duration.from({ minutes: 10 }),
+} as const;

@@ -16,8 +16,8 @@ decisions in it have reasons attached, and several of them are deliberate revers
 Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment it is sent,
 editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
 to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in is being built: the access
-core - accounts, sessions, setup links, the audit trail - exists without a screen yet. Nothing is deployed; sign-in
-comes before the first deploy.
+core - accounts, sessions, setup links, the audit trail - and passkey setup, sign-in and step-up exist as use cases,
+without a screen yet. Nothing is deployed; sign-in comes before the first deploy.
 
 ## Hard constraint: $0, no card
 
@@ -154,9 +154,19 @@ why, `docs/domain.md` "Access" has the rules in full. What code must never get w
   `secretTokenMatches` (constant time). A setup token travels in a URL fragment and reaches the server in a POST body.
 - **Only a use case that has just authenticated someone opens a session**, through `enlistNewSession` on its own unit
   of work. No adapter calls it, and nothing exposes it on the `App`.
-- **Security settings check step-up in the use case** (`Sessions.isFresh`), not only in the screen.
+- **Security settings check step-up in the use case** (`Sessions.isFresh`), not only in the screen. A step-up is a
+  passkey sign-in for the same account: a fresh session replaces the old one.
+- **A WebAuthn challenge is spent before its response is verified**, in one statement
+  (`CeremonyRepository.spendChallenge`), so two answers to one prompt cannot both pass. Never verify first.
+- **WebAuthn goes through the `PasskeyVerifier` port.** Only `simple-webauthn-verifier.ts` imports
+  `@simplewebauthn/server`. It requires user verification, and passes the library a counter of 0: a counter that did
+  not grow is a signal the domain records (`Passkeys.recordUse`), never a refusal. Its tests pin each refusal reason,
+  so an upgrade that rewords the library's errors fails them.
+- **The relying party comes from configuration, never from a request.** The RP ID is the full host.
 - **Every access attempt is recorded** in `access_event`, successes and refusals alike. Never a token, secret,
   challenge, credential response or derived key in it; the session id is the public half of a cookie and may appear.
+  A request with no ceremony of this browser behind it is refused without a log entry, so nobody can grow an
+  append-only log by sending junk.
 - **Rate limits count a client**, an IPv4 address or an IPv6 /64, in D1 (`createRateLimiter`), exact rather than the
   approximate per-location binding.
 - **The command line is for two moments only**: the first account, and break-glass (`pnpm access:*`, below). It runs
