@@ -1,7 +1,11 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
 import { accountIdSchema } from "@/features/access/domain/account";
-import { ceremonyIdSchema, type Ceremony } from "@/features/access/domain/ceremony";
+import {
+  ceremonyIdSchema,
+  challengeSchema,
+  type Ceremony,
+} from "@/features/access/domain/ceremony";
 import { secretHashSchema } from "@/features/access/domain/secret";
 import { setupLinkIdSchema } from "@/features/access/domain/setup-link";
 
@@ -16,6 +20,7 @@ export function toCeremony(row: CeremonyRow): Ceremony {
     bindingHash: secretHashSchema.parse(row.bindingHash),
     accountId: row.accountId === null ? undefined : accountIdSchema.parse(row.accountId),
     setupLinkId: row.setupLinkId === null ? undefined : setupLinkIdSchema.parse(row.setupLinkId),
+    challenge: row.challenge === null ? undefined : challengeSchema.parse(row.challenge),
     createdAt: Temporal.Instant.fromEpochMilliseconds(row.createdAt),
     expiresAt: Temporal.Instant.fromEpochMilliseconds(row.expiresAt),
   };
@@ -28,6 +33,7 @@ export function toCeremonyRow(ceremony: Ceremony): CeremonyRow {
     bindingHash: ceremony.bindingHash,
     accountId: ceremony.accountId ?? null,
     setupLinkId: ceremony.setupLinkId ?? null,
+    challenge: ceremony.challenge ?? null,
     createdAt: ceremony.createdAt.epochMilliseconds,
     expiresAt: ceremony.expiresAt.epochMilliseconds,
   };

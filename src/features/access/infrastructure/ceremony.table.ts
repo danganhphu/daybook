@@ -17,12 +17,18 @@ export const ceremonyTable = sqliteTable(
     bindingHash: text("binding_hash").notNull(),
     accountId: text("account_id").references(() => accountTable.id),
     setupLinkId: text("setup_link_id").references(() => setupLinkTable.id),
+    // The passkey prompt being waited on; cleared the moment a response to it arrives
+    challenge: text("challenge"),
     createdAt: integer("created_at").notNull(),
     expiresAt: integer("expires_at").notNull(),
   },
   (table) => [
     check("ceremony_kind_known", sql`${table.kind} in (${kindList})`),
     check("ceremony_binding_hash_length", sql`length(${table.bindingHash}) = 43`),
+    check(
+      "ceremony_challenge_length",
+      sql`${table.challenge} is null or length(${table.challenge}) = 43`,
+    ),
     check(
       "ceremony_setup_names_its_link",
       sql`${table.kind} <> 'setup' or ${table.setupLinkId} is not null`,

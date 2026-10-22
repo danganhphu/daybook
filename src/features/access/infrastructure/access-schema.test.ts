@@ -70,7 +70,11 @@ describe("STRICT on every access table", () => {
       "insert into setup_link values ('l', 'recovery', 'a', null, ?, 'soon', 2, null)",
       [hash],
     ],
-    ["ceremony", "insert into ceremony values ('c', 'setup', ?, null, 'l', 'soon', 2)", [hash]],
+    [
+      "ceremony",
+      "insert into ceremony values ('c', 'setup', ?, null, 'l', null, 'soon', 2)",
+      [hash],
+    ],
     [
       "access_event",
       "insert into access_event values ('e', 'soon', 'session_ended', null, null, null, null, null, 'x', null)",
@@ -175,6 +179,15 @@ describe("ceremony table", () => {
         hash,
       ),
     ).rejects.toThrow(/ceremony_setup_names_its_link/);
+  });
+
+  it("given a challenge of the wrong length, when inserted, then the check refuses it", async () => {
+    await expect(
+      run(
+        "insert into ceremony (id, kind, binding_hash, challenge, created_at, expires_at) values ('c1', 'passkey_sign_in', ?, 'short', 1, 2)",
+        hash,
+      ),
+    ).rejects.toThrow(/ceremony_challenge_length/);
   });
 });
 

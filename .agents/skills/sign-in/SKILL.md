@@ -1,6 +1,6 @@
 ---
 name: sign-in
-description: How sign-in works in this repo and what must never go wrong - where secrets live, how sessions open and end, step-up, rate limits, the access log, and the operator commands. Use this before touching src/features/access, adding a security setting, or adding anything that needs a signed-in user.
+description: How sign-in works in this repo and what must never go wrong - where secrets live, how sessions open and end, passkeys and their challenges, step-up, rate limits, the access log, and the operator commands. Use this before touching src/features/access, adding a security setting, or adding anything that needs a signed-in user.
 ---
 
 # Sign-in
@@ -28,11 +28,25 @@ Every secret a browser holds - a session's secret, a setup token, a ceremony bin
 - Every page and server action authenticates first. The proxy only redirects early; the check that counts is next to
   the data.
 
+## Passkeys
+
+- `PasskeyVerifier` is the port; `infrastructure/simple-webauthn-verifier.ts` the only file that imports
+  `@simplewebauthn/server`. Browser responses reach it as `unknown`.
+- Spend the challenge with `ceremonies.spendChallenge` **before** verifying. Delete a sign-in ceremony whatever the
+  outcome; a setup ceremony survives a refused answer so the person can try again.
+- The library refuses a counter that did not grow; the adapter passes it 0 and `Passkeys.recordUse` notes the stall
+  instead. Do not "fix" that.
+- A refusal is `passkey_not_accepted` for every reason; the reason goes to `access_event.detail`, never to the page.
+- Tests use the software authenticator in `src/testing/support/authenticator.ts`: real keys (ES256, Ed25519, RS256)
+  and a `Tampering` option for every field a test wants wrong. Each refusal is tested for its reason.
+
 ## Security settings
 
 Anything that changes an authenticator, the username or another device, or creates an invite or recovery link, checks
 `Sessions.isFresh` **in the use case** and returns `step_up_required`. The screen asking first is a courtesy, not the
-control. Record the outcome in `access_event`, with `actorId` set when one user acts on the other's account.
+control. The step-up itself is `startPasskeySignIn` with `stepUp`, then `finishPasskeySignIn`: a fresh session for
+the same account replaces the old one. Record the outcome in `access_event`, with `actorId` set when one user acts on
+the other's account.
 
 ## Rate limits
 

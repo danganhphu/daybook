@@ -1,0 +1,1158 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "68b4f7c6-c1f6-4a5c-9447-78a8b7720bfa",
+  "prevIds": ["c05d573f-1b83-477f-8c1e-6a0ab80aa142"],
+  "ddl": [
+    {
+      "name": "access_event",
+      "entityType": "tables"
+    },
+    {
+      "name": "account",
+      "entityType": "tables"
+    },
+    {
+      "name": "ceremony",
+      "entityType": "tables"
+    },
+    {
+      "name": "passkey",
+      "entityType": "tables"
+    },
+    {
+      "name": "rate_limit",
+      "entityType": "tables"
+    },
+    {
+      "name": "session",
+      "entityType": "tables"
+    },
+    {
+      "name": "setup_link",
+      "entityType": "tables"
+    },
+    {
+      "name": "capture",
+      "entityType": "tables"
+    },
+    {
+      "name": "note",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "occurred_at",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "actor_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "passkey_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ip",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "device_label",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "detail",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "username",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "webauthn_user_handle",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding_hash",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "setup_link_id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "challenge",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "credential_id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "public_key",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "algorithm",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sign_count",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "transports",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "aaguid",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "backup_eligible",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "backed_up",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_used_at",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "key",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "window_start",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "hits",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verifier",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "method",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "passkey_id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "authenticated_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "device_label",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "purpose",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "token_hash",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "redeemed_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "received_at",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_access_event_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "access_event"
+    },
+    {
+      "columns": ["actor_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_access_event_actor_id_account_id_fk",
+      "entityType": "fks",
+      "table": "access_event"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_ceremony_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "ceremony"
+    },
+    {
+      "columns": ["setup_link_id"],
+      "tableTo": "setup_link",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_ceremony_setup_link_id_setup_link_id_fk",
+      "entityType": "fks",
+      "table": "ceremony"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_passkey_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "passkey"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_session_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "session"
+    },
+    {
+      "columns": ["passkey_id"],
+      "tableTo": "passkey",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_session_passkey_id_passkey_id_fk",
+      "entityType": "fks",
+      "table": "session"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_setup_link_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "setup_link"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_setup_link_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "setup_link"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["key", "window_start"],
+      "nameExplicit": false,
+      "name": "rate_limit_pk",
+      "entityType": "pks",
+      "table": "rate_limit"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "access_event_pk",
+      "table": "access_event",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "account_pk",
+      "table": "account",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "ceremony_pk",
+      "table": "ceremony",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "passkey_pk",
+      "table": "passkey",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "session_pk",
+      "table": "session",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "setup_link_pk",
+      "table": "setup_link",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "capture_pk",
+      "table": "capture",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "note_pk",
+      "table": "note",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        },
+        {
+          "value": "occurred_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "access_event_by_account",
+      "entityType": "indexes",
+      "table": "access_event"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "passkey_by_account",
+      "entityType": "indexes",
+      "table": "passkey"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_by_account",
+      "entityType": "indexes",
+      "table": "session"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"note\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "note_live_by_created_at",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": [
+        {
+          "value": "capture_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "note_by_capture",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": ["username"],
+      "nameExplicit": false,
+      "name": "account_username_unique",
+      "entityType": "uniques",
+      "table": "account"
+    },
+    {
+      "columns": ["webauthn_user_handle"],
+      "nameExplicit": false,
+      "name": "account_webauthn_user_handle_unique",
+      "entityType": "uniques",
+      "table": "account"
+    },
+    {
+      "columns": ["credential_id"],
+      "nameExplicit": false,
+      "name": "passkey_credential_id_unique",
+      "entityType": "uniques",
+      "table": "passkey"
+    },
+    {
+      "columns": ["token_hash"],
+      "nameExplicit": false,
+      "name": "setup_link_token_hash_unique",
+      "entityType": "uniques",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"kind\" in ('account_created', 'setup_link_issued', 'setup_link_redeemed', 'setup_link_refused', 'session_opened', 'session_ended', 'other_sessions_ended', 'sessions_revoked', 'passkey_added', 'passkey_removed', 'sign_in_failed', 'password_set', 'password_changed', 'password_locked', 'username_changed', 'display_name_changed', 'rate_limited')",
+      "name": "access_event_kind_known",
+      "entityType": "checks",
+      "table": "access_event"
+    },
+    {
+      "value": "\"detail\" is null or (json_valid(\"detail\") and json_type(\"detail\") = 'object')",
+      "name": "access_event_detail_object",
+      "entityType": "checks",
+      "table": "access_event"
+    },
+    {
+      "value": "length(\"username\") between 3 and 32 and \"username\" not glob '*[^a-z0-9._-]*'",
+      "name": "account_username_format",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "length(trim(\"display_name\")) between 1 and 60",
+      "name": "account_display_name_present",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "length(\"webauthn_user_handle\") = 43",
+      "name": "account_user_handle_length",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "\"kind\" in ('setup', 'passkey_registration', 'passkey_sign_in', 'password_sign_in', 'password_change')",
+      "name": "ceremony_kind_known",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "length(\"binding_hash\") = 43",
+      "name": "ceremony_binding_hash_length",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"challenge\" is null or length(\"challenge\") = 43",
+      "name": "ceremony_challenge_length",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"kind\" <> 'setup' or \"setup_link_id\" is not null",
+      "name": "ceremony_setup_names_its_link",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"expires_at\" > \"created_at\"",
+      "name": "ceremony_expires_after_creation",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"algorithm\" in (-7, -8, -257)",
+      "name": "passkey_algorithm_offered",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "\"sign_count\" >= 0",
+      "name": "passkey_sign_count_not_negative",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "json_valid(\"transports\") and json_type(\"transports\") = 'array'",
+      "name": "passkey_transports_array",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "\"backup_eligible\" in (0, 1) and \"backed_up\" in (0, 1)",
+      "name": "passkey_backup_flags",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "\"hits\" > 0",
+      "name": "rate_limit_hits_positive",
+      "entityType": "checks",
+      "table": "rate_limit"
+    },
+    {
+      "value": "\"method\" in ('passkey', 'password')",
+      "name": "session_method_known",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "length(\"verifier\") = 43",
+      "name": "session_verifier_length",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"method\" = 'passkey' or \"passkey_id\" is null",
+      "name": "session_password_names_no_passkey",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"expires_at\" > \"authenticated_at\"",
+      "name": "session_ends_after_it_starts",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "length(trim(\"device_label\")) between 1 and 100",
+      "name": "session_device_label_present",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"purpose\" in ('first_setup', 'invite', 'recovery')",
+      "name": "setup_link_purpose_known",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "length(\"token_hash\") = 43",
+      "name": "setup_link_token_hash_length",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "(\"purpose\" = 'invite' and (\"account_id\" is null or \"redeemed_at\" is not null)) or (\"purpose\" <> 'invite' and \"account_id\" is not null)",
+      "name": "setup_link_account_by_purpose",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "(\"purpose\" <> 'first_setup' or \"created_by\" is null) and (\"purpose\" <> 'invite' or \"created_by\" is not null)",
+      "name": "setup_link_author_by_purpose",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"expires_at\" > \"created_at\"",
+      "name": "setup_link_expires_after_creation",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"source\" in ('web', 'telegram')",
+      "name": "capture_source_known",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "capture_content_present",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "note_content_present",
+      "entityType": "checks",
+      "table": "note"
+    }
+  ],
+  "renames": []
+}

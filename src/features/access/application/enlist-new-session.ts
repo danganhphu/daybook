@@ -1,7 +1,7 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
 import * as AccessEvents from "@/features/access/domain/access-event";
-import type { RequestOrigin } from "@/features/access/domain/access-event";
+import type { AccessEventDetail, RequestOrigin } from "@/features/access/domain/access-event";
 import type { AccountId } from "@/features/access/domain/account";
 import type { PasskeyId } from "@/features/access/domain/passkey";
 import * as Sessions from "@/features/access/domain/session";
@@ -24,6 +24,8 @@ export type NewSessionRequest = {
   readonly origin: RequestOrigin;
   // The session this browser held before, ended in the same commit: every sign-in gets a new id (ASVS 7.2.4)
   readonly replacing: SessionId | undefined;
+  // Anything worth noting about how it went, such as a passkey counter that did not move
+  readonly signals?: AccessEventDetail;
 };
 
 export type OpenedSession = {
@@ -64,7 +66,7 @@ export async function enlistNewSession(
         actorId: session.accountId,
         sessionId: session.id,
         passkeyId: session.passkeyId,
-        detail: { method: session.method },
+        detail: { ...request.signals, method: session.method },
       },
       request.origin,
       now,
