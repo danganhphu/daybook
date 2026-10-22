@@ -13,6 +13,10 @@
 }
 
 .header-inner {
+  display: flex;
+  gap: space(2);
+  align-items: flex-start;
+  justify-content: space-between;
   max-inline-size: size(content);
   margin-inline: auto;
 }

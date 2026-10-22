@@ -16,6 +16,7 @@ declare const sample: string;
 declare const caption: string;
 declare const items: string;
 declare const stack: string;
+declare const block: string;
 declare const frame: string;
 declare const row: string;
 declare const hint: string;
@@ -34,6 +35,7 @@ declare const __default_export__: {
 	caption: typeof caption;
 	items: typeof items;
 	stack: typeof stack;
+	block: typeof block;
 	frame: typeof frame;
 	row: typeof row;
 	hint: typeof hint;
@@ -42,4 +44,4 @@ declare const __default_export__: {
 	rowText: typeof rowText;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2FsbGVyeS5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJnYWxsZXJ5Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FhQTtjQU1BO2NBSUE7Y0FNQTtjQVFBO2NBSUE7Y0FNQTtjQU1BO2NBT0k7Y0FDQTtjQUNBO2NBWUo7Y0FNQTtjQXVCQTtjQVNBOzs7Q0FoSEE7Q0FhQTtDQU1BO0NBSUE7Q0FNQTtDQVFBO0NBSUE7Q0FNQTtDQU1BO0NBT0k7Q0FDQTtDQUNBO0NBWUo7Q0FNQTtDQXVCQTtDQVNBOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2FsbGVyeS5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJnYWxsZXJ5Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FhQTtjQU1BO2NBSUE7Y0FNQTtjQVFBO2NBSUE7Y0FNQTtjQU1BO2NBT0k7Y0FDQTtjQUNBO2NBQ0E7Y0FrQko7Y0FNQTtjQXVCQTtjQVNBOzs7Q0F2SEE7Q0FhQTtDQU1BO0NBSUE7Q0FNQTtDQVFBO0NBSUE7Q0FNQTtDQU1BO0NBT0k7Q0FDQTtDQUNBO0NBQ0E7Q0FrQko7Q0FNQTtDQXVCQTtDQVNBOzsifQ==

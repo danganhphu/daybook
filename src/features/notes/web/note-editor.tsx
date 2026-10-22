@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { parseContent } from "@/shared/domain/content";
+import { actionLabels } from "@/shared/ui/action-labels";
 import { Button } from "@/shared/ui/button/button";
 import { TextArea } from "@/shared/ui/text-area/text-area";
 import { currentDevice, enterSends } from "@/shared/web/enter-key";
@@ -101,10 +102,10 @@ export function NoteEditor({ initial, initialError, onSave, onCancel }: NoteEdit
       )}
       <div className={styles.actions}>
         <Button variant="quiet" onClick={onCancel}>
-          Huỷ
+          {actionLabels.cancel}
         </Button>
         <Button variant="primary" type="submit">
-          Lưu
+          {actionLabels.save}
         </Button>
       </div>
     </form>

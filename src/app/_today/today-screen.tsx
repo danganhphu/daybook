@@ -1,15 +1,20 @@
 "use client";
 
-import { startTransition, useCallback, useMemo, useOptimistic } from "react";
+import { LogOut, Settings } from "lucide-react";
+import { startTransition, useCallback, useMemo, useOptimistic, useRef } from "react";
 
 import { deleteNote, editNote, recordNote, restoreNote } from "@/app/actions";
+import { accessCopy } from "@/features/access/web/access-copy";
 import { Composer } from "@/features/capture/web/composer";
 import { applyChange, type ShownNote } from "@/features/notes/web/note-list";
 import { NoteRow } from "@/features/notes/web/note-row";
 import type { NoteView } from "@/features/notes/web/note-view";
+import { actionLabels } from "@/shared/ui/action-labels";
+import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
+import { routes } from "@/shared/web/routes";
 
 import styles from "./today-screen.module.scss";
 
@@ -23,6 +28,18 @@ export type TodayScreenProps = {
 // Today as a chat: the notes above, oldest first, and the box at the bottom where the thumb is
 export function TodayScreen({ label, notes }: TodayScreenProps) {
   const toast = useToast();
+  const signOutForm = useRef<HTMLFormElement>(null);
+  const menuActions = useMemo<ReadonlyArray<MenuAction>>(
+    () => [
+      { label: accessCopy.settings, icon: Settings, href: routes.settings },
+      {
+        label: accessCopy.signOut,
+        icon: LogOut,
+        onSelect: () => signOutForm.current?.requestSubmit(),
+      },
+    ],
+    [],
+  );
   const saved = useMemo<ReadonlyArray<ShownNote>>(
     () => notes.map((note) => ({ ...note, saving: false })),
     [notes],
@@ -56,7 +73,7 @@ export function TodayScreen({ label, notes }: TodayScreenProps) {
         toast.show({
           title: "Đã xoá ghi chú",
           description: note.content,
-          action: { label: "Hoàn tác", onAction: () => restore(note) },
+          action: { label: actionLabels.undo, onAction: () => restore(note) },
         });
       });
     },
@@ -67,8 +84,13 @@ export function TodayScreen({ label, notes }: TodayScreenProps) {
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <p className={styles.date}>{label}</p>
-          <h1 className={styles.title}>Hôm nay</h1>
+          <div>
+            <p className={styles.date}>{label}</p>
+            <h1 className={styles.title}>Hôm nay</h1>
+          </div>
+          <ActionMenu label={actionLabels.options} actions={menuActions} />
+          {/* A plain POST, so the response can tell the browser to drop the cookies */}
+          <form ref={signOutForm} method="post" action={routes.signOut} hidden />
         </div>
       </header>
       <main className={styles.scroller}>

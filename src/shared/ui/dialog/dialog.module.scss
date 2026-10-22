@@ -1,0 +1,75 @@
+@use "abstracts" as *;
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: z(overlay);
+  background: color(scrim);
+
+  @include motion {
+    transition: opacity duration(fast) easing(out);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      opacity: 0;
+    }
+  }
+}
+
+// A sheet from the bottom on a phone
+.popup {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: z(overlay);
+  display: grid;
+  gap: space(2);
+  padding: space(6) space(4) space(8);
+  background: color(surface);
+  border-radius: radius(surface) radius(surface) 0 0;
+  box-shadow: var(--shadow-overlay);
+
+  @include motion {
+    transition:
+      transform duration(slow) easing(out),
+      opacity duration(fast) easing(out);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      opacity: 0;
+      transform: translateY(#{space(8)});
+    }
+  }
+
+  // A card in the middle on a desk
+  @include from(md) {
+    inset-block: 50% auto;
+    inset-inline: 50% auto;
+    inline-size: size(panel);
+    border-radius: radius(surface);
+    transform: translate(-50%, -50%);
+
+    @include motion {
+      &[data-starting-style],
+      &[data-ending-style] {
+        transform: translate(-50%, -50%) scale(0.96);
+      }
+    }
+  }
+}
+
+.title {
+  @include text(title);
+}
+
+.description {
+  color: color(text-muted);
+
+  @include text(body);
+}
+
+.actions {
+  display: grid;
+  gap: space(2);
+  margin-block-start: space(4);
+}

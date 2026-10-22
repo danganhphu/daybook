@@ -2,14 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import type { App } from "@/composition/create-app";
 import { noteErrorMessages } from "@/features/notes/application/note-errors";
-import { content, testApp, testClock } from "@/testing/support/app";
+import { content, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 
 import { deleteNote, editNote, restoreNote, todaysNotes } from "./commands";
 import { toNoteView } from "./note-view";
 
 async function recorded(app: App, text: string) {
-  return toNoteView(await app.recordCapture({ content: content(text), source: "web" }));
+  return toNoteView(
+    await app.recordCapture({ content: content(text), source: "web", authorId: await theAuthor() }),
+  );
 }
 
 async function notesToday(app: App) {

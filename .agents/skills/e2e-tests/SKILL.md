@@ -12,9 +12,24 @@ Android phone and a desktop - the last two as real Chrome (`channel: "chromium"`
 ## Running
 
 - It tests the last `pnpm build`. Build first.
-- `e2e/serve.ts` empties `.cloudflare/e2e-state`, migrates it and serves the build; the dev database is never touched.
-- One worker: scenarios share a database and empty the day through the screen. About a minute.
-- Tags: `@desktop-only`, `@phone-only`, `@chromium-only` (for steps that ask Chrome itself over CDP).
+- `e2e/serve.ts` empties `.cloudflare/e2e-state`, migrates it, seeds it and serves the build over HTTPS on port
+  4173; the dev database is never touched. Nothing else may hold that port while it runs.
+- One worker: scenarios share a database and empty the day through the screen. About three minutes.
+- Tags: `@desktop-only`, `@phone-only`, `@chromium-only` (for steps that ask Chrome itself over CDP: install checks,
+  and passkeys through `e2e/face-id.ts`, since Playwright's WebKit has none).
+
+## The seed
+
+`e2e/seed.ts` makes random rows per run with the app's own code: Lan signed in (one fresh session, several old enough
+to need step-up, each with its `session_opened` event), Lan's password, and setup links for Minh. Seeded things a
+scenario spends - setup links, stale sessions - are counted in a file, so a retry never gets a used one. A value one
+step finds for a later one (a link shown once) goes in the `remembered` fixture. The pepper is random per run and
+passed to the preview as `PASSWORD_PEPPER`.
+
+## Outside services
+
+The breach check calls Have I Been Pwned from the browser; a scenario that sets a password answers it with
+`page.route` ("mật khẩu nào cũng chưa từng bị lộ"). Never depend on the real service.
 
 ## What an assertion must wait for
 

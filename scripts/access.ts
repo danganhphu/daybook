@@ -1,12 +1,14 @@
 // The first account, and break-glass when nobody can sign in; everything else is in the app's Settings.
-//   pnpm access:account --username <name> --name "<display name>" --origin <app URL> --remote|--dry-run
-//   pnpm access:setup-link --username <name> --origin <app URL> --remote|--dry-run
-//   pnpm access:revoke --username <name> --remote|--dry-run
+//   pnpm access:account --username <name> --name "<display name>" --origin <app URL> --remote|--local|--dry-run
+//   pnpm access:setup-link --username <name> --origin <app URL> --remote|--local|--dry-run
+//   pnpm access:revoke --username <name> --remote|--local|--dry-run
+// --local writes to the dev database in .cloudflare/state; stop the dev server first.
 // A REST batch may not be atomic: an account left without its link gets one from access:setup-link.
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { parseArgs } from "node:util";
 
 import type { Query } from "drizzle-orm";
@@ -15,6 +17,7 @@ import { z } from "zod";
 import { databaseId } from "#cloudflare-config";
 import { createOperatorConsole, type IssuedLink } from "@/composition/operator-console";
 import { displayNameSchema, usernameSchema } from "@/features/access/domain/account";
+import { setupLinkUrl } from "@/features/access/web/setup-link-url";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
 
 const { positionals, values } = parseArgs({
@@ -24,13 +27,16 @@ const { positionals, values } = parseArgs({
     name: { type: "string" },
     origin: { type: "string" },
     remote: { type: "boolean", default: false },
+    local: { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
   },
 });
 
 const command = z.enum(["account", "setup-link", "revoke"]).parse(positionals[0]);
-if (values.remote === values["dry-run"]) {
-  throw new Error("Choose one: --remote (writes to the production database) or --dry-run");
+if ([values.remote, values.local, values["dry-run"]].filter(Boolean).length !== 1) {
+  throw new Error(
+    "Choose one: --remote (the production database), --local (the dev database) or --dry-run",
+  );
 }
 const username = usernameSchema.parse(values.username);
 const operator = createOperatorConsole();
@@ -41,7 +47,50 @@ const d1Answer = z.union([
   z.array(z.object({ results: z.array(z.unknown()) })),
 ]);
 
+// What Drizzle binds is text, numbers or null; anything else is a bug, not a value to coerce
+function sqlValue(param: unknown): SQLInputValue {
+  if (param === null || typeof param === "string" || typeof param === "number") {
+    return param;
+  }
+  throw new Error(`Cannot bind a ${typeof param} to SQLite`);
+}
+
+// The dev server's D1 is a SQLite file in .cloudflare/state, which cf cannot query; Node opens it directly and runs
+// the statements in one transaction, as D1's batch would
+function queryLocal(statements: ReadonlyArray<Query>): unknown[][] {
+  const folder = ".cloudflare/state/v3/d1/miniflare-D1DatabaseObject";
+  const files = readdirSync(folder).filter(
+    (name) => name.endsWith(".sqlite") && name !== "metadata.sqlite",
+  );
+  if (files.length !== 1) {
+    throw new Error(
+      `Expected one database in ${folder}, found ${files.length}; run pnpm db:migrate first`,
+    );
+  }
+
+  const db = new DatabaseSync(join(folder, files[0] ?? ""));
+  try {
+    db.exec("PRAGMA foreign_keys = ON");
+    db.exec("BEGIN");
+    const rows = statements.map(({ sql, params }) => db.prepare(sql).all(...params.map(sqlValue)));
+    db.exec("COMMIT");
+
+    return rows;
+  } catch (error) {
+    if (db.isTransaction) {
+      db.exec("ROLLBACK");
+    }
+    throw error;
+  } finally {
+    db.close();
+  }
+}
+
 function query(statements: ReadonlyArray<Query>): unknown[][] {
+  if (values.local) {
+    return queryLocal(statements);
+  }
+
   const directory = mkdtempSync(join(tmpdir(), "daybook-access-"));
   try {
     const file = join(directory, "batch.json");
@@ -75,7 +124,7 @@ function printLink(issued: IssuedLink, displayName: string) {
   console.log(
     `Link cài đặt cho ${displayName}, dùng một lần, hết hạn lúc ${expires.toString({ smallestUnit: "minute" })}:`,
   );
-  console.log(`${linkOrigin()}/setup#${issued.token}`);
+  console.log(setupLinkUrl(new URL(linkOrigin()), issued.token));
 }
 
 async function existingAccount() {

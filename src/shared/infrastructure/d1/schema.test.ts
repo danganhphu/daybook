@@ -1,16 +1,32 @@
 import { env } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 // Guards the hand-edited parts of the migration: STRICT, the checks, the foreign key and the append-only triggers.
 // If a regenerated migration loses any of them, one of these fails.
 
 const captureId = "019a0000-0000-7000-8000-000000000001";
+const authorId = "019a0000-0000-7000-8000-0000000000a1";
 
-function insertCapture(id: unknown, content: unknown, source: unknown, receivedAt: unknown) {
-  return env.DB.prepare(
-    "insert into capture (id, content, source, received_at) values (?, ?, ?, ?)",
+// Every capture names its author, so each test starts with one account
+beforeEach(async () => {
+  await env.DB.prepare(
+    "insert into account (id, username, display_name, webauthn_user_handle, created_at, updated_at) values (?, 'author', 'Người ghi', ?, 1, 1)",
   )
-    .bind(id, content, source, receivedAt)
+    .bind(authorId, "H".repeat(43))
+    .run();
+});
+
+function insertCapture(
+  id: unknown,
+  content: unknown,
+  source: unknown,
+  receivedAt: unknown,
+  author: unknown = authorId,
+) {
+  return env.DB.prepare(
+    "insert into capture (id, content, source, author_id, received_at) values (?, ?, ?, ?, ?)",
+  )
+    .bind(id, content, source, author, receivedAt)
     .run();
 }
 
@@ -42,6 +58,18 @@ describe("capture table", () => {
   it("given text in an integer column, when inserted, then STRICT refuses it instead of coercing", async () => {
     await expect(insertCapture(captureId, "ghi chú", "web", "yesterday")).rejects.toThrow(
       /cannot store TEXT value in INTEGER column/,
+    );
+  });
+
+  it("given an author with no account, when inserted, then the foreign key refuses it", async () => {
+    await expect(
+      insertCapture(captureId, "ghi chú", "web", 1, "019a0000-0000-7000-8000-0000000000ff"),
+    ).rejects.toThrow(/FOREIGN KEY constraint failed/);
+  });
+
+  it("given no author, when inserted, then the table refuses it", async () => {
+    await expect(insertCapture(captureId, "ghi chú", "web", 1, null)).rejects.toThrow(
+      /NOT NULL constraint failed: capture\.author_id/,
     );
   });
 

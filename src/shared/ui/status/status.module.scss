@@ -1,0 +1,14 @@
+@use "abstracts" as *;
+
+// Keeps its line even when empty, so nothing below jumps when a message appears
+.status {
+  min-block-size: 1lh;
+  color: color(text-muted);
+  text-align: center;
+
+  @include text(body-sm);
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+}

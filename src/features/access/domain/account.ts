@@ -10,14 +10,21 @@ export const accountIdSchema = z.uuid().brand<"AccountId">();
 
 export type AccountId = z.infer<typeof accountIdSchema>;
 
+export const usernameLength = { minimum: 3, maximum: 32 } as const;
+
+export const displayNameMaxLength = 60;
+
+// What a valid username looks like, for the field's hint and its error alike
+export const usernameRule = `${usernameLength.minimum}-${usernameLength.maximum} ký tự, chỉ gồm chữ không dấu, số và . _ -`;
+
 // What someone types to sign in with the fallback password. Plain Latin so every keyboard types it the same way,
 // lower-cased so "Lan" and "lan" are one name.
 export const usernameSchema = z
   .string({ error: "Tên đăng nhập phải là chữ" })
   .trim()
   .toLowerCase()
-  .regex(/^[a-z0-9._-]{3,32}$/, {
-    error: "Tên đăng nhập dài 3-32 ký tự: chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang",
+  .regex(new RegExp(`^[a-z0-9._-]{${usernameLength.minimum},${usernameLength.maximum}}$`), {
+    error: `Tên đăng nhập ${usernameRule}`,
   })
   .brand<"Username">();
 
@@ -25,11 +32,11 @@ export type Username = z.infer<typeof usernameSchema>;
 
 // The name the app and the passkey manager show. NFC, so a name typed with Telex and with VNI is one string.
 export const displayNameSchema = z
-  .string({ error: "Tên hiển thị phải là chữ" })
+  .string({ error: "Tên phải là chữ" })
   .normalize("NFC")
   .trim()
-  .min(1, { error: "Chưa có tên hiển thị" })
-  .max(60, { error: "Tên hiển thị tối đa 60 ký tự" })
+  .min(1, { error: "Chưa nhập tên" })
+  .max(displayNameMaxLength, { error: `Tên tối đa ${displayNameMaxLength} ký tự` })
   .brand<"DisplayName">();
 
 export type DisplayName = z.infer<typeof displayNameSchema>;
@@ -56,4 +63,17 @@ export type NewAccount = {
 
 export function create(details: NewAccount, now: Temporal.Instant): Account {
   return { id: accountIdSchema.parse(uuidv7()), ...details, createdAt: now, updatedAt: now };
+}
+
+export function rename(account: Account, displayName: DisplayName, now: Temporal.Instant): Account {
+  return { ...account, displayName, updatedAt: now };
+}
+
+// The user handle stays: passkeys know the account by it, so a new username needs no new passkey
+export function changeUsername(
+  account: Account,
+  username: Username,
+  now: Temporal.Instant,
+): Account {
+  return { ...account, username, updatedAt: now };
 }

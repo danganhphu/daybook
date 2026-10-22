@@ -61,6 +61,7 @@
 
   > textarea,
   > .stack,
+  > .block,
   > .frame,
   > .row {
     flex: 1 1 100%;
@@ -72,6 +73,12 @@
   flex-direction: column;
   gap: space(2);
   align-items: flex-start;
+}
+
+// Full width, for what fills its column: a field, a list
+.block {
+  display: grid;
+  gap: space(2);
 }
 
 .hint {

@@ -1,41 +1,32 @@
-import { env } from "cloudflare:workers";
-
-import { createUnitOfWork } from "@/composition/unit-of-work";
 import { parseCeremonyCookie } from "@/features/access/application/ceremony-cookie";
-import {
-  finishPasskeySetup,
-  type FinishPasskeySetupRequest,
-} from "@/features/access/application/finish-passkey-setup";
-import {
-  finishPasskeySignIn,
-  type FinishPasskeySignInRequest,
-} from "@/features/access/application/finish-passkey-sign-in";
-import { startPasskeySetup } from "@/features/access/application/start-passkey-setup";
-import {
-  startPasskeySignIn,
-  type StartPasskeySignInRequest,
-} from "@/features/access/application/start-passkey-sign-in";
-import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
-import { createCeremonyRepository } from "@/features/access/infrastructure/ceremony-repository";
-import { createRateLimiter } from "@/features/access/infrastructure/d1-rate-limiter";
-import { createPasskeyRepository } from "@/features/access/infrastructure/passkey-repository";
-import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
-import {
-  createSimpleWebAuthnVerifier,
-  type RelyingParty,
-} from "@/features/access/infrastructure/simple-webauthn-verifier";
-import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
-import type { Clock } from "@/shared/application/clock";
-import { createDatabase } from "@/shared/infrastructure/d1/database";
 
+import { origin, seedAccount, seedSetupLink } from "./access";
+import { relyingParty, testApp, type testClock } from "./app";
 import { softwareAuthenticator } from "./authenticator";
+import { expectOk } from "./result";
 
-// A made-up workers.dev host: the shape of the real one, which is never written into the repository
-export const relyingParty: RelyingParty = {
-  id: "daybook.example.workers.dev",
-  origin: "https://daybook.example.workers.dev",
-  name: "daybook",
-};
+// Someone who went through setup: an account, the passkey on their phone, and the session setup opened
+export async function seedPasskeyAccount(time: ReturnType<typeof testClock>, username = "lan") {
+  const account = await seedAccount(time.clock, username);
+  const { token } = await seedSetupLink(time.clock, {
+    purpose: "first_setup",
+    accountId: account.id,
+  });
+  const app = testApp(time.clock);
+  const grant = expectOk(await app.redeemSetupLink(token, origin()));
+  const options = expectOk(await app.startPasskeySetup(grant.cookie));
+  const { response, passkey } = await anAuthenticator().create(options);
+  const finished = expectOk(
+    await app.finishPasskeySetup({
+      ceremonyCookie: grant.cookie,
+      response,
+      origin: origin(),
+      replacing: undefined,
+    }),
+  );
+
+  return { account, passkey, stored: finished.passkey, session: finished.session };
+}
 
 // The ceremony a cookie names, for tests that forge the binding next to it
 export function ceremonyIdIn(cookie: string) {
@@ -47,31 +38,7 @@ export function ceremonyIdIn(cookie: string) {
   return parsed.ceremonyId;
 }
 
+// A phone that answers for the test app's relying party
 export function anAuthenticator() {
   return softwareAuthenticator({ origin: relyingParty.origin, rpId: relyingParty.id });
-}
-
-// The passkey use cases over the test's D1, wired the way the App will wire them once the sign-in screens exist
-export function passkeyUseCases(clock: Clock) {
-  const db = createDatabase(env.DB);
-  const deps = {
-    clock,
-    secrets: webCryptoSecrets,
-    ceremonies: createCeremonyRepository(db),
-    accounts: createAccountRepository(db),
-    passkeys: createPasskeyRepository(db),
-    setupLinks: createSetupLinkRepository(db),
-    rateLimiter: createRateLimiter(db),
-    verifier: createSimpleWebAuthnVerifier(relyingParty),
-    startUnitOfWork: () => createUnitOfWork(db),
-  };
-
-  return {
-    startPasskeySetup: (ceremonyCookie: string | undefined) =>
-      startPasskeySetup(deps, ceremonyCookie),
-    finishPasskeySetup: (request: FinishPasskeySetupRequest) => finishPasskeySetup(deps, request),
-    startPasskeySignIn: (request: StartPasskeySignInRequest) => startPasskeySignIn(deps, request),
-    finishPasskeySignIn: (request: FinishPasskeySignInRequest) =>
-      finishPasskeySignIn(deps, request),
-  };
 }

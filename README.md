@@ -7,7 +7,8 @@ A Telegram bot is the main way in; a web app, installable as a PWA, is the secon
 on the free plan.
 
 **Status:** early. The web app records, edits and deletes notes, with Undo, and installs to a phone's home screen.
-Sign-in is being built. Nothing is deployed yet.
+Signing in takes Face ID or a fingerprint (a passkey), with a password as the fallback; the settings cover devices,
+invites and recovery links. Nothing is deployed yet.
 
 ## Stack
 

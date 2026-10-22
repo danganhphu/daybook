@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { content, testApp, testClock } from "@/testing/support/app";
+import { content, testApp, testClock, theAuthor } from "@/testing/support/app";
 
 describe("listNotesForToday", () => {
   it("given the last minute of a Vietnamese day, when today is listed, then it is still that day", async () => {
@@ -22,9 +22,17 @@ describe("listNotesForToday", () => {
   it("given notes from yesterday and today, when today is listed, then only today's are there", async () => {
     const time = testClock("2026-10-18T03:00:00Z");
     const app = testApp(time.clock);
-    await app.recordCapture({ content: content("hôm qua"), source: "web" });
+    await app.recordCapture({
+      content: content("hôm qua"),
+      source: "web",
+      authorId: await theAuthor(),
+    });
     time.setTo("2026-10-19T03:00:00Z");
-    await app.recordCapture({ content: content("hôm nay"), source: "web" });
+    await app.recordCapture({
+      content: content("hôm nay"),
+      source: "web",
+      authorId: await theAuthor(),
+    });
 
     const today = await app.listNotesForToday();
 

@@ -1,10 +1,11 @@
-import { and, eq, lte, ne } from "drizzle-orm";
+import { and, eq, isNull, lte, ne } from "drizzle-orm";
 
 import type {
   AccessEventWrites,
   AccountWrites,
   CeremonyWrites,
   PasskeyWrites,
+  PasswordWrites,
   SessionWrites,
   SetupLinkWrites,
 } from "@/features/access/application/access-writes";
@@ -19,6 +20,8 @@ import { toCeremonyRow } from "./ceremony-mapping";
 import { ceremonyTable } from "./ceremony.table";
 import { toPasskeyRow } from "./passkey-mapping";
 import { passkeyTable } from "./passkey.table";
+import { toPasswordRow } from "./password-mapping";
+import { passwordTable } from "./password.table";
 import { toSessionRow } from "./session-mapping";
 import { sessionTable } from "./session.table";
 import { toSetupLinkRow } from "./setup-link-mapping";
@@ -28,6 +31,19 @@ export function createAccountWrites(db: Database, batch: Batch): AccountWrites {
   return {
     add(account) {
       batch.enlist(db.insert(accountTable).values(toAccountRow(account)));
+    },
+
+    update(account) {
+      batch.enlist(
+        db
+          .update(accountTable)
+          .set({
+            username: account.username,
+            displayName: account.displayName,
+            updatedAt: account.updatedAt.epochMilliseconds,
+          })
+          .where(eq(accountTable.id, account.id)),
+      );
     },
   };
 }
@@ -48,6 +64,37 @@ export function createPasskeyWrites(db: Database, batch: Batch): PasskeyWrites {
             lastUsedAt: passkey.lastUsedAt?.epochMilliseconds ?? null,
           })
           .where(eq(passkeyTable.id, passkey.id)),
+      );
+    },
+
+    // Sessions it opened keep running; their passkey_id is set null by the foreign key
+    remove(id) {
+      batch.enlist(db.delete(passkeyTable).where(eq(passkeyTable.id, id)));
+    },
+  };
+}
+
+export function createPasswordWrites(db: Database, batch: Batch): PasswordWrites {
+  return {
+    save(password) {
+      const row = toPasswordRow(password);
+      batch.enlist(
+        db
+          .insert(passwordTable)
+          .values(row)
+          .onConflictDoUpdate({ target: passwordTable.accountId, set: row }),
+      );
+    },
+
+    recordAttempt(password) {
+      batch.enlist(
+        db
+          .update(passwordTable)
+          .set({
+            consecutiveFailures: password.consecutiveFailures,
+            lockedAt: password.lockedAt?.epochMilliseconds ?? null,
+          })
+          .where(eq(passwordTable.accountId, password.accountId)),
       );
     },
   };
@@ -111,6 +158,16 @@ export function createCeremonyWrites(db: Database, batch: Batch): CeremonyWrites
 
     setChallenge(id, challenge) {
       batch.enlist(db.update(ceremonyTable).set({ challenge }).where(eq(ceremonyTable.id, id)));
+    },
+
+    // Only while it has none: a second name for the same setup changes nothing
+    setAccount(id, accountId) {
+      batch.enlist(
+        db
+          .update(ceremonyTable)
+          .set({ accountId })
+          .where(and(eq(ceremonyTable.id, id), isNull(ceremonyTable.accountId))),
+      );
     },
 
     remove(id) {

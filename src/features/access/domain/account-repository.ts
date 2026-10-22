@@ -4,4 +4,6 @@ import type { Account, AccountId, Username } from "./account";
 export type AccountRepository = {
   get(id: AccountId): Promise<Account | undefined>;
   findByUsername(username: Username): Promise<Account | undefined>;
+  // Everyone who shares the book, oldest first: two people, so never paged
+  list(): Promise<ReadonlyArray<Account>>;
 };

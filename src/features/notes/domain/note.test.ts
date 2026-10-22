@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import * as Captures from "@/features/capture/domain/capture";
 import { contentSchema } from "@/shared/domain/content";
+import { anAuthorId } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 
 import * as Notes from "./note";
@@ -12,12 +13,19 @@ const later = Temporal.Instant.from("2026-10-16T02:00:00Z");
 const latest = Temporal.Instant.from("2026-10-16T03:00:00Z");
 
 function aLiveNote() {
-  return Notes.fromCapture(Captures.receive(contentSchema.parse("giấy in x2"), "web", received));
+  return Notes.fromCapture(
+    Captures.receive(contentSchema.parse("giấy in x2"), "web", anAuthorId, received),
+  );
 }
 
 describe("Notes.fromCapture", () => {
   it("given a capture, when filed as a note, then the note has its words and time and points back at it", () => {
-    const capture = Captures.receive(contentSchema.parse("bán 2 thùng giấy in"), "web", received);
+    const capture = Captures.receive(
+      contentSchema.parse("bán 2 thùng giấy in"),
+      "web",
+      anAuthorId,
+      received,
+    );
 
     const note = Notes.fromCapture(capture);
 

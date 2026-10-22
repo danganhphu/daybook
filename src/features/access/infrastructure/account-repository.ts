@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import type { AccountRepository } from "@/features/access/domain/account-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -22,6 +22,15 @@ export function createAccountRepository(db: Database): AccountRepository {
         .limit(1);
 
       return row === undefined ? undefined : toAccount(row);
+    },
+
+    async list() {
+      const rows = await db
+        .select()
+        .from(accountTable)
+        .orderBy(asc(accountTable.createdAt), asc(accountTable.id));
+
+      return rows.map(toAccount);
     },
   };
 }

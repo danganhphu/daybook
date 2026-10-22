@@ -20,6 +20,18 @@ export const webCryptoSecrets: Secrets = {
     return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
   },
 
+  async hmacSha256(key, data) {
+    const hmacKey = await crypto.subtle.importKey(
+      "raw",
+      key,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+
+    return new Uint8Array(await crypto.subtle.sign("HMAC", hmacKey, data));
+  },
+
   // Lengths are not secret here - every hash is 32 bytes - and timingSafeEqual throws on a mismatch
   equalInConstantTime(a, b) {
     if (!hasTimingSafeEqual(crypto.subtle)) {

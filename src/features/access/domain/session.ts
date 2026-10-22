@@ -17,8 +17,15 @@ export const authenticationMethods = ["passkey", "password"] as const;
 
 export type AuthenticationMethod = (typeof authenticationMethods)[number];
 
+export const deviceLabelMaxLength = 100;
+
 // How the device list names a device, for example "Chrome trên Android"
-export const deviceLabelSchema = z.string().trim().min(1).max(100).brand<"DeviceLabel">();
+export const deviceLabelSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(deviceLabelMaxLength)
+  .brand<"DeviceLabel">();
 
 export type DeviceLabel = z.infer<typeof deviceLabelSchema>;
 

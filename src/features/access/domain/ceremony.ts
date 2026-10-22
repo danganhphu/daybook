@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { ceremonyLifetime, setupLinkLifetime } from "./access-policy";
 import type { AccountId } from "./account";
+import type { PasswordSalt } from "./password";
 import { randomValueSchema, type SecretHash } from "./secret";
 import type { RedeemedSetupLink, SetupLinkId } from "./setup-link";
 
@@ -39,6 +40,8 @@ export type Ceremony = {
   readonly setupLinkId: SetupLinkId | undefined;
   // The challenge a passkey prompt is waiting on, if one is. A setup gets a new one for every attempt.
   readonly challenge: Challenge | undefined;
+  // The salt handed to the browser for a new password, kept until the password it derives arrives
+  readonly salt: PasswordSalt | undefined;
   readonly createdAt: Temporal.Instant;
   readonly expiresAt: Temporal.Instant;
 };
@@ -56,6 +59,7 @@ export function startSetup(
     accountId: link.accountId,
     setupLinkId: link.id,
     challenge: undefined,
+    salt: undefined,
     createdAt: now,
     expiresAt: now.add(setupLinkLifetime),
   };
@@ -75,6 +79,67 @@ export function startPasskeySignIn(
     accountId,
     setupLinkId: undefined,
     challenge,
+    salt: undefined,
+    createdAt: now,
+    expiresAt: now.add(ceremonyLifetime),
+  };
+}
+
+// Another passkey for an account already signed in, from its settings
+export function startPasskeyRegistration(
+  bindingHash: SecretHash,
+  challenge: Challenge,
+  accountId: AccountId,
+  now: Temporal.Instant,
+): Ceremony {
+  return {
+    id: ceremonyIdSchema.parse(uuidv7()),
+    kind: "passkey_registration",
+    bindingHash,
+    accountId,
+    setupLinkId: undefined,
+    challenge,
+    salt: undefined,
+    createdAt: now,
+    expiresAt: now.add(ceremonyLifetime),
+  };
+}
+
+// A password sign-in under way. The account is undefined when the username matched nobody: the browser still gets a
+// salt and still finishes, so whether a username exists is not something the answers tell apart.
+export function startPasswordSignIn(
+  bindingHash: SecretHash,
+  accountId: AccountId | undefined,
+  now: Temporal.Instant,
+): Ceremony {
+  return {
+    id: ceremonyIdSchema.parse(uuidv7()),
+    kind: "password_sign_in",
+    bindingHash,
+    accountId,
+    setupLinkId: undefined,
+    challenge: undefined,
+    salt: undefined,
+    createdAt: now,
+    expiresAt: now.add(ceremonyLifetime),
+  };
+}
+
+// A new password for a signed-in account: the salt is chosen here, so the browser cannot pick a weak one
+export function startPasswordChange(
+  bindingHash: SecretHash,
+  accountId: AccountId,
+  salt: PasswordSalt,
+  now: Temporal.Instant,
+): Ceremony {
+  return {
+    id: ceremonyIdSchema.parse(uuidv7()),
+    kind: "password_change",
+    bindingHash,
+    accountId,
+    setupLinkId: undefined,
+    challenge: undefined,
+    salt,
     createdAt: now,
     expiresAt: now.add(ceremonyLifetime),
   };

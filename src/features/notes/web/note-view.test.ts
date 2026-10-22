@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import * as Captures from "@/features/capture/domain/capture";
 import * as Notes from "@/features/notes/domain/note";
-import { content } from "@/testing/support/app";
+import { anAuthorId, content } from "@/testing/support/app";
 
 import { clockTime, preview, toNoteView } from "./note-view";
 
@@ -11,7 +11,7 @@ describe("toNoteView", () => {
   it("given a note, when viewed, then it keeps the words exactly and shows the time on the user's clock", () => {
     const typed = "  Giao 2 thùng giấy in\nthu 850.000đ  ";
     const received = Temporal.Instant.from("2026-10-19T02:12:00Z");
-    const note = Notes.fromCapture(Captures.receive(content(typed), "web", received));
+    const note = Notes.fromCapture(Captures.receive(content(typed), "web", anAuthorId, received));
 
     expect(toNoteView(note)).toEqual({
       id: note.id,

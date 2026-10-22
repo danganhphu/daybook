@@ -1,0 +1,59 @@
+@use "abstracts" as *;
+
+.field {
+  display: grid;
+  gap: space(1);
+}
+
+.label {
+  @include text(label);
+}
+
+// The box draws the edge and the focus ring, so the eye button sits inside it
+.box {
+  display: flex;
+  align-items: center;
+  min-block-size: size(control-lg);
+  padding-inline-end: space(1);
+  background: color(surface);
+  border: 1px solid color(border-strong);
+  border-radius: radius(control);
+
+  &:focus-within {
+    outline: 2px solid color(accent);
+    outline-offset: -1px;
+  }
+
+  .field[data-invalid] & {
+    border-color: color(danger);
+  }
+}
+
+.input {
+  flex: 1;
+  min-inline-size: 0;
+  padding: space(3);
+  color: color(text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+
+  @include text(body);
+
+  &:disabled {
+    color: color(text-muted);
+    cursor: not-allowed;
+  }
+}
+
+.description {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}

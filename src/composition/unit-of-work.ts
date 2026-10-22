@@ -3,6 +3,7 @@ import type {
   AccountWrites,
   CeremonyWrites,
   PasskeyWrites,
+  PasswordWrites,
   SessionWrites,
   SetupLinkWrites,
 } from "@/features/access/application/access-writes";
@@ -11,6 +12,7 @@ import {
   createAccountWrites,
   createCeremonyWrites,
   createPasskeyWrites,
+  createPasswordWrites,
   createSessionWrites,
   createSetupLinkWrites,
 } from "@/features/access/infrastructure/access-writes";
@@ -27,6 +29,7 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly notes: NoteWrites;
   readonly accounts: AccountWrites;
   readonly passkeys: PasskeyWrites;
+  readonly passwords: PasswordWrites;
   readonly sessions: SessionWrites;
   readonly setupLinks: SetupLinkWrites;
   readonly ceremonies: CeremonyWrites;
@@ -40,6 +43,7 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     notes: createNoteWrites(db, batch),
     accounts: createAccountWrites(db, batch),
     passkeys: createPasskeyWrites(db, batch),
+    passwords: createPasswordWrites(db, batch),
     sessions: createSessionWrites(db, batch),
     setupLinks: createSetupLinkWrites(db, batch),
     ceremonies: createCeremonyWrites(db, batch),

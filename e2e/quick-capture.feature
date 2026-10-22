@@ -2,6 +2,9 @@ Feature: Ghi nhanh
   Bạn ấy gõ vào ô ở cuối màn hình "Hôm nay". Ghi chú hiện ngay, sửa và xoá được,
   xoá thì có Hoàn tác, và không bao giờ mất chữ bạn ấy đã gõ.
 
+  Background:
+    Given tôi đã đăng nhập
+
   Scenario: Một ngày chưa có gì
     Given hôm nay chưa có ghi chú nào
     Then tôi thấy "Hôm nay chưa có ghi chú nào"

@@ -2,14 +2,18 @@ import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 
 import { noteIdSchema } from "@/features/notes/domain/note";
-import { content, testApp, testClock } from "@/testing/support/app";
+import { content, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 
 describe("editNote", () => {
   it("given a live note, when edited, then it carries the new words and only updatedAt moves", async () => {
     const time = testClock("2026-10-16T01:00:00Z");
     const app = testApp(time.clock);
-    const note = await app.recordCapture({ content: content("giấy in x2"), source: "web" });
+    const note = await app.recordCapture({
+      content: content("giấy in x2"),
+      source: "web",
+      authorId: await theAuthor(),
+    });
     time.setTo("2026-10-16T03:00:00Z");
 
     const edited = expectOk(await app.editNote({ id: note.id, content: content("giấy in x3") }));
@@ -21,7 +25,11 @@ describe("editNote", () => {
 
   it("given a note that was edited, when its capture is read, then the original words are still there", async () => {
     const app = testApp(testClock("2026-10-16T01:00:00Z").clock);
-    const note = await app.recordCapture({ content: content("giấy in x2"), source: "web" });
+    const note = await app.recordCapture({
+      content: content("giấy in x2"),
+      source: "web",
+      authorId: await theAuthor(),
+    });
 
     await app.editNote({ id: note.id, content: content("giấy in x3") });
     const capture = await env.DB.prepare("select content from capture where id = ?")
@@ -33,7 +41,11 @@ describe("editNote", () => {
 
   it("given a deleted note, when edited, then it refuses with note_deleted", async () => {
     const app = testApp(testClock("2026-10-16T01:00:00Z").clock);
-    const note = await app.recordCapture({ content: content("cũ"), source: "web" });
+    const note = await app.recordCapture({
+      content: content("cũ"),
+      source: "web",
+      authorId: await theAuthor(),
+    });
     await app.deleteNote(note.id);
 
     expect(await app.editNote({ id: note.id, content: content("mới") })).toEqual({

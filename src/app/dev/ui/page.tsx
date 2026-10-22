@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { appName } from "@/app/identity";
+
 import { Gallery } from "./gallery";
 
-export const metadata: Metadata = {
-  title: "UI - daybook",
-  robots: { index: false },
-};
+export const metadata: Metadata = { title: `UI - ${appName}` };
 
 // Every component in every state, so the look can be reviewed without a feature. Never served in production.
 export default function UiPage() {

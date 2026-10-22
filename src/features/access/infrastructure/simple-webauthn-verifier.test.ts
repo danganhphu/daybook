@@ -12,8 +12,9 @@ import { challengeSchema, type Challenge } from "@/features/access/domain/ceremo
 import * as Passkeys from "@/features/access/domain/passkey";
 import { deviceLabelSchema } from "@/features/access/domain/session";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
+import { relyingParty } from "@/testing/support/app";
 import { generateKeys, type KeyAlgorithm, type Tampering } from "@/testing/support/authenticator";
-import { anAuthenticator, relyingParty } from "@/testing/support/passkeys";
+import { anAuthenticator } from "@/testing/support/passkeys";
 import { expectOk } from "@/testing/support/result";
 
 import { createSimpleWebAuthnVerifier } from "./simple-webauthn-verifier";

@@ -8,7 +8,7 @@ import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-se
 import { origin, rows, seedAccount, seedSession, seedSetupLink } from "@/testing/support/access";
 import { testApp, testClock } from "@/testing/support/app";
 import type { Tampering } from "@/testing/support/authenticator";
-import { anAuthenticator, ceremonyIdIn, passkeyUseCases } from "@/testing/support/passkeys";
+import { anAuthenticator, ceremonyIdIn } from "@/testing/support/passkeys";
 import { expectOk } from "@/testing/support/result";
 
 const authenticator = anAuthenticator();
@@ -34,7 +34,7 @@ function aFirstSetup(time: Time) {
 
 async function aPromptAnswered(time: Time, tampering: Tampering = {}) {
   const setup = await aFirstSetup(time);
-  const passkeys = passkeyUseCases(time.clock);
+  const passkeys = testApp(time.clock);
   const options = expectOk(await passkeys.startPasskeySetup(setup.ceremonyCookie));
   const created = await authenticator.create(options, tampering);
 
@@ -46,7 +46,7 @@ describe("startPasskeySetup", () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const { account, ceremonyCookie, ceremonyId } = await aFirstSetup(time);
 
-    const options = expectOk(await passkeyUseCases(time.clock).startPasskeySetup(ceremonyCookie));
+    const options = expectOk(await testApp(time.clock).startPasskeySetup(ceremonyCookie));
 
     expect(options.user).toEqual({
       id: account.userHandle,
@@ -61,7 +61,7 @@ describe("startPasskeySetup", () => {
   it("given a prompt asked for twice, when the second comes, then it carries a new challenge that replaces the first", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const { ceremonyCookie } = await aFirstSetup(time);
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
 
     const first = expectOk(await passkeys.startPasskeySetup(ceremonyCookie));
     const second = expectOk(await passkeys.startPasskeySetup(ceremonyCookie));
@@ -77,7 +77,7 @@ describe("startPasskeySetup", () => {
       createdBy: account.id,
     }));
 
-    expect(await passkeyUseCases(time.clock).startPasskeySetup(ceremonyCookie)).toEqual({
+    expect(await testApp(time.clock).startPasskeySetup(ceremonyCookie)).toEqual({
       ok: false,
       error: "setup_link_unusable",
     });
@@ -88,7 +88,7 @@ describe("startPasskeySetup", () => {
     const { ceremonyCookie } = await aFirstSetup(time);
     time.setTo("2026-10-22T01:10:00Z");
 
-    expect(await passkeyUseCases(time.clock).startPasskeySetup(ceremonyCookie)).toEqual({
+    expect(await testApp(time.clock).startPasskeySetup(ceremonyCookie)).toEqual({
       ok: false,
       error: "setup_link_unusable",
     });
@@ -109,16 +109,17 @@ describe("startPasskeySetup", () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const { ceremonyCookie } = await aFirstSetup(time);
 
-    expect(await passkeyUseCases(time.clock).startPasskeySetup(cookieFrom(ceremonyCookie))).toEqual(
-      { ok: false, error: "setup_link_unusable" },
-    );
+    expect(await testApp(time.clock).startPasskeySetup(cookieFrom(ceremonyCookie))).toEqual({
+      ok: false,
+      error: "setup_link_unusable",
+    });
   });
 
   it("given the cookie of a step-up prompt for the same account, when a setup prompt is asked for, then it is unusable", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const { account } = await aFirstSetup(time);
     const { session } = await seedSession(time.clock, account);
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
     const signIn = expectOk(
       await passkeys.startPasskeySignIn({ origin: origin(), stepUp: session }),
     );
@@ -245,7 +246,7 @@ describe("finishPasskeySetup", () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const setup = await aFirstSetup(time);
     time.setTo("2026-10-22T01:09:59Z");
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
     const options = expectOk(await passkeys.startPasskeySetup(setup.ceremonyCookie));
     const { response } = await authenticator.create(options);
     time.setTo("2026-10-22T01:10:00Z");
@@ -270,7 +271,7 @@ describe("finishPasskeySetup", () => {
     });
 
     expect(
-      await passkeyUseCases(time.clock).finishPasskeySetup({
+      await testApp(time.clock).finishPasskeySetup({
         ceremonyCookie,
         response,
         origin: origin(),
@@ -322,7 +323,7 @@ describe("finishPasskeySetup", () => {
       accountId: account.id,
     }));
     await seedSession(time.clock, recovery.account);
-    const passkeys = passkeyUseCases(time.clock);
+    const passkeys = testApp(time.clock);
     const options = expectOk(await passkeys.startPasskeySetup(recovery.ceremonyCookie));
     const { response } = await authenticator.create(options);
 

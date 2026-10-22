@@ -40,7 +40,9 @@ export function todayPage(page: Page) {
     open,
     expectSaved,
 
-    // Deletes whatever today holds through the screen itself, then reloads so no toast is left over
+    // Deletes whatever today holds through the screen itself, then reloads so no toast is left over. The row leaves
+    // the screen before the server is done, so each delete waits for the server action's answer, or the reload
+    // could still find the note.
     async clear() {
       await open();
       for (let left = await notes.count(); left > 0; left -= 1) {
@@ -48,7 +50,9 @@ export function todayPage(page: Page) {
           .first()
           .getByRole("button", { name: /^Tuỳ chọn/ })
           .click();
+        const answered = page.waitForResponse((response) => response.request().method() === "POST");
         await page.getByRole("menuitem", { name: "Xoá" }).click();
+        await answered;
         await expect(notes).toHaveCount(left - 1);
       }
       await open();
