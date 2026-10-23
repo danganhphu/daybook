@@ -1,0 +1,37 @@
+@use "abstracts" as *;
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(4);
+}
+
+.field {
+  display: grid;
+  gap: space(1);
+}
+
+.label {
+  @include text(label);
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}
+
+.days {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(2);
+}
+
+.quick-days {
+  display: flex;
+  gap: space(2);
+}
+
+.customer {
+  color: color(text-muted);
+}

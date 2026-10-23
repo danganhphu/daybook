@@ -8,8 +8,7 @@ export type ChipLink = {
   readonly current: boolean;
 };
 
-// One filter at a time, as a row of chips that scrolls sideways on a phone, as Gmail's and Telegram's folders do.
-// Links rather than buttons: the filter lives in the URL, so back and reload keep it, and nothing waits for scripts.
+// One filter at a time, as a row of chips that scrolls sideways on a phone. Links rather than buttons: the filter lives in the URL, so back and reload keep it, and nothing waits for scripts.
 export function ChipLinks({
   label,
   chips,

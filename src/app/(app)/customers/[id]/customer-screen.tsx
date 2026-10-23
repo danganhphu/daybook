@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback, useMemo } from "react";
 
+import { ReminderList } from "@/app/(app)/_reminders/reminder-list";
 import { hideCustomer, showCustomer } from "@/app/(app)/customers/actions";
 import type { CustomerScreenView } from "@/features/customers/web/commands";
 import { customerDetail } from "@/features/customers/web/customer-view";
@@ -10,6 +11,8 @@ import { shortDay } from "@/features/orders/web/day-text";
 import type { OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { newOrderPath } from "@/features/orders/web/orders-path";
+import type { CustomerRemindersView } from "@/features/reminders/web/commands";
+import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { ButtonLink } from "@/shared/ui/button/button-link";
@@ -42,6 +45,7 @@ export type CustomerScreenProps = {
   readonly view: CustomerScreenView;
   // Newest first
   readonly orders: ReadonlyArray<OrderRowView & { readonly orderedOn: string }>;
+  readonly reminders: CustomerRemindersView;
 };
 
 function orderDetail(order: OrderRowView): string {
@@ -51,8 +55,12 @@ function orderDetail(order: OrderRowView): string {
 }
 
 // One customer: what they bought and owe at the top, a new order one tap away, how to reach them, then their orders
-export function CustomerScreen({ view, orders }: CustomerScreenProps) {
+export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps) {
   const toast = useToast();
+  const adding = useMemo(
+    () => (view.hidden ? undefined : { customer: { id: view.id, name: view.name } }),
+    [view.hidden, view.id, view.name],
+  );
 
   const toggleHidden = useCallback(() => {
     startTransition(async () => {
@@ -149,6 +157,16 @@ export function CustomerScreen({ view, orders }: CustomerScreenProps) {
           )}
         </List>
       )}
+
+      <ReminderList
+        heading={remindersCopy.title}
+        reminders={reminders.reminders}
+        today={reminders.today}
+        showDue
+        showCustomer={false}
+        adding={adding}
+        empty={remindersCopy.noneForCustomer}
+      />
 
       {orders.length === 0 ? (
         <EmptyState title={customersCopy.noOrders} />

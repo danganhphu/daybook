@@ -4,6 +4,7 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { customerScreen } from "@/features/customers/web/commands";
 import { customerOrders } from "@/features/orders/web/commands";
+import { customerReminders } from "@/features/reminders/web/commands";
 
 import { CustomerScreen } from "./customer-screen";
 
@@ -21,5 +22,10 @@ export default async function CustomerPage({ params }: CustomerPageProps) {
     notFound();
   }
 
-  return <CustomerScreen view={view} orders={await customerOrders(app, view.id)} />;
+  const [orders, reminders] = await Promise.all([
+    customerOrders(app, view.id),
+    customerReminders(app, view.id),
+  ]);
+
+  return <CustomerScreen view={view} orders={orders} reminders={reminders} />;
 }

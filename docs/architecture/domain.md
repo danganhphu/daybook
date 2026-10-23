@@ -33,13 +33,15 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Payment | lần thu | Money taken for an order, on a day, by cash or transfer. Never edited: removed with who and when |
 | Owed | còn nợ | An order's total less its live payments, never below zero; a customer owes the sum over their live orders |
 | Order change | lịch sử | One entry of an order's log: who, when, what kind, and the order before and after |
+| Reminder | việc cần nhắc | Something to do on a day, for a customer or not. Done with who and when; deleted with Undo. Made from a note, it keeps that note's capture |
+| Due | đến hạn | A reminder still open whose day is today or earlier |
 
 Planned, not built:
 
 | Term | Meaning |
 |---|---|
 | Interpretation | How a model read a capture: what it thinks was meant, which model, how sure. Many per capture - reading again with a better model adds one, never overwrites |
-| Reminder, Interaction | What an interpretation turns into, beside orders. Each keeps the `capture_id` it came from |
+| Interaction | What an interpretation turns into, beside orders and reminders. Keeps the `capture_id` it came from |
 
 ## Why a capture and a note, not one row
 
@@ -126,6 +128,22 @@ version, so "paid never exceeds the total" is kept in one place and two people c
   (`history-text.ts`).
 - **A form-made order has no `capture_id`**; it is set when a message became the order (decision 5).
 
+## Reminders
+
+`src/features/reminders/`. A reminder's text is the same `Content` as a note's, so a note's words always fit. Done
+and deleted are independent states, so each Undo is one update.
+
+| Function | Refuses with |
+|---|---|
+| `revise` | `reminder_deleted` |
+| `complete`, `reopen` | `reminder_deleted`; `reminder_done` (complete), `reminder_open` (reopen) |
+| `markDeleted`, `restore` | `reminder_not_deleted` (restore); deleting twice returns it as it is |
+
+- **Open** means live and not done. Lists come soonest due first, so an overdue one never drops out of sight.
+- **A new customer must be shown**, not hidden; the one a reminder already has may stay.
+- **Made from a live note**, it keeps the note's `capture_id`; from the form, it has none (decision 5).
+- **Who finished it** is kept beside when (`done_by`, approved 2026-10-23): `updated_by` changes with the next edit.
+
 ## Access
 
 Two people share one book; `src/features/access/` decides who is signing in. The decisions and their sources are in
@@ -197,10 +215,10 @@ through `createApp` in `src/composition/create-app.ts`.
 | `placeOrder`, `reviseOrder` | An order, making the products it names first | `customer_unavailable`, `product_not_found`, the order's own refusals |
 | `deliverOrder`, `undeliverOrder`, `addPayment`, `removePayment` | One change, logged | `order_not_found`, `order_changed_elsewhere`, the order's own refusals |
 | `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere` |
-
-Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
-order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
-the free plan.
+| `addReminder` | A reminder, from the form or from a live note | `customer_unavailable`, `note_unavailable` |
+| `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
+| `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
+| `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted` |
 | `authenticate` | The session behind a cookie; records its use at most hourly | `unauthenticated` |
 | `redeemSetupLink` | Spends a setup link and starts a setup ceremony bound to this browser | `setup_link_unusable`, `rate_limited` |
 | `startPasskeySetup` | The passkey prompt for a setup, with a new challenge | `setup_link_unusable` |
@@ -226,6 +244,11 @@ the free plan.
 | `issueRecoveryLink` | A recovery link for the other account | `step_up_required`, `not_found` |
 | `nameInvitedAccount` | Makes the invited account from the newcomer's name and username | `setup_link_unusable`, `username_taken` |
 | `resumeSetup` | Where a setup stands, from its ceremony cookie, after a reload | `setup_link_unusable` |
+
+Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
+order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
+the free plan. Open reminders are one indexed read (`reminder_open_by_due_on`), with one more for the customers'
+names.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence the user
@@ -277,6 +300,7 @@ The book's tables, all `STRICT`, every one but the lines and the log with the au
 | `order_line` | order, position, product, quantity, unit price | quantity 1-100,000; price 0 to a trillion; no audit, replaced whole on a revision |
 | `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`, `payment_no_delete` |
 | `order_change` | order, kind, who and when, before and after as JSON | known kinds; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
+| `reminder` | text, due on, customer, capture, done at and by | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither |
 
 The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets as the base64url of their SHA-256.
 Every number a `CHECK` holds - lengths, the Argon2id floor, the algorithms - is the domain's own constant, written

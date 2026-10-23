@@ -2,9 +2,10 @@
 
 import { startTransition, useCallback, useMemo, useState } from "react";
 
+import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
-import { DeleteIcon, EditIcon } from "@/shared/ui/icon/icons";
+import { DeleteIcon, EditIcon, NotificationsIcon } from "@/shared/ui/icon/icons";
 import { attempt } from "@/shared/web/attempt";
 
 import { NoteEditor } from "./note-editor";
@@ -20,11 +21,13 @@ export type NoteRowProps = {
   // Shows a change in the list before the server has answered
   readonly onPending: (change: NoteListChange) => void;
   readonly onDelete: (note: NoteView) => void;
+  // Opens the reminder form with the note's words
+  readonly onRemind: (note: NoteView) => void;
 };
 
 type Editing = { readonly draft: string; readonly error?: string };
 
-export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
+export function NoteRow({ note, edit, onPending, onDelete, onRemind }: NoteRowProps) {
   const [editing, setEditing] = useState<Editing>();
 
   const startEditing = useCallback(() => setEditing({ draft: note.content }), [note.content]);
@@ -50,8 +53,11 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
   );
 
   const actions = useMemo<ReadonlyArray<MenuAction>>(
-    () => [{ label: actionLabels.edit, icon: EditIcon, onSelect: startEditing }],
-    [startEditing],
+    () => [
+      { label: actionLabels.edit, icon: EditIcon, onSelect: startEditing },
+      { label: remindersCopy.fromNote, icon: NotificationsIcon, onSelect: () => onRemind(note) },
+    ],
+    [note, onRemind, startEditing],
   );
 
   const destructive = useMemo<MenuAction>(

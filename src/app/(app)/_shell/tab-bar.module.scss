@@ -1,8 +1,7 @@
 @use "abstracts" as *;
 
-// ColorOS's floating tab bar: a white pill in the middle of the bottom edge, its shadow lifting it off the page. It
-// keeps a row of its own rather than covering the page, so the box on Hôm nay is never under it. From `md` it stands
-// as a pill down the left side instead.
+// A white pill floating at the bottom, in a row of its own so the box on Hôm nay is never under it; from `md`, down
+// the left side
 .tab-bar {
   // The home indicator's room on a phone that runs edge to edge
   --tab-bar-safe-area: env(safe-area-inset-bottom, 0);
@@ -60,9 +59,9 @@
     block-size: size(icon-row);
   }
 
-  // Green as ColorOS has it; the filled icon says it too, for anyone who cannot tell the colour
+  // The filled icon says it too, for anyone who cannot tell the colour
   &[aria-current="page"] {
-    color: color(accent);
+    color: color(accent-text);
   }
 }
 

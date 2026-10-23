@@ -17,7 +17,7 @@ export type PageHeaderProps = {
 };
 
 // The top of a screen: back on the left where the thumb finds it, the title, then what can be done here. A tab's own
-// screen has no way back and a large title, as ColorOS sets "Tiện ích"; a page within it a smaller one.
+// screen has no way back and a large title; a page within it a smaller one.
 export function PageHeader({ title, subtitle, back, actions }: PageHeaderProps) {
   return (
     <header className={styles.header} data-root={back === undefined ? "" : undefined}>

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import styles from "./screen.module.scss";
 
 export type ScreenProps = {
-  // The faint green at the top, as ColorOS draws it on an app's own first screen: only a tab's own screen has it
+  // The faint green at the top: only a tab's own screen has it
   readonly wash?: boolean;
   readonly children: ReactNode;
 };

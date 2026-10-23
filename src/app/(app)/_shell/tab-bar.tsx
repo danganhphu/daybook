@@ -13,8 +13,7 @@ import styles from "./tab-bar.module.scss";
 
 const tabs = Object.values(sections);
 
-// The app's places, as ColorOS's floating tab bar. Hidden while the keyboard is up, so the box being typed in keeps
-// the room.
+// The app's places. Hidden while the keyboard is up, so the box being typed in keeps the room.
 export function TabBar() {
   const pathname = usePathname();
   const bar = useRef<HTMLElement>(null);
@@ -42,7 +41,6 @@ export function TabBar() {
                 className={styles.tab}
                 aria-current={current ? "page" : undefined}
               >
-                {/* Filled where you are, outlined elsewhere, as ColorOS and Material mark the current tab */}
                 <Icon filled={current} />
                 <span className={styles.label}>{tab.label}</span>
               </Link>

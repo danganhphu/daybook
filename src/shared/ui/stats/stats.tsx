@@ -9,12 +9,12 @@ export type Stat = {
 
 export type StatsProps = {
   readonly label: string;
-  // The screen's one big number, in green above the rest, as ColorOS shows "1,68 GB có thể dọn dẹp"
+  // The screen's one big number, in green above the rest
   readonly hero?: Stat | undefined;
   readonly items: ReadonlyArray<Stat>;
 };
 
-// A few numbers in one card, each a small label over a large value, as a banking app's summary
+// A few numbers in one card, each a small label over a large value
 export function Stats({ label, hero, items }: StatsProps) {
   return (
     <dl className={styles.stats} aria-label={label}>

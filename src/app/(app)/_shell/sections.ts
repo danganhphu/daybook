@@ -19,7 +19,8 @@ export const sections = {
     owns: (pathname) =>
       pathname === routes.today ||
       pathname.startsWith(`${routes.days}/`) ||
-      pathname === routes.history,
+      pathname === routes.history ||
+      pathname === routes.reminders,
   },
   orders: {
     label: "Đơn hàng",

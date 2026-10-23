@@ -1,5 +1,4 @@
-// Design tokens. The look follows Oppo's ColorOS (the owner's choice, 2026-10-23); the numbers come from Apple HIG,
-// Material 3 and WCAG. Reasons live in docs/ui/design-system.md. This file emits no CSS.
+// Design tokens. Reasons and contrast ratios live in docs/ui/design-system.md. This file emits no CSS.
 
 // Color roles every theme must define. Components only ever ask for a role, never a value. An icon tone is a
 // meaning, used for that meaning only, everywhere: see the table in the design system.
@@ -11,8 +10,10 @@ $color-roles: (
   border-strong,
   text,
   text-muted,
+  control-fill,
   accent,
   accent-hover,
+  accent-text,
   accent-wash,
   on-accent,
   danger,
@@ -40,8 +41,8 @@ $space: (
   16: 64px,
 );
 
-// ColorOS rounds generously: cards at 24, fields at 14, buttons and chips as pills (`full`). `field` is half the
-// 48px message field, so one line is a pill and more lines stay a soft rectangle.
+// Buttons and chips are pills (`full`). `field` is half the 48px message field, so one line is a pill and more lines
+// stay a soft rectangle.
 $radius: (
   control: 14px,
   surface: 24px,
@@ -49,8 +50,8 @@ $radius: (
   full: 9999px,
 );
 
-// Large and airy, as ColorOS sets its lists: a row reads at 17px (Apple's body size), its second line at 15. Nothing
-// below 13px; inputs are 17px, so iOS never zooms into one. Two weights only. `hero` is a screen's one big number.
+// Nothing below 13px; inputs are 17px, so iOS never zooms into one. `label-strong` is a filled button's label: 19px
+// bold is large text to WCAG, held to 3:1, which lets the button be a bright green.
 $text-styles: (
   caption: (
     size: 13px,
@@ -71,6 +72,11 @@ $text-styles: (
     size: 17px,
     leading: 24px,
     weight: 600,
+  ),
+  label-strong: (
+    size: 19px,
+    leading: 24px,
+    weight: 700,
   ),
   title: (
     size: 22px,
@@ -95,9 +101,8 @@ $sizes: (
   control: 44px,
   control-lg: 48px,
   icon: 20px,
-  // An icon leading a list row, as ColorOS lists show theirs
   icon-row: 24px,
-  // A list row: ColorOS's are tall, one line or two
+  // A list row, one line or two
   row: 60px,
   // One tab of the floating tab bar
   tab: 88px,

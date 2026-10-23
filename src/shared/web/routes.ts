@@ -3,6 +3,7 @@ export const routes = {
   today: "/",
   days: "/days",
   history: "/history",
+  reminders: "/reminders",
   orders: "/orders",
   newOrder: "/orders/new",
   customers: "/customers",

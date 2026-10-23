@@ -7,8 +7,8 @@ export type EnterKeyPress = {
   readonly isComposing: boolean;
 };
 
-// Desktop: Enter sends and Shift+Enter is a new line, as in Telegram Desktop.
-// Phone: Enter is always a new line and the button sends, as in Telegram and Zalo on a phone.
+// Desktop: Enter sends and Shift+Enter is a new line. Phone: Enter is always a new line and the button sends, as
+// chat apps on a phone do.
 export function enterSends(press: EnterKeyPress, device: Device): boolean {
   return press.key === "Enter" && !press.shiftKey && !press.isComposing && device === "desktop";
 }
