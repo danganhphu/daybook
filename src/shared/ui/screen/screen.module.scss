@@ -1,0 +1,21 @@
+@use "abstracts" as *;
+
+.page {
+  min-block-size: 100%;
+
+  &[data-wash] {
+    background: var(--wash);
+  }
+}
+
+// One column that never grows past the screen: a grid item's minimum is its content, and a date field's is wide
+.column {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(6);
+  align-content: start;
+  inline-size: 100%;
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  padding: space(4) space(4) space(8);
+  margin-inline: auto;
+}

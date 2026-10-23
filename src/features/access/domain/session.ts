@@ -2,8 +2,9 @@ import { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import type { AccountId } from "@/shared/domain/account-id";
+
 import { lastSeenPrecision, sessionLifetime, stepUpWindow } from "./access-policy";
-import type { AccountId } from "./account";
 import type { PasskeyId } from "./passkey";
 import type { SecretHash } from "./secret";
 

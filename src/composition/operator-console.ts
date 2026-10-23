@@ -7,10 +7,8 @@ import type { Secrets } from "@/features/access/application/secrets";
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import {
-  accountIdSchema,
   displayNameSchema,
   type Account,
-  type AccountId,
   type DisplayName,
   type Username,
 } from "@/features/access/domain/account";
@@ -20,6 +18,7 @@ import type { PendingSetupLink } from "@/features/access/domain/setup-link";
 import { accountTable } from "@/features/access/infrastructure/account.table";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import type { Clock } from "@/shared/application/clock";
+import { accountIdSchema, type AccountId } from "@/shared/domain/account-id";
 import type { Batch } from "@/shared/infrastructure/d1/batch";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import { systemClock } from "@/shared/infrastructure/system-clock";

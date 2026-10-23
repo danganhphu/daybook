@@ -1,6 +1,9 @@
 import type { Query } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 
+import { StaleWriteError } from "@/shared/application/stale-write";
+
+import { staleVersionMessage } from "./audit-columns";
 import type { Database } from "./database";
 
 // A statement that can also show its SQL, which lets the operator's command record a batch instead of running it
@@ -11,6 +14,17 @@ export type Batch = {
   enlist(statement: BatchStatement): void;
   commit(): Promise<void>;
 };
+
+// D1 wraps the trigger's message in its own; look through the causes for it
+function raisedStaleVersion(error: unknown): boolean {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    if (current.message.includes(staleVersionMessage)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export function createBatch(db: Database): Batch {
   const pending: BatchStatement[] = [];
@@ -26,7 +40,15 @@ export function createBatch(db: Database): Batch {
         return;
       }
 
-      await db.batch([first, ...rest]);
+      try {
+        await db.batch([first, ...rest]);
+      } catch (error) {
+        // The whole batch was refused, as D1 batches are; nothing of it was stored
+        if (raisedStaleVersion(error)) {
+          throw new StaleWriteError({ cause: error });
+        }
+        throw error;
+      }
     },
   };
 }

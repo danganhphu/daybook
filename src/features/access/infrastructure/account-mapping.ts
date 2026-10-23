@@ -1,12 +1,12 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
 import {
-  accountIdSchema,
   displayNameSchema,
   userHandleSchema,
   usernameSchema,
   type Account,
 } from "@/features/access/domain/account";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { accountTable } from "./account.table";
 

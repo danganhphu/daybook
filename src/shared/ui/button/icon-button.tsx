@@ -1,5 +1,6 @@
 import { Button as BaseButton } from "@base-ui/react/button";
-import type { LucideIcon } from "lucide-react";
+
+import type { Icon } from "@/shared/ui/icon/icon";
 
 import type { ButtonSize } from "./button";
 
@@ -15,7 +16,7 @@ export type IconButtonProps = Omit<
   "className" | "style" | "children" | "aria-label"
 > &
   Appearance & {
-    readonly icon: LucideIcon;
+    readonly icon: Icon;
     // The accessible name; there is no visible text, so this is all a screen reader has
     readonly label: string;
     readonly size?: ButtonSize;

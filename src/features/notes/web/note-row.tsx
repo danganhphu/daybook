@@ -1,10 +1,10 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
 import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
+import { DeleteIcon, EditIcon } from "@/shared/ui/icon/icons";
 import { attempt } from "@/shared/web/attempt";
 
 import { NoteEditor } from "./note-editor";
@@ -16,7 +16,7 @@ import styles from "./note-row.module.scss";
 export type NoteRowProps = {
   readonly note: ShownNote;
   // The server action that saves an edit
-  readonly edit: (id: string, text: string) => Promise<NoteResult>;
+  readonly edit: (id: string, version: number, text: string) => Promise<NoteResult>;
   // Shows a change in the list before the server has answered
   readonly onPending: (change: NoteListChange) => void;
   readonly onDelete: (note: NoteView) => void;
@@ -39,23 +39,23 @@ export function NoteRow({ note, edit, onPending, onDelete }: NoteRowProps) {
 
       startTransition(async () => {
         onPending({ kind: "edit", id: note.id, content: text });
-        const result = await attempt(() => edit(note.id, text));
+        const result = await attempt(() => edit(note.id, note.version, text));
         if (!result.ok) {
           // Reopen with what was written, and why it was not saved
           setEditing({ draft: text, error: result.error });
         }
       });
     },
-    [note.id, note.content, edit, onPending],
+    [note.id, note.version, note.content, edit, onPending],
   );
 
   const actions = useMemo<ReadonlyArray<MenuAction>>(
-    () => [{ label: actionLabels.edit, icon: Pencil, onSelect: startEditing }],
+    () => [{ label: actionLabels.edit, icon: EditIcon, onSelect: startEditing }],
     [startEditing],
   );
 
   const destructive = useMemo<MenuAction>(
-    () => ({ label: actionLabels.remove, icon: Trash2, onSelect: () => onDelete(note) }),
+    () => ({ label: actionLabels.remove, icon: DeleteIcon, onSelect: () => onDelete(note) }),
     [note, onDelete],
   );
 

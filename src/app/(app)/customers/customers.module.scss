@@ -1,0 +1,15 @@
+@use "abstracts" as *;
+
+// A way to something rarely needed, such as the hidden customers: quiet, centred, still a fair target
+.quiet-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  min-block-size: size(control);
+  padding-inline: space(3);
+  color: color(text-muted);
+  text-decoration: underline;
+
+  @include text(body-sm);
+  @include focus-ring;
+}

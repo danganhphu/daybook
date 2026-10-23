@@ -1,0 +1,12 @@
+// The input sits exactly under the button, so the phone's picker opens next to it
+.day-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}

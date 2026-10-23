@@ -1,7 +1,9 @@
 @use "abstracts" as *;
 
+// minmax(0, 1fr): the box fills what it is given and never pushes past it, whatever the input's own width
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: space(1);
 }
 

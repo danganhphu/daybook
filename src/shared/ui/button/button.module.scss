@@ -1,5 +1,7 @@
 @use "abstracts" as *;
 
+// ColorOS buttons are pills: filled green for the one action a screen exists for, pale green for a suggested one,
+// grey for the rest, and words alone for the quiet ones
 .button {
   display: inline-flex;
   flex-shrink: 0;
@@ -7,14 +9,15 @@
   align-items: center;
   justify-content: center;
   min-block-size: size(control);
-  padding-inline: space(4);
+  padding-inline: space(5);
   color: color(text);
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: radius(control);
+  border: 0;
+  border-radius: radius(full);
   touch-action: manipulation;
 
   @include text(label);
@@ -30,11 +33,10 @@
     min-block-size: size(control-lg);
   }
 
-  // Icon buttons are circles, as Material 3's are
+  // Icon buttons are circles
   &[data-icon-only] {
     min-inline-size: size(control);
     padding-inline: 0;
-    border-radius: radius(full);
 
     &[data-size="lg"] {
       min-inline-size: size(control-lg);
@@ -52,8 +54,7 @@
   }
 
   &[data-variant="secondary"] {
-    background: color(surface);
-    border-color: color(border-strong);
+    background: color(surface-subtle);
   }
 
   &[data-tone="danger"] {
@@ -66,6 +67,10 @@
     &[data-variant="primary"] {
       background: color(accent-hover);
     }
+
+    &[data-variant="secondary"] {
+      background: color(border);
+    }
   }
 
   @media (hover: hover) {
@@ -75,6 +80,10 @@
       &[data-variant="primary"] {
         background: color(accent-hover);
       }
+
+      &[data-variant="secondary"] {
+        background: color(border);
+      }
     }
   }
 
@@ -82,11 +91,14 @@
     color: color(text-muted);
     cursor: not-allowed;
     background: color(surface-subtle);
-    border-color: color(border);
 
     &[data-variant="quiet"] {
       background: transparent;
-      border-color: transparent;
+    }
+
+    // A quiet icon is already muted when it works, so a disabled one goes fainter still
+    &[data-variant="quiet"][data-icon-only] {
+      color: color(border-strong);
     }
   }
 }

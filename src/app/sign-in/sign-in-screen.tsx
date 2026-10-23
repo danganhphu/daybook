@@ -12,6 +12,7 @@ import { promptErrorMessage } from "@/features/access/web/prompt-errors";
 import { useWebAuthnSupport } from "@/features/access/web/use-webauthn-support";
 import { Button } from "@/shared/ui/button/button";
 import { attempt } from "@/shared/web/attempt";
+import { useHydrated } from "@/shared/web/use-hydrated";
 
 import { completeSignIn, prepareSignIn } from "./actions";
 import { PasswordForm } from "./password-form";
@@ -70,6 +71,7 @@ export function SignInScreen() {
   const toPassword = useCallback(() => setMode("password"), []);
   const toPasskey = useCallback(() => setMode("passkey"), []);
   const [screen, dispatch, pending] = useActionState(act, waiting);
+  const hydrated = useHydrated();
 
   useEffect(() => {
     if (supported) {
@@ -112,7 +114,8 @@ export function SignInScreen() {
       >
         {accessCopy.signIn}
       </Button>
-      <Button variant="quiet" onClick={toPassword}>
+      {/* A tap before the page has hydrated would do nothing, so it waits like the button above */}
+      <Button variant="quiet" disabled={!hydrated} onClick={toPassword}>
         Dùng mật khẩu
       </Button>
     </AccessPanel>

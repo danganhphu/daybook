@@ -1,0 +1,39 @@
+@use "abstracts" as *;
+
+// ColorOS's segmented choice: a grey pill track, the current choice a white pill on it. It scrolls sideways when the
+// choices do not fit, rather than wrapping into a second row.
+.chip-links {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.list {
+  display: flex;
+  inline-size: max-content;
+  padding: space(1);
+  list-style: none;
+  background: color(surface-subtle);
+  border-radius: radius(full);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: size(chip);
+  padding-inline: space(4);
+  color: color(text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: radius(full);
+  touch-action: manipulation;
+
+  @include text(body-sm);
+  @include focus-ring;
+
+  &[aria-current="page"] {
+    color: color(text);
+    background: color(surface);
+    box-shadow: var(--shadow-float);
+  }
+}

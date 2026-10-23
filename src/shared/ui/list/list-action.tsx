@@ -1,11 +1,12 @@
 import { Button as BaseButton } from "@base-ui/react/button";
-import type { LucideIcon } from "lucide-react";
+
+import type { Icon } from "@/shared/ui/icon/icon";
 
 import styles from "./list.module.scss";
 
 export type ListActionProps = Omit<BaseButton.Props, "className" | "style" | "children"> & {
   readonly label: string;
-  readonly icon: LucideIcon;
+  readonly icon: Icon;
   // Danger for an action that ends something, such as signing out
   readonly tone?: "accent" | "danger";
 };

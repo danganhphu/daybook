@@ -6,7 +6,7 @@ import { anAuthorId, content, testApp, testClock, theAuthor } from "@/testing/su
 
 describe("recordCapture", () => {
   it("given the user's words, when recorded, then they are filed as a note for that day exactly as typed", async () => {
-    const typed = "  bán 2 thùng giấy in\ncho chị Lan 500k  ";
+    const typed = "  bán 2 hộp thuốc tê\ncho chị Lan 500k  ";
     const app = testApp(testClock("2026-10-16T02:00:00Z").clock);
 
     const note = await app.recordCapture({
@@ -25,7 +25,7 @@ describe("recordCapture", () => {
     const authorId = await theAuthor();
 
     const note = await app.recordCapture({
-      content: content("giấy in x2"),
+      content: content("thuốc tê x2"),
       source: "telegram",
       authorId,
     });
@@ -36,7 +36,7 @@ describe("recordCapture", () => {
       .first();
 
     expect(capture).toEqual({
-      content: "giấy in x2",
+      content: "thuốc tê x2",
       source: "telegram",
       author_id: authorId,
       received_at: Temporal.Instant.from("2026-10-16T02:00:00Z").epochMilliseconds,

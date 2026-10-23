@@ -1,6 +1,5 @@
 "use client";
 
-import { LogOut } from "lucide-react";
 import { useCallback, useMemo, useTransition } from "react";
 
 import { accessCopy } from "@/features/access/web/access-copy";
@@ -9,6 +8,7 @@ import { problemMessage } from "@/features/access/web/attempt-setting";
 import type { SettingsResult } from "@/features/access/web/settings-commands";
 import { optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
+import { LogoutIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListRow } from "@/shared/ui/list/list-row";
@@ -56,7 +56,7 @@ export function Devices({ devices, run }: DevicesProps) {
       {hasOthers ? (
         <ListAction
           label={accessCopy.signOutOthers}
-          icon={LogOut}
+          icon={LogoutIcon}
           tone="danger"
           disabled={working}
           onClick={endOthers}
@@ -74,7 +74,7 @@ function DeviceItem({
   readonly onEnd: (device: DeviceRow) => void;
 }) {
   const destructive = useMemo<MenuAction>(
-    () => ({ label: accessCopy.signOut, icon: LogOut, onSelect: () => onEnd(device) }),
+    () => ({ label: accessCopy.signOut, icon: LogoutIcon, onSelect: () => onEnd(device) }),
     [device, onEnd],
   );
 

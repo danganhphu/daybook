@@ -1,7 +1,8 @@
-// Design tokens. Numbers come from Fluent 2, Cloudscape, Apple HIG and Material 3; reasons live in
-// docs/ui/design-system.md. This file emits no CSS.
+// Design tokens. The look follows Oppo's ColorOS (the owner's choice, 2026-10-23); the numbers come from Apple HIG,
+// Material 3 and WCAG. Reasons live in docs/ui/design-system.md. This file emits no CSS.
 
-// Color roles every theme must define. Components only ever ask for a role, never a value.
+// Color roles every theme must define. Components only ever ask for a role, never a value. An icon tone is a
+// meaning, used for that meaning only, everywhere: see the table in the design system.
 $color-roles: (
   canvas,
   surface,
@@ -12,9 +13,16 @@ $color-roles: (
   text-muted,
   accent,
   accent-hover,
+  accent-wash,
   on-accent,
   danger,
-  scrim
+  scrim,
+  icon-green,
+  icon-blue,
+  icon-orange,
+  icon-red,
+  icon-purple,
+  icon-amber
 );
 
 // 4px grid; steps are multiples of 4px
@@ -32,45 +40,51 @@ $space: (
   16: 64px,
 );
 
-// Material 3's corner scale (medium 12, large 16), which reads as a phone app rather than an office suite.
-// `field` is half the 48px message field, so one line is a pill and more lines stay a soft rectangle.
+// ColorOS rounds generously: cards at 24, fields at 14, buttons and chips as pills (`full`). `field` is half the
+// 48px message field, so one line is a pill and more lines stay a soft rectangle.
 $radius: (
-  control: 12px,
-  surface: 16px,
+  control: 14px,
+  surface: 24px,
   field: 24px,
   full: 9999px,
 );
 
-// Nothing below 12px; body is 16px so iOS never zooms into an input. Two weights only.
+// Large and airy, as ColorOS sets its lists: a row reads at 17px (Apple's body size), its second line at 15. Nothing
+// below 13px; inputs are 17px, so iOS never zooms into one. Two weights only. `hero` is a screen's one big number.
 $text-styles: (
   caption: (
-    size: 12px,
-    leading: 16px,
+    size: 13px,
+    leading: 18px,
     weight: 400,
   ),
   body-sm: (
-    size: 14px,
+    size: 15px,
     leading: 20px,
     weight: 400,
   ),
   body: (
-    size: 16px,
+    size: 17px,
     leading: 24px,
     weight: 400,
   ),
   label: (
-    size: 16px,
+    size: 17px,
     leading: 24px,
     weight: 600,
   ),
   title: (
-    size: 20px,
+    size: 22px,
     leading: 28px,
     weight: 600,
   ),
   display: (
-    size: 28px,
-    leading: 36px,
+    size: 30px,
+    leading: 38px,
+    weight: 600,
+  ),
+  hero: (
+    size: 36px,
+    leading: 44px,
     weight: 600,
   ),
 );
@@ -81,7 +95,17 @@ $sizes: (
   control: 44px,
   control-lg: 48px,
   icon: 20px,
+  // An icon leading a list row, as ColorOS lists show theirs
+  icon-row: 24px,
+  // A list row: ColorOS's are tall, one line or two
+  row: 60px,
+  // One tab of the floating tab bar
+  tab: 88px,
   menu: 200px,
+  // A filter chip: smaller than a button, still a fair target (WCAG 2.2 asks 24px; Material uses 32px)
+  chip: 36px,
+  // The tallest a list of suggestions grows before it scrolls: about six rows
+  suggestions: 280px,
   toast: 360px,
   // The sign-in and setup action: one thumb's width on a phone, not a banner on a desk
   panel: 400px,

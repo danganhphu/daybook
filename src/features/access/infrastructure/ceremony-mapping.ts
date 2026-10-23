@@ -1,6 +1,5 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import { accountIdSchema } from "@/features/access/domain/account";
 import {
   ceremonyIdSchema,
   challengeSchema,
@@ -9,6 +8,7 @@ import {
 import { passwordSaltSchema } from "@/features/access/domain/password";
 import { secretHashSchema } from "@/features/access/domain/secret";
 import { setupLinkIdSchema } from "@/features/access/domain/setup-link";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { ceremonyTable } from "./ceremony.table";
 

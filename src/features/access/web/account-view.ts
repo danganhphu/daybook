@@ -6,9 +6,9 @@ import type {
   PersonSummary,
 } from "@/features/access/application/account-overview";
 import type { AccessEvent, AccessEventKind } from "@/features/access/domain/access-event";
-import type { AccountId } from "@/features/access/domain/account";
 import type { SessionId } from "@/features/access/domain/session";
 import { setupLinkPurposes, type SetupLinkPurpose } from "@/features/access/domain/setup-link";
+import type { AccountId } from "@/shared/domain/account-id";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
 import { midSentence } from "@/shared/web/sentence-case";
 

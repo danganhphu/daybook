@@ -18,8 +18,20 @@ import {
 } from "@/features/access/infrastructure/access-writes";
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import { createCaptureWrites } from "@/features/capture/infrastructure/capture-writes";
+import type {
+  CustomerKindWrites,
+  CustomerWrites,
+} from "@/features/customers/application/customer-writes";
+import {
+  createCustomerKindWrites,
+  createCustomerWrites,
+} from "@/features/customers/infrastructure/customer-writes";
 import type { NoteWrites } from "@/features/notes/application/note-writes";
 import { createNoteWrites } from "@/features/notes/infrastructure/note-writes";
+import type { OrderWrites } from "@/features/orders/application/order-writes";
+import { createOrderWrites } from "@/features/orders/infrastructure/order-writes";
+import type { ProductWrites } from "@/features/products/application/product-writes";
+import { createProductWrites } from "@/features/products/infrastructure/product-writes";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { createBatch, type Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -27,6 +39,10 @@ import type { Database } from "@/shared/infrastructure/d1/database";
 export type DaybookUnitOfWork = UnitOfWork<{
   readonly captures: CaptureWrites;
   readonly notes: NoteWrites;
+  readonly customerKinds: CustomerKindWrites;
+  readonly customers: CustomerWrites;
+  readonly products: ProductWrites;
+  readonly orders: OrderWrites;
   readonly accounts: AccountWrites;
   readonly passkeys: PasskeyWrites;
   readonly passwords: PasswordWrites;
@@ -41,6 +57,10 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
   return {
     captures: createCaptureWrites(db, batch),
     notes: createNoteWrites(db, batch),
+    customerKinds: createCustomerKindWrites(db, batch),
+    customers: createCustomerWrites(db, batch),
+    products: createProductWrites(db, batch),
+    orders: createOrderWrites(db, batch),
     accounts: createAccountWrites(db, batch),
     passkeys: createPasskeyWrites(db, batch),
     passwords: createPasswordWrites(db, batch),

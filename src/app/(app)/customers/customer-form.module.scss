@@ -1,0 +1,22 @@
+@use "abstracts" as *;
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(4);
+}
+
+.note-label {
+  display: grid;
+  gap: space(1);
+
+  > span {
+    @include text(label);
+  }
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}

@@ -1,0 +1,58 @@
+@use "abstracts" as *;
+
+// Laid out as TextField: label above, the box, the error below
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(1);
+}
+
+.label {
+  @include text(label);
+}
+
+.box {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &[data-invalid] .select {
+    border-color: color(danger);
+  }
+}
+
+// The browser's arrow is replaced by the same chevron everywhere, so the box looks one way on every phone
+.select {
+  inline-size: 100%;
+  min-block-size: size(control-lg);
+  padding: space(3);
+  padding-inline-end: space(10);
+  color: color(text);
+  appearance: none;
+  background: color(surface);
+  border: 1px solid color(border-strong);
+  border-radius: radius(control);
+
+  @include text(body);
+  @include focus-ring;
+
+  &:disabled {
+    color: color(text-muted);
+    cursor: not-allowed;
+  }
+}
+
+.chevron {
+  position: absolute;
+  inset-inline-end: space(3);
+  inline-size: size(icon);
+  block-size: size(icon);
+  color: color(text-muted);
+  pointer-events: none;
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}

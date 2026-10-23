@@ -11,10 +11,10 @@ describe("recordNote", () => {
     const app = testApp(testClock("2026-10-19T02:12:00Z").clock);
 
     const view = expectOk(
-      await recordNote(app, await theAuthor(), "Giao 2 thùng giấy in\nthu 850.000đ"),
+      await recordNote(app, await theAuthor(), "Giao 2 hộp thuốc tê\nthu 850.000đ"),
     );
 
-    expect(view.content).toBe("Giao 2 thùng giấy in\nthu 850.000đ");
+    expect(view.content).toBe("Giao 2 hộp thuốc tê\nthu 850.000đ");
     expect(view.time).toBe("09:12");
   });
 

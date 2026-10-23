@@ -1,7 +1,8 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
-import { accountIdSchema } from "./account";
+import { accountIdSchema } from "@/shared/domain/account-id";
+
 import { secretHashSchema } from "./secret";
 import * as Sessions from "./session";
 

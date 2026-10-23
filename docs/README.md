@@ -18,6 +18,7 @@
 
 - [Product design](product/design.md) - what the product does and why, decision by decision
 - [Design system](ui/design-system.md) - principles, tokens, components, how styles are written
+- [Screenshots](ui/screenshots.md) - every screen on an Android phone, and one on a desktop
 
 ## Architecture
 

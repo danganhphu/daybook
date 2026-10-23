@@ -1,6 +1,5 @@
 "use client";
 
-import { KeyRound, UserPlus } from "lucide-react";
 import { useCallback, useMemo, useState, useTransition } from "react";
 
 import { setupLinkLifetime } from "@/features/access/domain/access-policy";
@@ -9,6 +8,7 @@ import { problemMessage } from "@/features/access/web/attempt-setting";
 import type { IssuedLinkView, SettingsResult } from "@/features/access/web/settings-commands";
 import { optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
+import { KeyIcon, PersonAddIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListRow } from "@/shared/ui/list/list-row";
@@ -74,7 +74,12 @@ export function People({ people, run }: PeopleProps) {
         {people.map((person) => (
           <PersonItem key={person.id} person={person} onRecover={recover} />
         ))}
-        <ListAction label="Mời người dùng" icon={UserPlus} disabled={working} onClick={invite} />
+        <ListAction
+          label="Mời người dùng"
+          icon={PersonAddIcon}
+          disabled={working}
+          onClick={invite}
+        />
       </List>
       <LinkDialog open={showing} link={link} onClose={hide} />
     </>
@@ -89,7 +94,7 @@ function PersonItem({
   readonly onRecover: (person: PersonRow) => void;
 }) {
   const actions = useMemo<ReadonlyArray<MenuAction>>(
-    () => [{ label: recoverLabel, icon: KeyRound, onSelect: () => onRecover(person) }],
+    () => [{ label: recoverLabel, icon: KeyIcon, onSelect: () => onRecover(person) }],
     [person, onRecover],
   );
 

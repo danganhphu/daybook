@@ -1,0 +1,25 @@
+@use "abstracts" as *;
+
+// One screen tall: the page scrolls on its own above the tab bar, or beside the rail from `md`
+.shell {
+  display: grid;
+  grid-template-areas:
+    "page"
+    "tabs";
+  grid-template-rows: minmax(0, 1fr) auto;
+  block-size: 100dvh;
+
+  @include from(md) {
+    grid-template: "tabs page" / auto minmax(0, 1fr);
+  }
+}
+
+.page {
+  grid-area: page;
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.tabs {
+  grid-area: tabs;
+}

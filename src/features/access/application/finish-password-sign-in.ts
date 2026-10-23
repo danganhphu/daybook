@@ -1,6 +1,5 @@
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
-import { accountIdSchema } from "@/features/access/domain/account";
 import * as Ceremonies from "@/features/access/domain/ceremony";
 import type { CeremonyRepository } from "@/features/access/domain/ceremony-repository";
 import * as Passwords from "@/features/access/domain/password";
@@ -9,6 +8,7 @@ import type { PasswordRepository } from "@/features/access/domain/password-repos
 import type { Session } from "@/features/access/domain/session";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
+import { accountIdSchema } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";

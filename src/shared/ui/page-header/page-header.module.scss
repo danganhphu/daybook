@@ -1,0 +1,40 @@
+@use "abstracts" as *;
+
+.header {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  min-block-size: size(control-lg);
+
+  &[data-root] {
+    padding-block-start: space(4);
+  }
+}
+
+.heading {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  overflow-wrap: anywhere;
+
+  @include text(title);
+
+  .header[data-root] & {
+    @include text(display);
+  }
+}
+
+.subtitle {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: space(1);
+  align-items: center;
+}

@@ -1,0 +1,25 @@
+@use "abstracts" as *;
+
+// Back a month, the month, on a month: the arrows at the ends, as a calendar app has them
+.months {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month {
+  @include text(label);
+}
+
+.filters {
+  display: grid;
+  gap: space(2);
+}
+
+.more {
+  color: color(text-muted);
+  text-align: center;
+
+  @include text(body-sm);
+}

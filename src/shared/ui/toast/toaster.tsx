@@ -1,16 +1,16 @@
 "use client";
 
 import { Toast } from "@base-ui/react/toast";
-import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { IconButton } from "@/shared/ui/button/icon-button";
+import { CloseIcon } from "@/shared/ui/icon/icons";
 
 import { plainToastTimeout } from "./toast-timing";
 
 import styles from "./toast.module.scss";
 
-const closeButton = <IconButton icon={X} label="Đóng thông báo" />;
+const closeButton = <IconButton icon={CloseIcon} label="Đóng thông báo" />;
 
 // One viewport for the whole app: mount once, near the root, and raise toasts with useToast()
 export function Toaster({ children }: { readonly children: ReactNode }) {
@@ -37,7 +37,9 @@ function ToastList() {
           <Toast.Description className={styles.description} />
         </div>
         <Toast.Action className={styles.action} />
-        <Toast.Close render={closeButton} />
+        {/* Base UI hides it from screen readers until the toast expands, yet keeps it in the tab order: a
+            focusable button nobody hears (axe: aria-hidden-focus). Always exposed instead. */}
+        <Toast.Close render={closeButton} aria-hidden={false} />
       </Toast.Content>
     </Toast.Root>
   ));

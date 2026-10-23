@@ -63,9 +63,47 @@
   > .stack,
   > .block,
   > .frame,
-  > .row {
+  > .row,
+  > .icons {
     flex: 1 1 100%;
   }
+}
+
+// Every icon the app has: outlined, then filled, over its name; cells about a tab wide
+.icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(size(tab), 1fr));
+  gap: space(2);
+  padding: 0;
+  list-style: none;
+}
+
+.icon {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: center;
+  padding: space(3) space(2);
+  background: color(surface);
+  border-radius: radius(control);
+
+  svg {
+    inline-size: size(icon-row);
+    block-size: size(icon-row);
+  }
+}
+
+.icon-forms {
+  display: flex;
+  gap: space(3);
+}
+
+.icon-name {
+  color: color(text-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+
+  @include text(caption);
 }
 
 .stack {

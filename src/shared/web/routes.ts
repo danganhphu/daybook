@@ -1,9 +1,40 @@
 // Every path the app serves, so a link, a redirect and the route behind them cannot drift apart
 export const routes = {
   today: "/",
+  days: "/days",
+  history: "/history",
+  orders: "/orders",
+  newOrder: "/orders/new",
+  customers: "/customers",
+  newCustomer: "/customers/new",
   signIn: "/sign-in",
   setup: "/setup",
   signOut: "/sign-out",
   settings: "/settings",
   componentGallery: "/dev/ui",
 } as const;
+
+// The search box on the history screen sends its words under this name
+export const searchQueryParameter = "q";
+
+export function orderPath(id: string): string {
+  return `${routes.orders}/${id}`;
+}
+
+export function editOrderPath(id: string): string {
+  return `${orderPath(id)}/edit`;
+}
+
+export function customerPath(id: string): string {
+  return `${routes.customers}/${id}`;
+}
+
+export function editCustomerPath(id: string): string {
+  return `${customerPath(id)}/edit`;
+}
+
+// Today has one address, the home screen, so a day page never shows what the home screen shows. Days are YYYY-MM-DD
+// text, so the browser can build a path from the date picker without loading Temporal.
+export function dayPath(day: string, today: string): string {
+  return day === today ? routes.today : `${routes.days}/${day}`;
+}

@@ -6,9 +6,7 @@ A notebook for a salesperson on the move: orders, customers and follow-ups, type
 A Telegram bot is the main way in; a web app, installable as a PWA, is the second. Both run on one Cloudflare Worker,
 on the free plan. The interface is in Vietnamese.
 
-| Sign in | Today | Settings | Invited |
-| --- | --- | --- | --- |
-| ![Sign-in screen](docs/images/sign-in.png) | ![Today's notes](docs/images/today.png) | ![Settings](docs/images/settings.png) | ![Naming an invited account](docs/images/invite.png) |
+What it looks like: [screenshots](docs/ui/screenshots.md).
 
 ## Features
 
@@ -45,7 +43,7 @@ one-time setup for Cloudflare and the test browsers, are in [installation](docs/
 | --- | --- |
 | Getting started | [Installation](docs/getting-started/installation.md), [development](docs/getting-started/development.md) |
 | Guides | [Configuration](docs/guides/configuration.md), [commands](docs/guides/commands.md), [testing](docs/guides/testing.md), [database](docs/guides/database.md), [deployment](docs/guides/deployment.md), [troubleshooting](docs/guides/troubleshooting.md) |
-| Product and design | [Product design](docs/product/design.md), [design system](docs/ui/design-system.md) |
+| Product and design | [Product design](docs/product/design.md), [design system](docs/ui/design-system.md), [screenshots](docs/ui/screenshots.md) |
 | Architecture | [Overview](docs/architecture/overview.md), [domain](docs/architecture/domain.md) |
 | Conventions | [AGENTS.md](AGENTS.md), for people and coding agents alike |
 

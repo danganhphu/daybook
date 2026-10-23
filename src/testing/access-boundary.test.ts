@@ -48,7 +48,7 @@ function exportedFunctions(text: string) {
 describe("the access boundary", () => {
   it("given the source tree, when read, then the checks below have something to check", () => {
     expect(serverActionModules).toContain("/src/app/actions.ts");
-    expect(pages).toContain("/src/app/page.tsx");
+    expect(pages).toContain("/src/app/(app)/page.tsx");
   });
 
   it("given the public lists, when compared with the source tree, then none names a file that is gone", () => {

@@ -1,6 +1,6 @@
-import type { AccountId } from "@/features/access/domain/account";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
+import type { AccountId } from "@/shared/domain/account-id";
 
 export type ListSessionsDeps = {
   readonly sessions: SessionRepository;

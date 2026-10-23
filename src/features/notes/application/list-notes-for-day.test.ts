@@ -1,7 +1,7 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
-import { content, testApp, testClock, theAuthor } from "@/testing/support/app";
+import { changeOf, content, testApp, testClock, theAuthor } from "@/testing/support/app";
 
 const day = Temporal.PlainDate.from("2026-10-16");
 
@@ -77,7 +77,7 @@ describe("listNotesForDay", () => {
       source: "web",
       authorId: await theAuthor(),
     });
-    await app.deleteNote(note.id);
+    await app.deleteNote(changeOf(note, await theAuthor()));
 
     expect(await app.listNotesForDay(day)).toEqual([]);
   });

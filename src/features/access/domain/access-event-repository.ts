@@ -1,7 +1,8 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
+import type { AccountId } from "@/shared/domain/account-id";
+
 import type { AccessEvent } from "./access-event";
-import type { AccountId } from "./account";
 
 // Reads only. Events are written through the unit of work and never change.
 export type AccessEventRepository = {

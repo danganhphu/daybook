@@ -1,7 +1,6 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { z } from "zod";
 
-import { accountIdSchema } from "@/features/access/domain/account";
 import {
   credentialIdSchema,
   isPasskeyAlgorithm,
@@ -9,6 +8,7 @@ import {
   type Passkey,
 } from "@/features/access/domain/passkey";
 import { deviceLabelSchema } from "@/features/access/domain/session";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { passkeyTable } from "./passkey.table";
 

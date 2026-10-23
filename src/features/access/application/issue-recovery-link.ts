@@ -1,8 +1,8 @@
 import type { RequestOrigin } from "@/features/access/domain/access-event";
-import { accountIdSchema } from "@/features/access/domain/account";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
 import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
+import { accountIdSchema } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";

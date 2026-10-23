@@ -1,35 +1,46 @@
-// Every pair used for text meets WCAG AA (4.5:1); border-strong and accent meet 3:1 as UI boundaries.
-// Ratios are recorded in docs/ui/design-system.md. Change a value here and re-check them.
+// Every pair used for text meets WCAG AA (4.5:1); border-strong, the accent and every icon tone meet 3:1 as UI
+// parts. Ratios are recorded in docs/ui/design-system.md and computed by the contrast script named there. Change a
+// value here and re-check them.
 @use "sass:list";
 @use "sass:map";
 @use "../abstracts/tokens";
 
-// A neutral grey canvas under white cards and a bright blue, as messaging apps and Google's own products use.
-// The blue is as bright as AA allows: white on it is 4.65:1 (Telegram's #3390ec would be 3.31:1).
+// ColorOS: a light grey canvas under white cards, one green for what matters. The green is Oppo's, darkened until
+// it reads at AA on surface-subtle too: white on it 5.64:1 (Oppo's own #1cb84c is 2.62:1).
 $colors: (
-  canvas: oklch(96.5% 0.004 265deg),
+  canvas: oklch(95.5% 0.003 250deg),
   surface: oklch(100% 0 0deg),
-  surface-subtle: oklch(94.5% 0.006 265deg),
-  border: oklch(91% 0.007 265deg),
-  border-strong: oklch(62% 0.014 262deg),
-  text: oklch(21% 0.008 265deg),
-  text-muted: oklch(50% 0.012 265deg),
-  accent: oklch(56.5% 0.19 256deg),
-  accent-hover: oklch(50% 0.19 256deg),
+  surface-subtle: oklch(93% 0.004 250deg),
+  border: oklch(90% 0.005 250deg),
+  border-strong: oklch(62% 0.01 250deg),
+  text: oklch(20% 0.005 250deg),
+  text-muted: oklch(50% 0.008 250deg),
+  accent: oklch(49.5% 0.17 145deg),
+  accent-hover: oklch(45% 0.15 145deg),
+  // The faint green at the top of a tab's own screen, fading into the canvas
+  accent-wash: oklch(96% 0.035 145deg),
   on-accent: oklch(100% 0 0deg),
-  danger: oklch(55% 0.2 27deg),
+  // Dark enough to keep 4.5:1 on a secondary button's hover grey
+  danger: oklch(52% 0.2 27deg),
   // Dims the page behind a dialog; a tint, not a colour anything is read on
-  scrim: oklch(21% 0.008 265deg / 40%),
+  scrim: oklch(20% 0.005 250deg / 40%),
+  // Icon tones, each one meaning (docs/ui/design-system.md, "Icon tones"), each at least 3:1 on white
+  icon-green: oklch(60% 0.18 145deg),
+  icon-blue: oklch(58% 0.19 256deg),
+  icon-orange: oklch(66% 0.18 50deg),
+  icon-red: oklch(58% 0.21 27deg),
+  icon-purple: oklch(55% 0.2 300deg),
+  icon-amber: oklch(64% 0.15 70deg),
 );
 
-// Cards at rest are flat. What floats over the page - the message field, later a tab bar - takes a soft, wide
-// shadow; overlays sit clearly above everything.
+// Cards at rest are flat. What floats over the page - the message field, the tab bar - takes a soft, wide shadow;
+// overlays sit clearly above everything.
 $shadow-float:
-  0 1px 3px oklch(21% 0.008 265deg / 6%),
-  0 4px 16px oklch(21% 0.008 265deg / 8%);
+  0 1px 3px oklch(20% 0.005 250deg / 6%),
+  0 6px 20px oklch(20% 0.005 250deg / 10%);
 $shadow-overlay:
-  0 2px 6px oklch(21% 0.008 265deg / 8%),
-  0 12px 32px oklch(21% 0.008 265deg / 12%);
+  0 2px 6px oklch(20% 0.005 250deg / 8%),
+  0 12px 32px oklch(20% 0.005 250deg / 12%);
 
 @each $role in tokens.$color-roles {
   @if not map.has-key($colors, $role) {
@@ -52,4 +63,11 @@ $shadow-overlay:
 
   --shadow-float: #{$shadow-float};
   --shadow-overlay: #{$shadow-overlay};
+
+  // The wash at the top of a tab's own screen: the faint green, gone by the first card
+  --wash: linear-gradient(
+    to bottom,
+    #{map.get($colors, accent-wash)},
+    #{map.get($colors, canvas)} 280px
+  );
 }

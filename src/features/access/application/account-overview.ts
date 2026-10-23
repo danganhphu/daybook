@@ -2,7 +2,7 @@ import type { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEvent } from "@/features/access/domain/access-event";
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
-import type { Account, AccountId } from "@/features/access/domain/account";
+import type { Account } from "@/features/access/domain/account";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
 import type { Passkey } from "@/features/access/domain/passkey";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
@@ -10,6 +10,7 @@ import * as Passwords from "@/features/access/domain/password";
 import type { PasswordRepository } from "@/features/access/domain/password-repository";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
+import type { AccountId } from "@/shared/domain/account-id";
 
 export type AccountOverviewDeps = {
   readonly accounts: AccountRepository;

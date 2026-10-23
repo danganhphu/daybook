@@ -1,9 +1,9 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import { accountIdSchema } from "@/features/access/domain/account";
 import { passkeyIdSchema } from "@/features/access/domain/passkey";
 import { secretHashSchema } from "@/features/access/domain/secret";
 import { deviceLabelSchema, sessionIdSchema, type Session } from "@/features/access/domain/session";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { sessionTable } from "./session.table";
 

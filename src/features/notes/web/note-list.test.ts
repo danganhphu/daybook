@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { applyChange, type ShownNote } from "./note-list";
 
 function shown(id: string, createdAt: string, text = id): ShownNote {
-  return { id, content: text, createdAt, time: "", saving: false };
+  return { id, content: text, createdAt, time: "", version: 1, saving: false };
 }
 
 const morning = shown("a", "2026-10-19T01:00:00Z");

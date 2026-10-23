@@ -1,0 +1,82 @@
+@use "abstracts" as *;
+
+// One column, as the day screens: the search box where the title would be
+.screen {
+  display: grid;
+  gap: space(4);
+  align-content: start;
+  inline-size: 100%;
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  padding: space(4) space(4) space(12);
+  margin-inline: auto;
+}
+
+// The box says what the page is; the heading is there for screen readers
+.title {
+  @include visually-hidden;
+}
+
+// Back on the left, where the thumb finds it, then the box across the rest
+.header {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+}
+
+.search {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.results {
+  display: grid;
+  gap: space(6);
+}
+
+.day {
+  display: grid;
+  gap: space(2);
+}
+
+.day-heading {
+  @include text(label);
+}
+
+// The whole line opens the day, tall enough for a thumb
+.day-link {
+  display: inline-flex;
+  gap: space(1);
+  align-items: center;
+  min-block-size: size(control);
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.chevron {
+  inline-size: size(icon);
+  block-size: size(icon);
+  color: color(text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  padding: 0;
+  list-style: none;
+}
+
+.more {
+  color: color(text-muted);
+  text-align: center;
+
+  @include text(body-sm);
+}

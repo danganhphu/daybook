@@ -1,16 +1,17 @@
 "use client";
 
 import { Menu } from "@base-ui/react/menu";
-import { Ellipsis, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
 import { IconButton } from "@/shared/ui/button/icon-button";
+import type { Icon } from "@/shared/ui/icon/icon";
+import { MoreHorizIcon } from "@/shared/ui/icon/icons";
 
 import styles from "./action-menu.module.scss";
 
 // An item does something here, or goes to another page; a page is a real link, so it can open in a new tab
-export type MenuAction = { readonly label: string; readonly icon: LucideIcon } & (
+export type MenuAction = { readonly label: string; readonly icon: Icon } & (
   | { readonly onSelect: () => void }
   | { readonly href: string }
 );
@@ -20,13 +21,13 @@ export type ActionMenuProps = {
   readonly label: string;
   readonly actions?: ReadonlyArray<MenuAction>;
   // Always last, below a divider and in the danger color, so it is never hit by mistake
-  readonly destructive?: MenuAction;
+  readonly destructive?: MenuAction | undefined;
 };
 
 const noActions: ReadonlyArray<MenuAction> = [];
 
 export function ActionMenu({ label, actions = noActions, destructive }: ActionMenuProps) {
-  const trigger = useMemo(() => <IconButton icon={Ellipsis} label={label} />, [label]);
+  const trigger = useMemo(() => <IconButton icon={MoreHorizIcon} label={label} />, [label]);
 
   return (
     <Menu.Root>
@@ -80,7 +81,7 @@ function MenuLink({
   tone,
 }: {
   readonly label: string;
-  readonly icon: LucideIcon;
+  readonly icon: Icon;
   readonly href: string;
   readonly tone: "danger" | "neutral";
 }) {

@@ -1,0 +1,82 @@
+@use "abstracts" as *;
+
+// Columns of minmax(0, 1fr) throughout: a field's intrinsic width must never push the form past the screen
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(4);
+}
+
+.lines {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(3);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-block-end: space(1);
+
+  @include text(label);
+}
+
+// Each line its own card: the product, then how many and at what price, then the line's amount
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(3);
+  padding: space(3);
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+.line-head {
+  display: flex;
+  gap: space(1);
+  align-items: flex-end;
+
+  > :first-child {
+    flex: 1;
+    min-inline-size: 0;
+  }
+}
+
+.numbers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: space(3);
+}
+
+.amount {
+  justify-self: end;
+  color: color(text-muted);
+
+  @include tabular-nums;
+}
+
+.note-label {
+  display: grid;
+  gap: space(1);
+
+  > span {
+    @include text(label);
+  }
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  @include text(title);
+  @include tabular-nums;
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}

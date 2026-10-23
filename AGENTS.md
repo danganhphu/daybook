@@ -47,7 +47,7 @@ The free-plan limits that shape the code:
 | Web | [vinext](https://github.com/cloudflare/vinext): the Next.js 16 API on Vite, built for Workers. Next.js App Router conventions apply, but parity is not complete - check vinext's compatibility notes before using an uncommon Next feature |
 | Components | Base UI for behavior and accessibility; our own design system on top, in SCSS. See [docs/ui/design-system.md](docs/ui/design-system.md) |
 | Styling | Sass (`sass-embedded`) as CSS Modules beside each component, tokens in `src/shared/ui/styles/`. Not Tailwind: Tailwind 4 is not built to sit beside a preprocessor |
-| Icons | lucide-react |
+| Icons | Material Symbols Rounded, generated as components by `pnpm symbols` from Iconify's data; no icon library at run time. Why not Lucide or Phosphor: [docs/ui/design-system.md](docs/ui/design-system.md#icons) |
 | Font | Inter with the `vietnamese` subset. Geist has no Vietnamese glyphs |
 | Browser-side server state | TanStack Query, once a screen needs client caching or optimistic updates. Not SWR: same job, less for mutations |
 | Client state | None until something needs it, then Zustand. Not Redux Toolkit: far more machinery than one user needs |
@@ -236,7 +236,8 @@ End-to-end tests cover the flows a user would notice breaking; everything else i
 - **Scenarios are Gherkin** in `e2e/*.feature`, with English keywords and Vietnamese steps, run by Playwright
   through playwright-bdd on an iPhone (WebKit), an Android phone (Chromium) and desktop Chrome. Tag a scenario
   `@desktop-only` or `@phone-only` when the devices behave differently, like what Enter does, and `@chromium-only`
-  when it asks Chrome itself over the DevTools protocol.
+  when it asks Chrome itself over the DevTools protocol. `@iphone-later` marks a scenario that should pass on the
+  iPhone but does not yet: Android comes first, and each one is in the project's known gaps.
 - **Chromium is real Chrome** in its new headless mode (`channel: "chromium"`). Playwright's default headless shell
   is not full Chrome: asked whether a page installs, it reports no errors even for a page with no manifest.
 - **They run the production build** over HTTPS on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts`
@@ -371,6 +372,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
 | `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`. Commit the output |
+| `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx`. Commit the output |
 | `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:revoke` | Ends every session of an account: `--username`, then one of `--local`, `--remote`, `--dry-run` |
