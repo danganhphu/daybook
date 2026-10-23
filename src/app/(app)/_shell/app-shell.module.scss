@@ -1,15 +1,25 @@
 @use "abstracts" as *;
 
-// One screen tall: the page scrolls on its own above the tab bar, or beside the rail from `md`
+// One screen tall. On a phone the tab bar floats over the foot of the page, which keeps that much room at its end, so
+// what scrolls passes under the bar and the last of it still comes clear. From `md` the bar is a rail beside the page.
 .shell {
+  // The fade above the bar, the bar, the gap under it, the home indicator (tab-bar.module.scss lays them out)
+  --tab-bar-room: calc(
+    #{space(4)} + #{size(tab-bar)} + #{space(2)} + env(safe-area-inset-bottom, 0px)
+  );
+
   display: grid;
-  grid-template-areas:
-    "page"
-    "tabs";
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template: "page" minmax(0, 1fr) / minmax(0, 1fr);
   block-size: 100dvh;
 
+  // The bar stands down while the keyboard is up (use-typing.ts), and its room with it
+  &:has([data-typing]) {
+    --tab-bar-room: 0px;
+  }
+
   @include from(md) {
+    --tab-bar-room: 0px;
+
     grid-template: "tabs page" / auto minmax(0, 1fr);
   }
 }
@@ -17,9 +27,20 @@
 .page {
   grid-area: page;
   min-block-size: 0;
+  padding-block-end: var(--tab-bar-room);
   overflow-y: auto;
+
+  // A field scrolled to or focused stops above the bar, not under it
+  scroll-padding-block-end: var(--tab-bar-room);
 }
 
 .tabs {
-  grid-area: tabs;
+  z-index: z(sticky);
+  grid-area: page;
+  align-self: end;
+
+  @include from(md) {
+    grid-area: tabs;
+    align-self: stretch;
+  }
 }

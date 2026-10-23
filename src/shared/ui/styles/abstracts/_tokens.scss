@@ -5,6 +5,7 @@
 $color-roles: (
   canvas,
   surface,
+  surface-float,
   surface-subtle,
   border,
   border-strong,
@@ -58,6 +59,11 @@ $text-styles: (
     leading: 18px,
     weight: 400,
   ),
+  caption-strong: (
+    size: 13px,
+    leading: 18px,
+    weight: 600,
+  ),
   body-sm: (
     size: 15px,
     leading: 20px,
@@ -102,10 +108,13 @@ $sizes: (
   control-lg: 48px,
   icon: 20px,
   icon-row: 24px,
+  // The one picture of each place in the tab bar
+  icon-tab: 28px,
   // A list row, one line or two
   row: 60px,
-  // One tab of the floating tab bar
+  // One tab of the floating tab bar, and the bar's height
   tab: 88px,
+  tab-bar: 64px,
   menu: 200px,
   // A filter chip: smaller than a button, still a fair target (WCAG 2.2 asks 24px; Material uses 32px)
   chip: 36px,

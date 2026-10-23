@@ -1,15 +1,35 @@
 @use "abstracts" as *;
 
-// A white pill floating at the bottom, in a row of its own so the box on Hôm nay is never under it; from `md`, down
-// the left side
+// A frosted pill floating over the foot of the page, the page fading out behind it, in the room the shell keeps for it
+// (app-shell.module.scss); from `md`, a rail down the left side
 .tab-bar {
-  // The home indicator's room on a phone that runs edge to edge
-  --tab-bar-safe-area: env(safe-area-inset-bottom, 0);
+  --tab-bar-padding-end: calc(#{space(2)} + env(safe-area-inset-bottom, 0px));
 
-  padding: space(2) space(4) var(--tab-bar-safe-area);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  block-size: var(--tab-bar-room);
+  padding: 0 space(4) var(--tab-bar-padding-end);
+
+  // Only the pill takes a tap; around it the page is still the page
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: var(--tab-bar-fade);
+  }
 
   @include from(md) {
+    block-size: auto;
     padding: space(4);
+    pointer-events: auto;
+
+    &::before {
+      content: none;
+    }
   }
 
   // A text field has focus on a phone (use-typing.ts): the keyboard and the box being typed in take its room
@@ -21,20 +41,31 @@
 }
 
 .list {
+  // Above the fade
+  position: relative;
   display: grid;
   grid-auto-columns: size(tab);
   grid-auto-flow: column;
   inline-size: fit-content;
   padding: space(1);
-  margin: 0 auto space(2);
+  margin: 0 auto;
   list-style: none;
-  background: color(surface);
+  pointer-events: auto;
+  background: color(surface-float);
   border-radius: radius(full);
   box-shadow: var(--shadow-float);
+  backdrop-filter: blur(20px);
 
+  @media (prefers-reduced-transparency: reduce) {
+    background: color(surface);
+    backdrop-filter: none;
+  }
+
+  // Standing, the pill's round ends would cut into the first and last labels without the extra room
   @include from(md) {
     grid-auto-flow: row;
     gap: space(1);
+    padding-block: space(4);
     margin: 0;
   }
 }
@@ -42,11 +73,11 @@
 .tab {
   display: flex;
   flex-direction: column;
-  gap: space(1);
   align-items: center;
   justify-content: center;
-  min-block-size: size(control-lg);
-  padding-block: space(2);
+
+  // The bar's height less its padding
+  block-size: calc(#{size(tab-bar)} - #{space(1)} * 2);
   color: color(text-muted);
   text-decoration: none;
   border-radius: radius(full);
@@ -55,13 +86,17 @@
   @include focus-ring;
 
   svg {
-    inline-size: size(icon-row);
-    block-size: size(icon-row);
+    inline-size: size(icon-tab);
+    block-size: size(icon-tab);
   }
 
-  // The filled icon says it too, for anyone who cannot tell the colour
+  // The filled icon and the heavier label say it too, for anyone who cannot tell the colour
   &[aria-current="page"] {
     color: color(accent-text);
+
+    .label {
+      @include text(caption-strong);
+    }
   }
 }
 
