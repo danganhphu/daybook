@@ -77,34 +77,55 @@ Then("tôi đang xem khách {string}", async ({ page }, name: string) => {
   await expect(page).toHaveURL(/\/customers\/[0-9a-f-]{36}$/);
 });
 
+// Fills the order form's lines from a table of món, số lượng, đơn giá, then saves and waits for the order's page
+async function fillLinesAndSave(page: Page, table: DataTable) {
+  // The product field is built once the page has hydrated; it is disabled until then
+  await expect(page.getByRole("combobox", { name: "Món hàng 1" })).toBeEnabled();
+
+  const rows = table.hashes();
+  for (const [index, row] of rows.entries()) {
+    if (index > 0) {
+      await page.getByRole("button", { name: "Thêm món" }).click();
+    }
+    await page.getByRole("combobox", { name: `Món hàng ${index + 1}` }).fill(row["món"] ?? "");
+    await page
+      .getByRole("textbox", { name: "Số lượng" })
+      .nth(index)
+      .fill(row["số lượng"] ?? "");
+    await page
+      .getByRole("textbox", { name: "Đơn giá (đ)" })
+      .nth(index)
+      .fill(row["đơn giá"] ?? "");
+  }
+  await page.getByRole("button", { name: "Lưu đơn" }).click();
+  await expect(page).toHaveURL(/\/orders\/[0-9a-f-]{36}$/);
+}
+
 When(
   "tôi tạo đơn cho khách {string} gồm:",
   async ({ page }, customer: string, table: DataTable) => {
     await page.goto("/customers");
     await customerRow(page, customer).first().click();
     await page.getByRole("link", { name: "Tạo đơn" }).click();
-    // The product field is built once the page has hydrated; it is disabled until then
-    await expect(page.getByRole("combobox", { name: "Món hàng 1" })).toBeEnabled();
-
-    const rows = table.hashes();
-    for (const [index, row] of rows.entries()) {
-      if (index > 0) {
-        await page.getByRole("button", { name: "Thêm món" }).click();
-      }
-      await page.getByRole("combobox", { name: `Món hàng ${index + 1}` }).fill(row["món"] ?? "");
-      await page
-        .getByRole("textbox", { name: "Số lượng" })
-        .nth(index)
-        .fill(row["số lượng"] ?? "");
-      await page
-        .getByRole("textbox", { name: "Đơn giá (đ)" })
-        .nth(index)
-        .fill(row["đơn giá"] ?? "");
-    }
-    await page.getByRole("button", { name: "Lưu đơn" }).click();
-    await expect(page).toHaveURL(/\/orders\/[0-9a-f-]{36}$/);
+    await fillLinesAndSave(page, table);
   },
 );
+
+When(
+  "tôi tạo đơn ở trang Đơn hàng, gõ {string} rồi chọn khách {string}, gồm:",
+  async ({ page }, typed: string, customer: string, table: DataTable) => {
+    await page.goto("/orders/new");
+    const field = page.getByRole("combobox", { name: "Khách" });
+    await expect(field).toBeEnabled();
+    await field.fill(typed);
+    await page.getByRole("option", { name: new RegExp(customer) }).click();
+    await fillLinesAndSave(page, table);
+  },
+);
+
+Then("đơn là của khách {string}", async ({ page }, customer: string) => {
+  await expect(page.getByRole("heading", { name: customer, level: 1 })).toBeVisible();
+});
 
 When("tôi thu {string}", async ({ page }, amount: string) => {
   await page.getByRole("button", { name: "Thu tiền" }).click();

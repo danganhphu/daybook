@@ -116,6 +116,19 @@ import { createOrderQueries } from "@/features/orders/infrastructure/order-queri
 import { createOrderRepository } from "@/features/orders/infrastructure/order-repository";
 import type { ProductId } from "@/features/products/domain/product";
 import { createProductRepository } from "@/features/products/infrastructure/product-repository";
+import { addReminder, type AddReminderInput } from "@/features/reminders/application/add-reminder";
+import {
+  completeReminder,
+  reopenReminder,
+} from "@/features/reminders/application/complete-reminder";
+import { deleteReminder, restoreReminder } from "@/features/reminders/application/delete-reminder";
+import {
+  reviseReminder,
+  type ReviseReminderInput,
+} from "@/features/reminders/application/revise-reminder";
+import type { ReminderId } from "@/features/reminders/domain/reminder";
+import type { OpenReminderFilter } from "@/features/reminders/domain/reminder-repository";
+import { createReminderRepository } from "@/features/reminders/infrastructure/reminder-repository";
 import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import type { AccountId } from "@/shared/domain/account-id";
@@ -145,6 +158,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const products = createProductRepository(db);
   const orders = createOrderRepository(db);
   const orderQueries = createOrderQueries(db);
+  const reminders = createReminderRepository(db);
   const accounts = createAccountRepository(db);
   const ceremonies = createCeremonyRepository(db);
   const passkeys = createPasskeyRepository(db);
@@ -174,6 +188,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const customerKinds = { clock, kinds, startUnitOfWork };
   const customerBook = { clock, customers, kinds, startUnitOfWork };
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
+  const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
 
   return {
     recordCapture: (input: RecordCaptureInput) => recordCapture({ clock, startUnitOfWork }, input),
@@ -223,6 +238,16 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     removePayment: (input: RemovePaymentInput) => removePayment(orderBook, input),
     deleteOrder: (input: RecordChange<OrderId>) => deleteOrder(orderBook, input),
     restoreOrder: (input: RecordChange<OrderId>) => restoreOrder(orderBook, input),
+
+    getReminder: (id: ReminderId) => reminders.get(id),
+    listOpenReminders: (filter: OpenReminderFilter, limit: number) =>
+      reminders.listOpen(filter, limit),
+    addReminder: (input: AddReminderInput) => addReminder(reminderBook, input),
+    reviseReminder: (input: ReviseReminderInput) => reviseReminder(reminderBook, input),
+    completeReminder: (input: RecordChange<ReminderId>) => completeReminder(reminderBook, input),
+    reopenReminder: (input: RecordChange<ReminderId>) => reopenReminder(reminderBook, input),
+    deleteReminder: (input: RecordChange<ReminderId>) => deleteReminder(reminderBook, input),
+    restoreReminder: (input: RecordChange<ReminderId>) => restoreReminder(reminderBook, input),
 
     authenticate: (cookie: string | undefined) => authenticate(access, cookie),
     redeemSetupLink: (token: string, origin: RequestOrigin) =>

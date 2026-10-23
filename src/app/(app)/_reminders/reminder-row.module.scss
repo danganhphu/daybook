@@ -1,0 +1,31 @@
+@use "abstracts" as *;
+
+// Inside a List card: the round check where a row's icon would be, so the words line up with the other rows
+.row {
+  display: flex;
+  gap: space(2);
+  align-items: center;
+  min-block-size: size(row);
+  padding: space(2) space(3) space(2) space(2);
+}
+
+.text {
+  display: grid;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.detail {
+  color: color(text-muted);
+
+  @include text(body-sm);
+
+  [data-overdue] {
+    color: color(danger);
+  }
+}

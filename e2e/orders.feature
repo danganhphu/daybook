@@ -14,6 +14,13 @@ Feature: Đơn hàng
     And lịch sử đơn có "Tạo đơn"
     And trang không có lỗi trợ năng
 
+  Scenario: Tạo đơn ở trang Đơn hàng, chọn khách trong gợi ý
+    When tôi tạo đơn ở trang Đơn hàng, gõ "sao" rồi chọn khách "Sao Mai", gồm:
+      | món      | số lượng | đơn giá |
+      | Bông gòn | 2        | 20000   |
+    Then đơn là của khách "Sao Mai"
+    And đơn có tổng "40.000đ" và còn nợ "40.000đ"
+
   @iphone-later
   Scenario: Thu đủ tiền và giao hàng
     When tôi tạo đơn cho khách "Sao Mai" gồm:

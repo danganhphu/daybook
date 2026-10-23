@@ -4,6 +4,7 @@ import { DayScreen } from "@/app/(app)/_day/day-screen";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { todaysNotes } from "@/features/notes/web/commands";
+import { dueReminders } from "@/features/reminders/web/commands";
 
 // The notes change with every visit; never prerender this page
 export const dynamic = "force-dynamic";
@@ -15,5 +16,7 @@ export default async function TodayPage() {
   const app = daybook();
   await requireSession(app);
 
-  return <DayScreen view={await todaysNotes(app)} />;
+  const [view, due] = await Promise.all([todaysNotes(app), dueReminders(app)]);
+
+  return <DayScreen view={view} due={due} />;
 }

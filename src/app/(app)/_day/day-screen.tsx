@@ -1,8 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startTransition, useCallback, useId, useMemo, useOptimistic, useRef } from "react";
+import {
+  startTransition,
+  useCallback,
+  useId,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 
+import { DueBar } from "@/app/(app)/_reminders/due-bar";
+import { ReminderDialog } from "@/app/(app)/_reminders/reminder-dialog";
 import { deleteNote, editNote, recordNote, restoreNote } from "@/app/actions";
 import { accessCopy } from "@/features/access/web/access-copy";
 import { Composer } from "@/features/capture/web/composer";
@@ -11,6 +21,8 @@ import { applyChange, type ShownNote } from "@/features/notes/web/note-list";
 import { NoteRow } from "@/features/notes/web/note-row";
 import type { NoteView } from "@/features/notes/web/note-view";
 import { notesCopy } from "@/features/notes/web/notes-copy";
+import type { DueView } from "@/features/reminders/web/reminder-view";
+import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { IconButton } from "@/shared/ui/button/icon-button";
@@ -21,6 +33,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LogoutIcon,
+  NotificationsIcon,
   SearchIcon,
   SettingsIcon,
 } from "@/shared/ui/icon/icons";
@@ -30,10 +43,22 @@ import { dayPath, routes } from "@/shared/web/routes";
 
 import styles from "./day-screen.module.scss";
 
+export type DayScreenProps = {
+  readonly view: DayView;
+  // Today's: what is due, shown under the header
+  readonly due?: DueView | undefined;
+};
+
 // A day as a chat: the notes above, oldest first. Today also has the box at the bottom, where the thumb is; an
 // earlier day is read, corrected and tidied, but nothing new is written into it.
-export function DayScreen({ view }: { readonly view: DayView }) {
+export function DayScreen({ view, due }: DayScreenProps) {
   const toast = useToast();
+  const [reminding, setReminding] = useState<NoteView>();
+  const stopReminding = useCallback(() => setReminding(undefined), []);
+  const remindFrom = useMemo(
+    () => (reminding === undefined ? undefined : { id: reminding.id, text: reminding.content }),
+    [reminding],
+  );
   const router = useRouter();
   const titleId = useId();
   const signOutForm = useRef<HTMLFormElement>(null);
@@ -108,6 +133,12 @@ export function DayScreen({ view }: { readonly view: DayView }) {
           {/* No prefetch here or below: each is a Worker request and D1 reads that most visits never use */}
           <div className={styles.actions}>
             <IconLink
+              icon={NotificationsIcon}
+              label={remindersCopy.title}
+              href={routes.reminders}
+              prefetch={false}
+            />
+            <IconLink
               icon={SearchIcon}
               label={notesCopy.search}
               href={routes.history}
@@ -137,6 +168,7 @@ export function DayScreen({ view }: { readonly view: DayView }) {
             />
           )}
         </nav>
+        {view.isToday && due !== undefined ? <DueBar due={due} /> : null}
       </header>
       <main className={styles.scroller}>
         <div className={styles.content}>
@@ -155,6 +187,7 @@ export function DayScreen({ view }: { readonly view: DayView }) {
                   edit={editNote}
                   onPending={applyOptimistic}
                   onDelete={remove}
+                  onRemind={setReminding}
                 />
               ))}
             </ol>
@@ -162,6 +195,9 @@ export function DayScreen({ view }: { readonly view: DayView }) {
         </div>
       </main>
       {view.isToday ? <Composer record={recordNote} onPending={applyOptimistic} /> : null}
+      {remindFrom === undefined ? null : (
+        <ReminderDialog onClose={stopReminding} today={view.today} fromNote={remindFrom} />
+      )}
     </div>
   );
 }

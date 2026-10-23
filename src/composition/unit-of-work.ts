@@ -32,6 +32,8 @@ import type { OrderWrites } from "@/features/orders/application/order-writes";
 import { createOrderWrites } from "@/features/orders/infrastructure/order-writes";
 import type { ProductWrites } from "@/features/products/application/product-writes";
 import { createProductWrites } from "@/features/products/infrastructure/product-writes";
+import type { ReminderWrites } from "@/features/reminders/application/reminder-writes";
+import { createReminderWrites } from "@/features/reminders/infrastructure/reminder-writes";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { createBatch, type Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -43,6 +45,7 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly customers: CustomerWrites;
   readonly products: ProductWrites;
   readonly orders: OrderWrites;
+  readonly reminders: ReminderWrites;
   readonly accounts: AccountWrites;
   readonly passkeys: PasskeyWrites;
   readonly passwords: PasswordWrites;
@@ -61,6 +64,7 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     customers: createCustomerWrites(db, batch),
     products: createProductWrites(db, batch),
     orders: createOrderWrites(db, batch),
+    reminders: createReminderWrites(db, batch),
     accounts: createAccountWrites(db, batch),
     passkeys: createPasskeyWrites(db, batch),
     passwords: createPasswordWrites(db, batch),

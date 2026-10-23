@@ -1,7 +1,6 @@
 @use "abstracts" as *;
 
-// ColorOS's segmented choice: a grey pill track, the current choice a white pill on it. It scrolls sideways when the
-// choices do not fit, rather than wrapping into a second row.
+// A grey pill track with the current choice a white pill on it; it scrolls sideways rather than wrapping
 .chip-links {
   max-inline-size: 100%;
   overflow-x: auto;

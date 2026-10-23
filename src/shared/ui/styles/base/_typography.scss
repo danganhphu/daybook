@@ -9,9 +9,8 @@
     @include text(body);
   }
 
-  // A link in running text: the darker green, comfortably past AA on the canvas and on white
   a {
-    color: color(accent-hover);
+    color: color(accent-text);
     text-underline-offset: 0.2em;
   }
 }

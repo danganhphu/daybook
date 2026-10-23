@@ -23,12 +23,14 @@ The rules and the numbers are in `docs/ui/design-system.md`. This is how to work
 
 - Mobile first: write for the phone, add `@include from(md)` (640px) or `from(lg)` (1024px) for wider screens.
   Review the phone screenshot first.
-- Oppo's ColorOS: one green accent, neutral greys, flat cards with 24px corners, pill buttons, large type. Icons are
-  coloured by meaning through `iconTones` (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. The only
-  gradient is the wash on a tab's own screen (`<Screen wash>`). No glass, no glow.
-- A new colour pair is checked for WCAG AA (4.5:1 text, 3:1 boundaries) before it lands, in every state: a hover or
-  pressed background counts. The accent green `#00790f` passes on white (5.64:1), the canvas (4.95:1) and the hover
-  grey (4.59:1); every icon tone clears 3:1 on white.
+- One bright green, neutral greys, flat cards with 24px corners, pill buttons, large type. Icons are coloured by
+  meaning through `iconTones` (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. The only gradient is
+  the wash on a tab's own screen (`<Screen wash>`). No glass, no glow.
+- Two greens: `accent` is a fill under white text, which must be large and bold there (`label-strong`); green words
+  use `accent-text`. Never put `accent` on text or small white text on `accent`.
+- A new colour pair is checked for WCAG AA (4.5:1 text, 3:1 large text and boundaries) before it lands, in every
+  state: a hover or pressed background counts. Every icon tone clears 3:1 on white.
+- Comments and docs state a rule and its reason, never which app it looks like.
 
 ## Icons
 

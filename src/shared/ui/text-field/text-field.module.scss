@@ -22,7 +22,7 @@
   border-radius: radius(control);
 
   &:focus-within {
-    outline: 2px solid color(accent);
+    outline: 2px solid color(accent-text);
     outline-offset: -1px;
   }
 

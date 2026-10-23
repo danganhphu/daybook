@@ -1,7 +1,6 @@
 @use "abstracts" as *;
 
-// ColorOS buttons are pills: filled green for the one action a screen exists for, pale green for a suggested one,
-// grey for the rest, and words alone for the quiet ones
+// Pills: filled green for the one action a screen exists for, grey for the rest, words alone for the quiet ones
 .button {
   display: inline-flex;
   flex-shrink: 0;
@@ -51,10 +50,18 @@
   &[data-variant="primary"] {
     color: color(on-accent);
     background: color(accent);
+
+    @include text(label-strong);
   }
 
   &[data-variant="secondary"] {
-    background: color(surface-subtle);
+    background: color(control-fill);
+
+    // One of a few choices, chosen
+    &[aria-pressed="true"] {
+      color: color(accent-text);
+      background: color(accent-wash);
+    }
   }
 
   &[data-tone="danger"] {
@@ -67,10 +74,6 @@
     &[data-variant="primary"] {
       background: color(accent-hover);
     }
-
-    &[data-variant="secondary"] {
-      background: color(border);
-    }
   }
 
   @media (hover: hover) {
@@ -79,10 +82,6 @@
 
       &[data-variant="primary"] {
         background: color(accent-hover);
-      }
-
-      &[data-variant="secondary"] {
-        background: color(border);
       }
     }
   }

@@ -98,7 +98,7 @@
 
   // Keeps the 44px target without a 20px gap between it and the description
   margin-block-start: rem(-8px);
-  color: color(accent);
+  color: color(accent-text);
   cursor: pointer;
   background: transparent;
   border: 0;
@@ -108,13 +108,8 @@
   @include text(label);
   @include focus-ring;
 
-  &:active {
-    color: color(accent-hover);
-  }
-
   @media (hover: hover) {
     &:hover {
-      color: color(accent-hover);
       text-decoration: underline;
       text-underline-offset: 0.2em;
     }

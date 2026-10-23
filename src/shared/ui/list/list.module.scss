@@ -36,13 +36,12 @@
     background: color(border);
   }
 
-  // With icons, the hairline starts past them, where the words do, as ColorOS draws it
+  // With icons, the hairline starts past them, where the words do
   &:has(.row-icon) > li + li::before {
     inset-inline-start: calc(#{space(5)} + #{size(icon-row)} + #{space(4)});
   }
 }
 
-// ColorOS rows are tall and airy: the words at 17px, a second line beneath, room around both
 .row {
   display: flex;
   gap: space(4);
@@ -115,7 +114,7 @@
   touch-action: manipulation;
 
   &:focus-visible {
-    outline: 2px solid color(accent);
+    outline: 2px solid color(accent-text);
     outline-offset: -2px;
   }
 
@@ -164,7 +163,7 @@
   inline-size: 100%;
   min-block-size: size(row);
   padding-inline: space(5);
-  color: color(accent);
+  color: color(accent-text);
   text-align: start;
   cursor: pointer;
   user-select: none;
@@ -175,7 +174,7 @@
   @include text(body);
 
   &:focus-visible {
-    outline: 2px solid color(accent);
+    outline: 2px solid color(accent-text);
     outline-offset: -2px;
   }
 

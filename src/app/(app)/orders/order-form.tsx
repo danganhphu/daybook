@@ -92,16 +92,13 @@ export function OrderForm({ view }: { readonly view: OrderFormView }) {
     setLines((current) => current.filter((line) => line.key !== key));
   }, []);
 
-  const typeCustomer = useCallback(
-    (text: string) => {
-      setCustomerText(text);
-      if (text !== customer?.name) {
-        setCustomer(undefined);
-      }
-      setError(undefined);
-    },
-    [customer?.name],
-  );
+  // Picking a suggestion also reports its name as typed, before or after the pick, so the choice is dropped only by
+  // other words, judged against the current choice rather than this render's
+  const typeCustomer = useCallback((text: string) => {
+    setCustomerText(text);
+    setCustomer((current) => (current?.name === text ? current : undefined));
+    setError(undefined);
+  }, []);
   const pickCustomer = useCallback((picked: CustomerSuggestion) => {
     setCustomer(picked);
     setCustomerText(picked.name);
