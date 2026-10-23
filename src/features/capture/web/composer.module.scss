@@ -1,7 +1,7 @@
 @use "abstracts" as *;
 
-// Docked under the list on the canvas itself, above the tab bar, which keeps the home indicator's room. From `md`
-// the tab bar is a rail at the side, so the box keeps that room itself.
+// Docked under the list on the canvas itself, above the room the shell keeps for the tab bar and the home indicator.
+// From `md` the tab bar is a rail at the side, so the box keeps that room itself.
 .composer {
   --composer-padding-end: #{space(2)};
 

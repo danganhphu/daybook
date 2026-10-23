@@ -1,5 +1,6 @@
 // Every pair used for text meets WCAG AA: 4.5:1, or 3:1 for the filled button's large bold label; border-strong and
 // every icon tone meet 3:1 as UI parts. Ratios are in docs/ui/design-system.md. Change a value and re-check them.
+@use "sass:color";
 @use "sass:list";
 @use "sass:map";
 @use "../abstracts/tokens";
@@ -7,6 +8,8 @@
 $colors: (
   canvas: oklch(95.8% 0 0deg),
   surface: oklch(100% 0 0deg),
+  // The tab bar, which the page shows through blurred. At 88% its labels keep 4.5:1 even over unblurred black text.
+  surface-float: oklch(100% 0 0deg / 88%),
   surface-subtle: oklch(91.6% 0 0deg),
   // A grey button, a round icon tile: a step off white, and off the canvas
   control-fill: oklch(97.3% 0 0deg),
@@ -69,5 +72,12 @@ $shadow-overlay:
     to bottom,
     #{map.get($colors, accent-wash)},
     #{map.get($colors, canvas)} 320px
+  );
+
+  // Behind the floating tab bar: the page fading into the canvas as it passes under
+  --tab-bar-fade: linear-gradient(
+    to bottom,
+    transparent,
+    #{color.change(map.get($colors, canvas), $alpha: 0.8)}
   );
 }

@@ -19,9 +19,9 @@ waits behind it.
 
 **Color carries meaning.** Surfaces are neutral. The green accent marks the primary action, the current tab, links
 and focus; red means danger. An icon takes the tone of what it is about - money green, people blue, debt orange - the
-same on every screen (see Icon tones), and a word or a shape always says it too, so colour is never the only cue. The
-one decoration is the wash, a faint green at the top of a tab's own screen fading into the grey. No glass, no glow, no
-shadows on cards.
+same on every screen (see Icon tones), and a word or a shape always says it too, so colour is never the only cue. Two
+touches go beyond flat colour: the wash, a faint green at the top of a tab's own screen fading into the grey, and the
+tab bar, frosted, floating over the foot of the page. No glow, no shadows on cards.
 
 **Motion only when it explains something.** An overlay entering, a toast appearing, an error pointing at a field.
 Never decoration, never on frequent interactions, and none at all under reduced motion.
@@ -58,7 +58,8 @@ unknown name fails the build.
 | Role | Value | Used for | Contrast |
 |---|---|---|---|
 | `canvas` | `#f1f1f1` | Page background: a neutral grey, so white cards stand out without borders | |
-| `surface` | `#ffffff` | Cards, sheets, inputs, the tab bar | decorative on canvas |
+| `surface` | `#ffffff` | Cards, sheets, inputs | decorative on canvas |
+| `surface-float` | `#ffffff` at 88% | The tab bar, which the page shows through blurred | over black text, even unblurred: muted 4.88:1, accent text 4.73:1 |
 | `surface-subtle` | `#e3e3e3` | Hover and pressed states, disabled controls, the track behind filter chips | text 15.88:1, muted 4.98:1, accent text 4.82:1, danger 4.75:1 on it |
 | `control-fill` | `#f6f6f6` | A secondary button, a round icon tile: a step off white and off the canvas | text 18.86:1, danger 5.65:1 on it |
 | `border` | `#e6e6e6` | Separators that carry no meaning | decorative |
@@ -113,6 +114,7 @@ for a filled button's label only.
 | Style | Size / line height | Use |
 |---|---|---|
 | `caption` | 13 / 18 | The smallest anything gets: tab labels, small print |
+| `caption-strong` | 13 / 18, 600 | The current tab's label |
 | `body-sm` | 15 / 20 | Secondary lines, a row's second line |
 | `body` | 17 / 24 | Default. Above 16px, so iOS never zooms into an input |
 | `label` | 17 / 24, 600 | Field labels, row titles, buttons |
@@ -130,7 +132,8 @@ current tab and the icon leading a row, as Material marks what is chosen. `scrip
 lists the icons the app uses, and `pnpm symbols` writes each as a component into `src/shared/ui/icon/icons.tsx`: one
 `<path>`, no icon library at run time, no style attribute for the CSP to refuse. The output is committed. To add one,
 put its name from https://fonts.google.com/icons in the list, run the command and import `<Name>Icon`. Its size comes
-from the CSS around it: `size(icon)` 20px in buttons, `size(icon-row)` 24px in rows and tabs.
+from the CSS around it: `size(icon)` 20px in buttons, `size(icon-row)` 24px in rows, `size(icon-tab)` 28px in the tab
+bar.
 
 Why this set (2026-10-23): Lucide, the most active, has no filled forms by design. Phosphor has six weights, but its
 React package last shipped in May 2025. Heroicons last shipped in November 2024, with about 300 icons. Tabler fills
@@ -150,9 +153,13 @@ React output needs svgr, last released in August 2023.
 - **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow. What floats over the
   page - the message field, the tab bar - takes a soft, wide shadow (`--shadow-float`). Anything that overlaps -
   popover, sheet, dialog, toast - takes the overlay shadow (Cloudscape's rule).
-- **Tab bar:** a floating white pill, centred at the bottom, 88px per tab. It keeps a row of its own instead of
-  covering the page, so the message field is never under it, and hides while the keyboard is up. From `md` it stands
-  down the left side. The current tab is green with a filled icon; the others are grey and outlined.
+- **Tab bar:** a pill floating at the bottom centre over the foot of the page, 64px tall, 88px per tab, 28px icons.
+  The page runs under it, fading into the canvas behind the bar (`--tab-bar-fade`) and showing through the pill
+  blurred (`surface-float`); under reduced transparency the pill is plain white. Only the pill is blurred, a small
+  area, and the fade is a plain gradient, so scrolling stays cheap. The page keeps the bar's height as room at its end
+  and as scroll padding, so the last row and a focused field always come clear of it (WCAG 2.4.11); on Hôm nay the
+  message field sits above that room. The bar and its room go while the keyboard is up. From `md` it stands down the
+  left side. The current tab is green with a filled icon and a bolder label; the others are grey and outlined.
 - **The wash:** `--wash`, the faint green at the top of a tab's own screen, gone 320px down. Only there; a page
   within a tab is plain canvas, so the wash also says "you are at the top".
 - **How the look got here:** the first version took Fluent 2's 8px corners, one bordered list with divider rows and

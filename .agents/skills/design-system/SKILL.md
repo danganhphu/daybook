@@ -24,8 +24,9 @@ The rules and the numbers are in `docs/ui/design-system.md`. This is how to work
 - Mobile first: write for the phone, add `@include from(md)` (640px) or `from(lg)` (1024px) for wider screens.
   Review the phone screenshot first.
 - One bright green, neutral greys, flat cards with 24px corners, pill buttons, large type. Icons are coloured by
-  meaning through `iconTones` (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. The only gradient is
-  the wash on a tab's own screen (`<Screen wash>`). No glass, no glow.
+  meaning through `iconTones` (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. The only gradients are
+  the wash on a tab's own screen (`<Screen wash>`) and the fade behind the tab bar; the tab bar is the only frosted
+  thing. No glow.
 - Two greens: `accent` is a fill under white text, which must be large and bold there (`label-strong`); green words
   use `accent-text`. Never put `accent` on text or small white text on `accent`.
 - A new colour pair is checked for WCAG AA (4.5:1 text, 3:1 large text and boundaries) before it lands, in every
