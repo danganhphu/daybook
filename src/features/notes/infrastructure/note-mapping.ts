@@ -1,8 +1,13 @@
-import { Temporal } from "temporal-polyfill/implementation";
-
 import { captureIdSchema } from "@/features/capture/domain/capture";
 import { noteIdSchema, type Note } from "@/features/notes/domain/note";
 import { contentSchema } from "@/shared/domain/content";
+import { searchText } from "@/shared/domain/search-text";
+import {
+  toAudit,
+  toAuditRow,
+  toDeletion,
+  toDeletionRow,
+} from "@/shared/infrastructure/d1/audit-mapping";
 
 import type { noteTable } from "./note.table";
 
@@ -14,17 +19,13 @@ export function toNote(row: NoteRow): Note {
     id: noteIdSchema.parse(row.id),
     captureId: captureIdSchema.parse(row.captureId),
     content: contentSchema.parse(row.content),
-    createdAt: Temporal.Instant.fromEpochMilliseconds(row.createdAt),
-    updatedAt: Temporal.Instant.fromEpochMilliseconds(row.updatedAt),
+    audit: toAudit(row),
   };
+  const deletion = toDeletion(row);
 
-  return row.deletedAt === null
+  return deletion === undefined
     ? { ...fields, status: "live" }
-    : {
-        ...fields,
-        status: "deleted",
-        deletedAt: Temporal.Instant.fromEpochMilliseconds(row.deletedAt),
-      };
+    : { ...fields, status: "deleted", deletion };
 }
 
 export function toNoteRow(note: Note): NoteRow {
@@ -32,8 +33,8 @@ export function toNoteRow(note: Note): NoteRow {
     id: note.id,
     captureId: note.captureId,
     content: note.content,
-    createdAt: note.createdAt.epochMilliseconds,
-    updatedAt: note.updatedAt.epochMilliseconds,
-    deletedAt: note.status === "deleted" ? note.deletedAt.epochMilliseconds : null,
+    searchText: searchText(note.content),
+    ...toAuditRow(note.audit),
+    ...toDeletionRow(note.status === "deleted" ? note.deletion : undefined),
   };
 }

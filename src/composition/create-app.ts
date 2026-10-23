@@ -47,7 +47,7 @@ import {
   type StartPasskeySignInRequest,
 } from "@/features/access/application/start-passkey-sign-in";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
-import type { AccountId, DisplayName, Username } from "@/features/access/domain/account";
+import type { DisplayName, Username } from "@/features/access/domain/account";
 import type { Session } from "@/features/access/domain/session";
 import { createAccessEventRepository } from "@/features/access/infrastructure/access-event-repository";
 import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
@@ -66,14 +66,61 @@ import {
   recordCapture,
   type RecordCaptureInput,
 } from "@/features/capture/application/record-capture";
+import { addCustomer, type AddCustomerInput } from "@/features/customers/application/add-customer";
+import {
+  addCustomerKind,
+  type AddCustomerKindInput,
+} from "@/features/customers/application/add-customer-kind";
+import { archiveCustomer } from "@/features/customers/application/archive-customer";
+import { archiveCustomerKind } from "@/features/customers/application/archive-customer-kind";
+import { listCustomers } from "@/features/customers/application/list-customers";
+import {
+  renameCustomerKind,
+  type RenameCustomerKindInput,
+} from "@/features/customers/application/rename-customer-kind";
+import { restoreCustomer } from "@/features/customers/application/restore-customer";
+import { restoreCustomerKind } from "@/features/customers/application/restore-customer-kind";
+import {
+  reviseCustomer,
+  type ReviseCustomerInput,
+} from "@/features/customers/application/revise-customer";
+import type { CustomerId } from "@/features/customers/domain/customer";
+import type { CustomerKindId } from "@/features/customers/domain/customer-kind";
+import type { CustomerFilter } from "@/features/customers/domain/customer-repository";
+import { createCustomerKindRepository } from "@/features/customers/infrastructure/customer-kind-repository";
+import { createCustomerRepository } from "@/features/customers/infrastructure/customer-repository";
 import { deleteNote } from "@/features/notes/application/delete-note";
 import { editNote, type EditNoteInput } from "@/features/notes/application/edit-note";
 import { listNotesForDay } from "@/features/notes/application/list-notes-for-day";
-import { listNotesForToday } from "@/features/notes/application/list-notes-for-today";
+import type { NoteChange } from "@/features/notes/application/note-change";
 import { restoreNote } from "@/features/notes/application/restore-note";
-import type { NoteId } from "@/features/notes/domain/note";
+import { searchNotes } from "@/features/notes/application/search-notes";
 import { createNoteRepository } from "@/features/notes/infrastructure/note-repository";
+import { deleteOrder, restoreOrder } from "@/features/orders/application/delete-order";
+import {
+  deliverOrder,
+  undeliverOrder,
+  type DeliverOrderInput,
+} from "@/features/orders/application/deliver-order";
+import type { OrderFilter } from "@/features/orders/application/order-queries";
+import {
+  addPayment,
+  removePayment,
+  type AddPaymentInput,
+  type RemovePaymentInput,
+} from "@/features/orders/application/payments";
+import { placeOrder, type PlaceOrderInput } from "@/features/orders/application/place-order";
+import { reviseOrder, type ReviseOrderInput } from "@/features/orders/application/revise-order";
+import type { OrderId } from "@/features/orders/domain/order";
+import { createOrderQueries } from "@/features/orders/infrastructure/order-queries";
+import { createOrderRepository } from "@/features/orders/infrastructure/order-repository";
+import type { ProductId } from "@/features/products/domain/product";
+import { createProductRepository } from "@/features/products/infrastructure/product-repository";
 import type { Clock } from "@/shared/application/clock";
+import type { RecordChange } from "@/shared/application/record-change";
+import type { AccountId } from "@/shared/domain/account-id";
+import type { SearchTerm } from "@/shared/domain/search-text";
+import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import { systemClock } from "@/shared/infrastructure/system-clock";
 
@@ -93,6 +140,11 @@ export type AppBindings = {
 export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const db = createDatabase(bindings.db);
   const notes = createNoteRepository(db);
+  const kinds = createCustomerKindRepository(db);
+  const customers = createCustomerRepository(db);
+  const products = createProductRepository(db);
+  const orders = createOrderRepository(db);
+  const orderQueries = createOrderQueries(db);
   const accounts = createAccountRepository(db);
   const ceremonies = createCeremonyRepository(db);
   const passkeys = createPasskeyRepository(db);
@@ -119,14 +171,58 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     verifier,
     startUnitOfWork,
   };
+  const customerKinds = { clock, kinds, startUnitOfWork };
+  const customerBook = { clock, customers, kinds, startUnitOfWork };
+  const orderBook = { clock, orders, customers, products, startUnitOfWork };
 
   return {
     recordCapture: (input: RecordCaptureInput) => recordCapture({ clock, startUnitOfWork }, input),
     editNote: (input: EditNoteInput) => editNote({ clock, notes, startUnitOfWork }, input),
-    deleteNote: (id: NoteId) => deleteNote({ clock, notes, startUnitOfWork }, id),
-    restoreNote: (id: NoteId) => restoreNote({ notes, startUnitOfWork }, id),
+    deleteNote: (input: NoteChange) => deleteNote({ clock, notes, startUnitOfWork }, input),
+    restoreNote: (input: NoteChange) => restoreNote({ clock, notes, startUnitOfWork }, input),
     listNotesForDay: (day: Temporal.PlainDate) => listNotesForDay({ notes }, day),
-    listNotesForToday: () => listNotesForToday({ clock, notes }),
+    searchNotes: (term: SearchTerm) => searchNotes({ notes }, term),
+    // The user's day in Vietnam by the injected clock, so it can be tested either side of midnight
+    today: () => vietnamDate(clock()),
+
+    listCustomerKinds: () => kinds.list(),
+    addCustomerKind: (input: AddCustomerKindInput) => addCustomerKind(customerKinds, input),
+    renameCustomerKind: (input: RenameCustomerKindInput) =>
+      renameCustomerKind(customerKinds, input),
+    archiveCustomerKind: (input: RecordChange<CustomerKindId>) =>
+      archiveCustomerKind(customerKinds, input),
+    restoreCustomerKind: (input: RecordChange<CustomerKindId>) =>
+      restoreCustomerKind(customerKinds, input),
+    getCustomer: (id: CustomerId) => customers.get(id),
+    getCustomers: (ids: ReadonlyArray<CustomerId>) => customers.getMany(ids),
+    listCustomers: (filter: CustomerFilter) => listCustomers({ customers }, filter),
+    addCustomer: (input: AddCustomerInput) => addCustomer(customerBook, input),
+    reviseCustomer: (input: ReviseCustomerInput) => reviseCustomer(customerBook, input),
+    archiveCustomer: (input: RecordChange<CustomerId>) => archiveCustomer(customerBook, input),
+    restoreCustomer: (input: RecordChange<CustomerId>) => restoreCustomer(customerBook, input),
+
+    searchProducts: (term: SearchTerm, limit: number) => products.search(term, limit),
+    getProducts: (ids: ReadonlyArray<ProductId>) => products.getMany(ids),
+    lastPrices: (ids: ReadonlyArray<ProductId>, customerId: CustomerId | undefined) =>
+      orderQueries.lastPrices(ids, customerId),
+
+    // Who is who in a change log: the two people's names, by account
+    displayNames: async () =>
+      new Map((await accounts.list()).map((account) => [account.id, account.displayName])),
+    getOrder: (id: OrderId) => orders.get(id),
+    orderHistory: (id: OrderId) => orderQueries.history(id),
+    listOrders: (filter: OrderFilter, limit: number) => orderQueries.list(filter, limit),
+    orderTotals: (filter: OrderFilter) => orderQueries.totals(filter),
+    owedByCustomer: () => orderQueries.owedByCustomer(),
+    customerAccount: (id: CustomerId) => orderQueries.customerAccount(id),
+    placeOrder: (input: PlaceOrderInput) => placeOrder(orderBook, input),
+    reviseOrder: (input: ReviseOrderInput) => reviseOrder(orderBook, input),
+    deliverOrder: (input: DeliverOrderInput) => deliverOrder(orderBook, input),
+    undeliverOrder: (input: RecordChange<OrderId>) => undeliverOrder(orderBook, input),
+    addPayment: (input: AddPaymentInput) => addPayment(orderBook, input),
+    removePayment: (input: RemovePaymentInput) => removePayment(orderBook, input),
+    deleteOrder: (input: RecordChange<OrderId>) => deleteOrder(orderBook, input),
+    restoreOrder: (input: RecordChange<OrderId>) => restoreOrder(orderBook, input),
 
     authenticate: (cookie: string | undefined) => authenticate(access, cookie),
     redeemSetupLink: (token: string, origin: RequestOrigin) =>

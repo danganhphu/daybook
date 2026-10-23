@@ -1,0 +1,54 @@
+@use "abstracts" as *;
+
+// Side by side while they fit; a number that does not moves to the next line whole. Fixed columns let
+// "1.300.000đ" run into its neighbour on a phone.
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4) space(6);
+  padding: space(5);
+  margin: 0;
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+.stat,
+.hero {
+  display: grid;
+  flex: 1 0 auto;
+  gap: space(1);
+}
+
+// The one big number takes the whole first line
+.hero {
+  flex-basis: 100%;
+}
+
+.label {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.value,
+.hero-value {
+  margin: 0;
+  white-space: nowrap;
+
+  @include tabular-nums;
+}
+
+.value {
+  @include text(title);
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+}
+
+// Large text, so the brighter icon green reads at 3:1 (WCAG 1.4.3 for text of 24px and up)
+.hero-value {
+  color: color(icon-green);
+
+  @include text(hero);
+}

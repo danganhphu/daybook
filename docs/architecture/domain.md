@@ -12,6 +12,9 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Content | nội dung | The user's text. Not blank, at most 4,000 characters, otherwise kept exactly as typed: spaces, line breaks, diacritics |
 | Source | | Where a capture came in: `web` or `telegram` |
 | Day | ngày | A calendar day in `Asia/Ho_Chi_Minh`. A day's notes are those created from its first instant up to the next day's |
+| Audit | | Who made a record and when, who changed it last and when, and its version. On every record people change |
+| Version | | How many times a record has been saved. A change carries the version its screen showed; a stale one is refused |
+| Search text | | A note's words as a search matches them: no diacritics, `đ` as `d`, lower case, single spaces |
 | Account | tài khoản | One of the two people using the book. A lower-case username for the fallback password, a display name, a random WebAuthn user handle |
 | Passkey | Face ID, vân tay | The way in: a WebAuthn credential bound to this app's host |
 | Session | thiết bị đã đăng nhập | One signed-in browser. Lives 30 days from the sign-in that opened it |
@@ -23,12 +26,20 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Recovery link | link khôi phục | A setup link for the other user's account, when they lost every way in |
 | Access event | hoạt động đăng nhập | A record of who signed in, what changed, and from where. Never edited |
 
+| Customer kind | loại khách | The owner's own grouping of customers, typed into Settings. The code names none of them |
+| Customer | khách | Someone orders are for: a name, and optionally a kind, an area, a phone, an address, a note. Hidden, never deleted |
+| Product | món hàng | Something sold, made the first time an order names it. "Thuốc tê" and "thuoc te" are one product |
+| Order | đơn | A customer's order on a day: its lines, its delivery day, its payments. Its total is the sum of its lines |
+| Payment | lần thu | Money taken for an order, on a day, by cash or transfer. Never edited: removed with who and when |
+| Owed | còn nợ | An order's total less its live payments, never below zero; a customer owes the sum over their live orders |
+| Order change | lịch sử | One entry of an order's log: who, when, what kind, and the order before and after |
+
 Planned, not built:
 
 | Term | Meaning |
 |---|---|
 | Interpretation | How a model read a capture: what it thinks was meant, which model, how sure. Many per capture - reading again with a better model adds one, never overwrites |
-| Order, Customer, Reminder, Interaction | What an interpretation turns into. Each keeps the `capture_id` it came from |
+| Reminder, Interaction | What an interpretation turns into, beside orders. Each keeps the `capture_id` it came from |
 
 ## Why a capture and a note, not one row
 
@@ -41,7 +52,7 @@ parsing exists, the entries shown are derived from captures the same way.
 
 ## Capture
 
-- Made by `receive(content, source, receivedAt)` in `src/features/capture/domain/capture.ts`. There is no other
+- Made by `receive(content, source, authorId, receivedAt)` in `src/features/capture/domain/capture.ts`. There is no other
   operation.
 - Never updated, never deleted. The type is readonly and has no function that changes it; in the database, two
   triggers abort any `UPDATE` or `DELETE` on `capture`, so a hand-written query cannot break the rule either.
@@ -54,16 +65,66 @@ note says so in its type. The transitions are pure functions in `src/features/no
 
 | Function | From | Gives |
 |---|---|---|
-| `fromCapture` | a capture | a live note with the capture's words, created and updated at the capture's time |
-| `edit` | live | live, with the new content and `updatedAt` moved |
+| `fromCapture` | a capture | a live note with the capture's words, made by its author at its time, version 1 |
+| `edit` | live | live, with the new content; a change by the editor |
 | `edit` | deleted | `note_deleted` |
-| `markDeleted` | live | deleted, with `deletedAt` |
+| `markDeleted` | live | deleted, with who deleted it and when; a change by them |
 | `markDeleted` | deleted | the same note, unchanged: deleting is undoable, so deleting twice is harmless |
-| `restore` | deleted | live, exactly as it was before the delete |
+| `restore` | deleted | live, with its words and creation; a change by whoever restored it |
 | `restore` | live | `note_not_deleted` |
 
-- `createdAt` never moves. It is the capture's `receivedAt`, so a note stays on the day it was sent.
+- The creation never moves. `createdAt` is the capture's `receivedAt`, so a note stays on the day it was sent, and
+  `createdBy` is who typed it.
+- Each change moves `updatedAt`, sets `updatedBy` and adds one to the version (`src/shared/domain/audit.ts`).
 - Every note points at its capture through `capture_id`, a foreign key.
+
+## Audit
+
+Every record people change carries the same audit (ADR 0011, decision 9): `createdAt`, `createdBy`, `updatedAt`,
+`updatedBy`, `version`, and, when it can be deleted, `deletedAt` with `deletedBy`. There is no `is_deleted` column;
+a record is deleted when `deletedAt` is set, and the type says so (`DeletedNote`).
+
+The audit says who and when, not what. Records whose history matters - orders and payments - keep a change log of their
+own (decision 10). A note does not: its capture keeps the words as first sent.
+
+## Customers and kinds
+
+`src/features/customers/`. Both are hidden (`archived_at`, `archived_by`) rather than deleted: old orders still show
+who they were for.
+
+- A kind's name is unique among the shown ones, ignoring case and diacritics; a hidden kind frees its name, and comes
+  back only if the name is still free. New kinds go last.
+- A customer's details are parsed from the form: the name is required, the rest optional and stored as null when
+  empty, never "". Two customers may share a name; the list shows the kind and area beneath to tell them apart.
+- A customer is given only a shown kind, unless it already had the one now hidden.
+- `search_name` is the name and area as a search matches them; the list sorts by it, so "Ánh" sits beside "Anh".
+
+## Orders
+
+`src/features/orders/`. An order is one aggregate: its lines and its payments change with it, under the order's
+version, so "paid never exceeds the total" is kept in one place and two people cannot break it at once.
+
+| Function | Refuses with |
+|---|---|
+| `place` | `order_too_large` (a line or the total past what money holds) |
+| `revise` | `order_deleted`, `order_too_large`, `total_below_paid`, `delivered_before_ordered` |
+| `deliver`, `undeliver` | `order_deleted`, `delivered_before_ordered` |
+| `addPayment` | `order_deleted`, `payment_exceeds_owed` |
+| `removePayment` | `order_deleted`, `payment_not_found` |
+| `markDeleted`, `restore` | `order_not_deleted` (restore) |
+
+- **Money is a whole number of đồng** (`src/shared/domain/money.ts`), at most a trillion. The total is computed from
+  the lines every time and never stored.
+- **Business days are Vietnam calendar days**, `YYYY-MM-DD`: ordered, delivered, paid. A delivery is never before the
+  order.
+- **Products come from the order form.** A line names a known product by id or a new one by name; a name matching a
+  shown product, ignoring case and diacritics, is that product. New ones are written in the order's batch.
+- **A product's last price is read, not stored**: the latest live line, this customer's first.
+- **Every change is logged** (`order_change`, ADR 0011 decision 10): `placed`, `revised`, `delivered`, `undelivered`,
+  `payment_added`, `payment_removed`, `deleted`, `restored`, with the order before and after as JSON. `OrderWrites`
+  takes the entry with every write, so no change is stored without it. The page reads the log in words
+  (`history-text.ts`).
+- **A form-made order has no `capture_id`**; it is set when a message became the order (decision 5).
 
 ## Access
 
@@ -123,10 +184,23 @@ through `createApp` in `src/composition/create-app.ts`.
 | Use case | Does | Can refuse with |
 |---|---|---|
 | `recordCapture` | Stores the capture and its note together | - |
-| `editNote` | Replaces a live note's content | `note_not_found`, `note_deleted` |
-| `deleteNote` | Soft-deletes a note | `note_not_found` |
-| `restoreNote` | Brings a deleted note back | `note_not_found`, `note_not_deleted` |
+| `editNote` | Replaces a live note's content | `note_not_found`, `note_deleted`, `note_changed_elsewhere` |
+| `deleteNote` | Soft-deletes a note | `note_not_found`, `note_changed_elsewhere` |
+| `restoreNote` | Brings a deleted note back | `note_not_found`, `note_not_deleted`, `note_changed_elsewhere` |
 | `listNotesForDay` | A day's live notes, newest first | - |
+| `searchNotes` | Live notes holding every word typed, newest first, 50 at most and whether there are more | - |
+| `addCustomerKind`, `renameCustomerKind` | A kind, last in the list; a new name | `kind_name_taken`, `kind_not_found`, `kind_changed_elsewhere` |
+| `archiveCustomerKind`, `restoreCustomerKind` | Hides a kind from the form; shows it again | `kind_archived`, `kind_not_archived`, `kind_name_taken` |
+| `addCustomer`, `reviseCustomer` | A customer, with a shown kind | `kind_not_found`, `kind_archived`, `customer_changed_elsewhere` |
+| `archiveCustomer`, `restoreCustomer` | Hides a customer from the lists; shows them again | `customer_archived`, `customer_not_archived` |
+| `listCustomers` | By name, filtered by words, kind and shown or hidden; 200 at most | - |
+| `placeOrder`, `reviseOrder` | An order, making the products it names first | `customer_unavailable`, `product_not_found`, the order's own refusals |
+| `deliverOrder`, `undeliverOrder`, `addPayment`, `removePayment` | One change, logged | `order_not_found`, `order_changed_elsewhere`, the order's own refusals |
+| `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere` |
+
+Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
+order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
+the free plan.
 | `authenticate` | The session behind a cookie; records its use at most hourly | `unauthenticated` |
 | `redeemSetupLink` | Spends a setup link and starts a setup ceremony bound to this browser | `setup_link_unusable`, `rate_limited` |
 | `startPasskeySetup` | The passkey prompt for a setup, with a new challenge | `setup_link_unusable` |
@@ -178,11 +252,31 @@ Triggers `capture_no_update` and `capture_no_delete` abort with "capture is appe
 | `id` | text | primary key, UUIDv7 |
 | `capture_id` | text | foreign key to `capture.id` |
 | `content` | text | not blank |
-| `created_at`, `updated_at` | integer | epoch milliseconds |
-| `deleted_at` | integer | null while live |
+| `search_text` | text | `searchText(content)`, written with every change of the content |
+| `created_at`, `updated_at` | integer | epoch milliseconds; updated never before created |
+| `created_by`, `updated_by` | text | foreign keys to `account.id` |
+| `version` | integer | 1 or more |
+| `deleted_at`, `deleted_by` | integer, text | both null while live, both set once deleted |
 
 Indexes: `note_live_by_created_at` on `created_at`, partial on `deleted_at is null`, serves the day list;
-`note_by_capture` serves tracing a capture to its notes.
+`note_by_capture` serves tracing a capture to its notes. A search reads every live note's `search_text` with one
+`LIKE` per word: a scan, which a book of a few thousand notes a year finishes well inside a request.
+
+Triggers: `note_version_moves_by_one` aborts with `stale_version` unless an update sets the version to the stored one
+plus one; `note_creation_is_fixed` aborts with `creation_is_fixed` if `created_at` or `created_by` would change.
+
+The book's tables, all `STRICT`, every one but the lines and the log with the audit columns and both triggers
+(`audited-tables.test.ts` finds any table with a `version` that lacks them):
+
+| Table | Holds | Rules the database keeps |
+|---|---|---|
+| `customer_kind` | name, search name, position | name 1-40; shown names unique by search name |
+| `customer` | name, search name, kind, area, phone, address, note | lengths; optional details null, never "" |
+| `product` | name, search name | shown names unique by search name |
+| `sales_order` | customer, ordered on, delivered on, note, capture | days are `YYYY-MM-DD`; delivered on or after ordered |
+| `order_line` | order, position, product, quantity, unit price | quantity 1-100,000; price 0 to a trillion; no audit, replaced whole on a revision |
+| `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`, `payment_no_delete` |
+| `order_change` | order, kind, who and when, before and after as JSON | known kinds; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
 
 The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets as the base64url of their SHA-256.
 Every number a `CHECK` holds - lengths, the Argon2id floor, the algorithms - is the domain's own constant, written
@@ -206,8 +300,16 @@ sends them as one batch, so a capture is never stored without its note. Each fea
 (`CaptureWrites`, `NoteWrites`) and `src/composition/unit-of-work.ts` puts them all on the same batch, so a write
 can span features without either knowing the other's tables. Repositories only read.
 
-There is no optimistic concurrency: two devices editing the same note at once means the last write wins. Two people
-on their phones and maybe a laptop make that rare; a `version` column is the fix if it stops being rare.
+Two people share the book, each maybe on two devices, so a change never overwrites one it has not seen (optimistic
+concurrency). Every note on screen carries its version, and every change sends it back:
+
+1. The use case reads the record and refuses with `*_changed_elsewhere` if the stored version is not the one shown.
+2. Between that read and the write, the other person may save. The write sets the version to the one read plus one,
+   and the trigger aborts the whole batch if the stored version has moved meanwhile.
+3. The batch turns that abort into `StaleWriteError`, and `commitUnlessStale` into the same `*_changed_elsewhere`.
+
+Either way the person sees one sentence and the page refreshes with the other change, so they decide again with the
+newer words in front of them.
 
 ## Where feature 2 (parsing) attaches
 

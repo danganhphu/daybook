@@ -10,10 +10,14 @@ declare const section: string;
 declare const heading: string;
 declare const footer: string;
 declare const list: string;
+declare const rowIcon: string;
 declare const row: string;
 declare const text: string;
 declare const title: string;
 declare const detail: string;
+declare const link: string;
+declare const value: string;
+declare const chevron: string;
 declare const content: string;
 declare const action: string;
 
@@ -22,12 +26,16 @@ declare const __default_export__: {
 	heading: typeof heading;
 	footer: typeof footer;
 	list: typeof list;
+	rowIcon: typeof rowIcon;
 	row: typeof row;
 	text: typeof text;
 	title: typeof title;
 	detail: typeof detail;
+	link: typeof link;
+	value: typeof value;
+	chevron: typeof chevron;
 	content: typeof content;
 	action: typeof action;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBT0E7Y0F1QkE7Y0FRQTtjQU1BO2NBSUE7Y0FPQTtjQU9BOzs7Q0FwRUE7Q0FLQTtDQUNBO0NBT0E7Q0F1QkE7Q0FRQTtDQU1BO0NBSUE7Q0FPQTtDQU9BOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBT0E7Y0F1QlE7Y0FNUjtjQTRDQTtjQU1BO2NBSUE7Y0FPQTtjQTBCQTtjQVlBO2NBUUE7Y0FPQTs7O0NBNUpBO0NBS0E7Q0FDQTtDQU9BO0NBdUJRO0NBTVI7Q0E0Q0E7Q0FNQTtDQUlBO0NBT0E7Q0EwQkE7Q0FZQTtDQVFBO0NBT0E7OyJ9

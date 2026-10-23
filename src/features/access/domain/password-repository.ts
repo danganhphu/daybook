@@ -1,4 +1,6 @@
-import type { Account, AccountId, Username } from "./account";
+import type { AccountId } from "@/shared/domain/account-id";
+
+import type { Account, Username } from "./account";
 import type { Password } from "./password";
 
 // Reads only. Writes go through the application's unit of work.

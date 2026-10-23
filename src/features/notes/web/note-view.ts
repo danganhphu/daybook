@@ -10,10 +10,15 @@ export type NoteView = {
   readonly createdAt: string;
   // The user's clock: "09:12"
   readonly time: string;
+  // Sent back with every change, so a change made from a stale screen is refused rather than overwriting another
+  readonly version: number;
 };
 
 // What a note action answers: the note as it now is, or the sentence the user reads
 export type NoteResult = Result<NoteView, string>;
+
+// What a new note is before the server has answered: shown at once, changed only after the answer
+export const unsavedVersion = 0;
 
 const clock = new Intl.DateTimeFormat("vi-VN", {
   hour: "2-digit",
@@ -39,7 +44,8 @@ export function toNoteView(note: Note): NoteView {
   return {
     id: note.id,
     content: note.content,
-    createdAt: note.createdAt.toString(),
-    time: clockTime(note.createdAt.epochMilliseconds),
+    createdAt: note.audit.createdAt.toString(),
+    time: clockTime(note.audit.createdAt.epochMilliseconds),
+    version: note.audit.version,
   };
 }

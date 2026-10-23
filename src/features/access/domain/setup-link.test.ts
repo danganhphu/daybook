@@ -1,9 +1,9 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
+import { accountIdSchema } from "@/shared/domain/account-id";
 import { expectOk } from "@/testing/support/result";
 
-import { accountIdSchema } from "./account";
 import { secretHashSchema } from "./secret";
 import * as SetupLinks from "./setup-link";
 

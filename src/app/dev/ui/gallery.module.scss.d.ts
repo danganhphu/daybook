@@ -19,6 +19,10 @@ declare const stack: string;
 declare const block: string;
 declare const frame: string;
 declare const row: string;
+declare const icons: string;
+declare const icon: string;
+declare const iconForms: string;
+declare const iconName: string;
 declare const hint: string;
 declare const error: string;
 declare const rowTime: string;
@@ -38,10 +42,14 @@ declare const __default_export__: {
 	block: typeof block;
 	frame: typeof frame;
 	row: typeof row;
+	icons: typeof icons;
+	icon: typeof icon;
+	iconForms: typeof iconForms;
+	iconName: typeof iconName;
 	hint: typeof hint;
 	error: typeof error;
 	rowTime: typeof rowTime;
 	rowText: typeof rowText;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2FsbGVyeS5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJnYWxsZXJ5Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FhQTtjQU1BO2NBSUE7Y0FNQTtjQVFBO2NBSUE7Y0FNQTtjQU1BO2NBT0k7Y0FDQTtjQUNBO2NBQ0E7Y0FrQko7Y0FNQTtjQXVCQTtjQVNBOzs7Q0F2SEE7Q0FhQTtDQU1BO0NBSUE7Q0FNQTtDQVFBO0NBSUE7Q0FNQTtDQU1BO0NBT0k7Q0FDQTtDQUNBO0NBQ0E7Q0FrQko7Q0FNQTtDQXVCQTtDQVNBOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZ2FsbGVyeS5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJnYWxsZXJ5Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FhQTtjQU1BO2NBSUE7Y0FNQTtjQVFBO2NBSUE7Y0FNQTtjQU1BO2NBT0k7Y0FDQTtjQUNBO2NBQ0E7Y0FDQTtjQWNKO2NBZUE7Y0FLQTtjQXFCQTtjQU1BO2NBdUJBO2NBU0E7OztDQTdKQTtDQWFBO0NBTUE7Q0FJQTtDQU1BO0NBUUE7Q0FJQTtDQU1BO0NBTUE7Q0FPSTtDQUNBO0NBQ0E7Q0FDQTtDQUNBO0NBY0o7Q0FlQTtDQUtBO0NBcUJBO0NBTUE7Q0F1QkE7Q0FTQTs7In0=

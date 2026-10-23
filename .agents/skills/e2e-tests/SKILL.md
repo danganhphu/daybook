@@ -16,7 +16,8 @@ Android phone and a desktop - the last two as real Chrome (`channel: "chromium"`
   4173; the dev database is never touched. Nothing else may hold that port while it runs.
 - One worker: scenarios share a database and empty the day through the screen. About three minutes.
 - Tags: `@desktop-only`, `@phone-only`, `@chromium-only` (for steps that ask Chrome itself over CDP: install checks,
-  and passkeys through `e2e/face-id.ts`, since Playwright's WebKit has none).
+  and passkeys through `e2e/face-id.ts`, since Playwright's WebKit has none), `@iphone-later` (should pass on WebKit,
+  does not yet; Android first, the owner's call). Never use `@chromium-only` to hide a WebKit failure.
 
 ## The seed
 

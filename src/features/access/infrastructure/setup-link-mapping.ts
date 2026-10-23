@@ -1,12 +1,12 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import { accountIdSchema } from "@/features/access/domain/account";
 import { secretHashSchema } from "@/features/access/domain/secret";
 import {
   setupLinkIdSchema,
   type PendingSetupLink,
   type SetupLink,
 } from "@/features/access/domain/setup-link";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { setupLinkTable } from "./setup-link.table";
 

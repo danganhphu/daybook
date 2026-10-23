@@ -2,7 +2,7 @@ import type { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
-import type { AccountId } from "@/features/access/domain/account";
+import type { AccountId } from "@/shared/domain/account-id";
 import type { Content } from "@/shared/domain/content";
 
 export const captureSources = ["web", "telegram"] as const;

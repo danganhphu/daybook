@@ -13,12 +13,14 @@ export function createNoteWrites(db: Database, batch: Batch): NoteWrites {
       batch.enlist(db.insert(noteTable).values(toNoteRow(note)));
     },
 
+    // Everything but the creation, which the database refuses to change; the version trigger refuses a stale write
     update(note) {
-      const { content, updatedAt, deletedAt } = toNoteRow(note);
+      const { content, searchText, updatedAt, updatedBy, version, deletedAt, deletedBy } =
+        toNoteRow(note);
       batch.enlist(
         db
           .update(noteTable)
-          .set({ content, updatedAt, deletedAt })
+          .set({ content, searchText, updatedAt, updatedBy, version, deletedAt, deletedBy })
           .where(eq(noteTable.id, note.id)),
       );
     },

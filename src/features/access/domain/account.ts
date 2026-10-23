@@ -2,13 +2,12 @@ import type { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import { accountIdSchema, type AccountId } from "@/shared/domain/account-id";
+
 import { randomValueSchema } from "./secret";
 
-// Read as a module: `import * as Accounts` then `Accounts.create(...)`
-
-export const accountIdSchema = z.uuid().brand<"AccountId">();
-
-export type AccountId = z.infer<typeof accountIdSchema>;
+// Read as a module: `import * as Accounts` then `Accounts.create(...)`. The id lives in the shared kernel
+// (`@/shared/domain/account-id`), since every feature records who acted.
 
 export const usernameLength = { minimum: 3, maximum: 32 } as const;
 

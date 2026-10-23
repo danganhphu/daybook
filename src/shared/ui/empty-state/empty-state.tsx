@@ -6,7 +6,7 @@ export type EmptyStateProps = {
   // Says what is empty, not that something is
   readonly title: string;
   // One line on why, only when it helps
-  readonly description?: string;
+  readonly description?: string | undefined;
   // The action that fills it
   readonly action?: ReactNode;
 };

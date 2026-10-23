@@ -6,9 +6,9 @@ import {
   ipAddressSchema,
   type AccessEvent,
 } from "@/features/access/domain/access-event";
-import { accountIdSchema } from "@/features/access/domain/account";
 import { passkeyIdSchema } from "@/features/access/domain/passkey";
 import { deviceLabelSchema, sessionIdSchema } from "@/features/access/domain/session";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { accessEventTable } from "./access-event.table";
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { SendHorizontal } from "lucide-react";
 import {
   startTransition,
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -14,13 +14,15 @@ import {
 } from "react";
 
 import type { NoteListChange } from "@/features/notes/web/note-list";
-import { clockTime, type NoteResult } from "@/features/notes/web/note-view";
+import { clockTime, unsavedVersion, type NoteResult } from "@/features/notes/web/note-view";
 import { parseContent } from "@/shared/domain/content";
 import { IconButton } from "@/shared/ui/button/icon-button";
+import { SendIcon } from "@/shared/ui/icon/icons";
 import { TextArea } from "@/shared/ui/text-area/text-area";
 import { useToastClearance } from "@/shared/ui/toast/use-toast-clearance";
 import { attempt } from "@/shared/web/attempt";
 import { currentDevice, enterSends } from "@/shared/web/enter-key";
+import { useHydrated } from "@/shared/web/use-hydrated";
 
 import styles from "./composer.module.scss";
 
@@ -41,8 +43,18 @@ export function Composer({ record, onPending }: ComposerProps) {
   const [error, setError] = useState<string>();
   const errorId = useId();
   const form = useRef<HTMLFormElement>(null);
+  const box = useRef<HTMLTextAreaElement>(null);
+  const hydrated = useHydrated();
   // Docked at the bottom, so the Undo toast must sit above the box, not on it
   useToastClearance(form);
+
+  // Words typed before React took over are in the box but not in state; without this, Ghi would send nothing
+  useEffect(() => {
+    const early = box.current?.value ?? "";
+    if (early !== "") {
+      setText(early);
+    }
+  }, []);
 
   const send = useCallback(() => {
     const typed = text;
@@ -68,6 +80,7 @@ export function Composer({ record, onPending }: ComposerProps) {
           content: typed,
           createdAt: new Date(now).toISOString(),
           time: clockTime(now),
+          version: unsavedVersion,
         },
       });
 
@@ -109,6 +122,7 @@ export function Composer({ record, onPending }: ComposerProps) {
     <form ref={form} className={styles.composer} onSubmit={submit}>
       <div className={styles.field}>
         <TextArea
+          ref={box}
           appearance="bare"
           aria-label="Ghi chú mới"
           placeholder="Gõ đơn, việc cần nhắc, ghi chú..."
@@ -120,9 +134,10 @@ export function Composer({ record, onPending }: ComposerProps) {
         />
         <IconButton
           type="submit"
-          icon={SendHorizontal}
+          icon={SendIcon}
           label="Ghi"
           variant="primary"
+          disabled={!hydrated}
           onMouseDown={keepFocus}
         />
       </div>

@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { Given, Then, When } from "./fixtures";
+import { todayPage } from "./today-page";
 
 Given("hôm nay chưa có ghi chú nào", async ({ today }) => {
   await today.clear();
@@ -16,12 +17,39 @@ When("tôi mở trang Hôm nay", async ({ today }) => {
   await today.open();
 });
 
+// Another tab with the same sign-in stands in for the other phone; this page keeps showing the old words
+Given(
+  "máy khác vừa sửa ghi chú {string} thành {string}",
+  async ({ context }, from: string, to: string) => {
+    const other = todayPage(await context.newPage());
+    await other.open();
+    await other.edit(from, to);
+    await other.expectSaved(other.note(to));
+    await other.page.close();
+  },
+);
+
 Given("mất kết nối mạng", async ({ context }) => {
   await context.setOffline(true);
 });
 
 When("tôi gõ {string} và gửi", async ({ today }, text: string) => {
   await today.record(text);
+});
+
+// Typed before React has taken the page over: its scripts are held back until the words are in the box. The click
+// then waits for Ghi to be enabled.
+When("tôi gõ {string} ngay khi trang vừa hiện, rồi gửi", async ({ page, today }, text: string) => {
+  const { promise: typed, resolve: releaseScripts } = Promise.withResolvers<void>();
+  await page.route(/\.js(\?|$)/, async (route) => {
+    await typed;
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "commit" });
+  await today.box.fill(text);
+  await expect(today.send).toBeDisabled();
+  releaseScripts();
+  await today.send.click();
 });
 
 When("tôi gõ và gửi:", async ({ today }, text: string) => {

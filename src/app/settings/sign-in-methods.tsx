@@ -1,6 +1,5 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState, useTransition } from "react";
 
 import { passkeyTerm } from "@/features/access/application/access-terms";
@@ -11,6 +10,7 @@ import { useWebAuthnSupport } from "@/features/access/web/use-webauthn-support";
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { ConfirmDialog } from "@/shared/ui/dialog/confirm-dialog";
+import { AddIcon, DeleteIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListRow } from "@/shared/ui/list/list-row";
@@ -74,7 +74,7 @@ export function SignInMethods({ view, run }: SignInMethodsProps) {
         {supported ? (
           <ListAction
             label={accessCopy.addPasskey}
-            icon={Plus}
+            icon={AddIcon}
             disabled={working}
             onClick={startAdding}
           />
@@ -102,7 +102,7 @@ function PasskeyItem({
   readonly onRemove: (passkey: PasskeyRow) => void;
 }) {
   const destructive = useMemo<MenuAction>(
-    () => ({ label: actionLabels.remove, icon: Trash2, onSelect: () => onRemove(passkey) }),
+    () => ({ label: actionLabels.remove, icon: DeleteIcon, onSelect: () => onRemove(passkey) }),
     [passkey, onRemove],
   );
 

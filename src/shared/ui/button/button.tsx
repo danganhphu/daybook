@@ -2,7 +2,7 @@ import { Button as BaseButton } from "@base-ui/react/button";
 
 import styles from "./button.module.scss";
 
-// Destructive actions never take the filled primary style, so primary has no danger tone
+// Destructive actions never take the filled green style, so primary has no danger tone
 type Appearance =
   | { readonly variant: "primary"; readonly tone?: "neutral" }
   | { readonly variant?: "secondary" | "quiet"; readonly tone?: "neutral" | "danger" };

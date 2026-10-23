@@ -39,7 +39,8 @@ pnpm test:e2e
   `@chromium-only`; Playwright's WebKit has none. The breach check is answered by the run, never by the real service.
 - Every page fails its scenario on a Content Security Policy violation or an uncaught error.
 - The step `trang không có lỗi trợ năng` runs axe against WCAG 2.2 A and AA, after animations finish.
-- Tags: `@desktop-only`, `@phone-only`, `@chromium-only`.
+- Tags: `@desktop-only`, `@phone-only`, `@chromium-only`, and `@iphone-later` for a scenario that should pass on the
+  iPhone but fails on WebKit for now; Android is supported first, the iPhone after.
 
 A failed test keeps its trace in `test-results/` (open it with `pnpm exec playwright show-trace <file>`). In CI the
 HTML report, traces included, is kept as an artifact for 14 days.

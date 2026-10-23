@@ -42,10 +42,10 @@ The bot and the app speak Vietnamese.
 Recording an order:
 
 ```
-Người dùng:  bán 2 thùng giấy in cho chị Lan 500k
+Người dùng:  bán 2 hộp thuốc tê cho chị Lan 500k
 
 Bot:     Đã lưu đơn
-         Cửa hàng Lan Anh - Giấy in x2 - 500.000đ
+         Nha khoa Lan Anh - Thuốc tê x2 - 500.000đ
 
          Đơn thứ 12 tháng này, tổng 8.450.000đ
          [Sửa]  [Xoá]
@@ -54,16 +54,16 @@ Bot:     Đã lưu đơn
 The running total confirms the numbers add up and shows progress. When unsure:
 
 ```
-Bot:     Giấy in x2 - 500.000đ. Nhưng "chị Lan" là chỗ nào?
-         [Cửa hàng Lan Anh]  [Hương Lan]  [Thêm mới]
+Bot:     Thuốc tê x2 - 500.000đ. Nhưng "chị Lan" là chỗ nào?
+         [Nha khoa Lan Anh]  [Hương Lan]  [Thêm mới]
 ```
 
 One box takes everything; the bot sorts it:
 
 | Typed | Understood as |
 |---|---|
-| `bán 2 thùng giấy in cho chị Lan 500k` | an order |
-| `cửa hàng Minh Châu hẹn gọi lại thứ 5` | a reminder |
+| `bán 2 hộp thuốc tê cho chị Lan 500k` | an order |
+| `nha khoa Minh Châu hẹn gọi lại thứ 5` | a reminder |
 | `chị Hà hỏi giá, chưa trả lời` | a reminder |
 | `nhớ mang catalogue` | a note |
 
@@ -135,6 +135,8 @@ over a limit instead of billing. The price: Workers cannot run .NET, the first p
 Not where the work happens - where it is reviewed and corrected:
 
 - the same chat box as the bot, for a desk
+- a day at a time: today to write in, earlier days to read and correct, and a search over every note that does not
+  care about diacritics
 - an order table: filter, sort, edit in bulk
 - weekly and monthly numbers
 - a page per customer

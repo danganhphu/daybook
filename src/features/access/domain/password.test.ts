@@ -1,8 +1,9 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
+import { accountIdSchema } from "@/shared/domain/account-id";
+
 import { passwordLockAfter } from "./access-policy";
-import { accountIdSchema } from "./account";
 import * as Passwords from "./password";
 import { passwordSaltSchema, passwordVerifierSchema } from "./password";
 

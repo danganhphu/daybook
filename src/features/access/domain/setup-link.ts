@@ -2,10 +2,10 @@ import { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import type { AccountId } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import { setupLinkLifetime } from "./access-policy";
-import type { AccountId } from "./account";
 import type { SecretHash } from "./secret";
 
 // Read as a module: `import * as SetupLinks` then `SetupLinks.issue(...)`

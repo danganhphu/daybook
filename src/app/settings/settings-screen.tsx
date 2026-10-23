@@ -1,20 +1,21 @@
 "use client";
 
-import { ArrowLeft, LogOut } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useId, useMemo } from "react";
 
 import { usernameRule } from "@/features/access/domain/account";
 import { accessCopy } from "@/features/access/web/access-copy";
 import type { AccountView } from "@/features/access/web/account-view";
+import type { KindView } from "@/features/customers/web/customer-view";
 import { actionLabels } from "@/shared/ui/action-labels";
-import { IconButton } from "@/shared/ui/button/icon-button";
+import { IconLink } from "@/shared/ui/button/icon-link";
+import { ArrowBackIcon, LogoutIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListRow } from "@/shared/ui/list/list-row";
 import { routes } from "@/shared/web/routes";
 
 import { renameAccount, renameUsername } from "./actions";
+import { CustomerKinds } from "./customer-kinds";
 import { Devices } from "./devices";
 import { EditableRow } from "./editable-row";
 import { People } from "./people";
@@ -22,8 +23,6 @@ import { SignInMethods } from "./sign-in-methods";
 import { useStepUp } from "./use-step-up";
 
 import styles from "./settings.module.scss";
-
-const backLink = <Link href={routes.today} />;
 
 const usernameField = {
   autoComplete: "username",
@@ -34,7 +33,13 @@ const nameField = { autoComplete: "name" } as const;
 
 // The account, its ways in, its devices and what happened lately, as one column of grouped cards. Security settings
 // ask to confirm again when the sign-in is old; the server decides when.
-export function SettingsScreen({ view }: { readonly view: AccountView }) {
+export function SettingsScreen({
+  view,
+  kinds,
+}: {
+  readonly view: AccountView;
+  readonly kinds: ReadonlyArray<KindView>;
+}) {
   const signOutForm = useId();
   const stepUpAccount = useMemo(
     () => ({ username: view.username, hasPasskey: view.passkeys.length > 0 }),
@@ -49,12 +54,7 @@ export function SettingsScreen({ view }: { readonly view: AccountView }) {
   return (
     <main className={styles.screen}>
       <header className={styles.header}>
-        <IconButton
-          icon={ArrowLeft}
-          label={actionLabels.back}
-          render={backLink}
-          nativeButton={false}
-        />
+        <IconLink icon={ArrowBackIcon} label={actionLabels.back} href={routes.today} />
         <h1 className={styles.title}>{accessCopy.settings}</h1>
       </header>
 
@@ -76,6 +76,8 @@ export function SettingsScreen({ view }: { readonly view: AccountView }) {
         />
       </List>
 
+      <CustomerKinds kinds={kinds} />
+
       <SignInMethods view={view} run={run} />
 
       <Devices devices={view.devices} run={run} />
@@ -91,7 +93,7 @@ export function SettingsScreen({ view }: { readonly view: AccountView }) {
       <List>
         <ListAction
           label={accessCopy.signOut}
-          icon={LogOut}
+          icon={LogoutIcon}
           tone="danger"
           type="submit"
           form={signOutForm}

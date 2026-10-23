@@ -1,0 +1,44 @@
+@use "abstracts" as *;
+
+.amount {
+  padding-inline-end: space(2);
+
+  @include tabular-nums;
+}
+
+// A deleted order says so first, with the way back beside it
+.deleted {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  align-items: center;
+  justify-content: space-between;
+  padding: space(3) space(4);
+  color: color(danger);
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+.history-entry {
+  display: grid;
+  gap: space(1);
+  padding: space(3) space(4);
+}
+
+.history-detail {
+  overflow-wrap: anywhere;
+
+  @include text(body-sm);
+}
+
+.history-who {
+  color: color(text-muted);
+
+  @include text(caption);
+}
+
+// The payment form inside its dialog: the fields stacked, the buttons full width beneath
+.dialog-form {
+  display: grid;
+  gap: space(4);
+}

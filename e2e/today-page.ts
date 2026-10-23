@@ -12,7 +12,8 @@ async function expectSaved(row: Locator) {
 export function todayPage(page: Page) {
   const box = page.getByRole("textbox", { name: "Ghi chú mới" });
   const send = page.getByRole("button", { name: "Ghi", exact: true });
-  const notes = page.getByRole("listitem");
+  // In the page's main area: the tab bar has list items of its own
+  const notes = page.getByRole("main").getByRole("listitem");
   const emptyDay = page.getByRole("heading", { name: "Hôm nay chưa có ghi chú nào" });
 
   function note(text: string) {

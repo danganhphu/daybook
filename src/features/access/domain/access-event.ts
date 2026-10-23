@@ -2,7 +2,8 @@ import type { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
-import type { AccountId } from "./account";
+import type { AccountId } from "@/shared/domain/account-id";
+
 import type { PasskeyId } from "./passkey";
 import type { DeviceLabel, SessionId } from "./session";
 

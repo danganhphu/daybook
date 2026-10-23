@@ -1,4 +1,3 @@
-import type { AccountId } from "@/features/access/domain/account";
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import * as Captures from "@/features/capture/domain/capture";
 import type { CaptureSource } from "@/features/capture/domain/capture";
@@ -7,6 +6,7 @@ import * as Notes from "@/features/notes/domain/note";
 import type { LiveNote } from "@/features/notes/domain/note";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
+import type { AccountId } from "@/shared/domain/account-id";
 import type { Content } from "@/shared/domain/content";
 
 export type RecordCaptureDeps = {

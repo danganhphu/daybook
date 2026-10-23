@@ -12,22 +12,29 @@ Feature: Ghi nhanh
 
   Scenario: Ghi một ghi chú
     Given hôm nay chưa có ghi chú nào
-    When tôi gõ "Giao 2 thùng giấy in cho cửa hàng Minh Tâm" và gửi
-    Then ghi chú "Giao 2 thùng giấy in cho cửa hàng Minh Tâm" hiện trong hôm nay
+    When tôi gõ "Giao 2 hộp thuốc tê cho nha khoa Minh Tâm" và gửi
+    Then ghi chú "Giao 2 hộp thuốc tê cho nha khoa Minh Tâm" hiện trong hôm nay
     And ô nhập trống
     And trang không có lỗi trợ năng
+
+  @iphone-later
+  Scenario: Gõ ngay khi trang vừa hiện cũng không mất chữ
+    Given hôm nay chưa có ghi chú nào
+    When tôi gõ "gõ sớm" ngay khi trang vừa hiện, rồi gửi
+    Then ghi chú "gõ sớm" hiện trong hôm nay
+    And ô nhập trống
 
   Scenario: Xuống dòng được giữ nguyên
     Given hôm nay chưa có ghi chú nào
     When tôi gõ và gửi:
       """
-      cửa hàng Sao Mai hẹn gọi lại thứ 6
-      hỏi giá bìa hồ sơ
+      nha khoa Sao Mai hẹn gọi lại thứ 6
+      hỏi giá kim nha khoa
       """
     Then ghi chú cuối cùng đúng như đã gõ:
       """
-      cửa hàng Sao Mai hẹn gọi lại thứ 6
-      hỏi giá bìa hồ sơ
+      nha khoa Sao Mai hẹn gọi lại thứ 6
+      hỏi giá kim nha khoa
       """
 
   Scenario: Gửi khi chưa gõ gì thì không có gì xảy ra
@@ -36,10 +43,20 @@ Feature: Ghi nhanh
     Then tôi thấy "Hôm nay chưa có ghi chú nào"
 
   Scenario: Sửa một ghi chú
-    Given hôm nay chỉ có ghi chú "giấy in x2"
-    When tôi sửa ghi chú "giấy in x2" thành "giấy in x3"
-    Then ghi chú "giấy in x3" hiện trong hôm nay
-    And không còn ghi chú "giấy in x2"
+    Given hôm nay chỉ có ghi chú "thuốc tê x2"
+    When tôi sửa ghi chú "thuốc tê x2" thành "thuốc tê x3"
+    Then ghi chú "thuốc tê x3" hiện trong hôm nay
+    And không còn ghi chú "thuốc tê x2"
+
+  Scenario: Máy khác vừa sửa thì không ghi đè
+    Given hôm nay chỉ có ghi chú "thuốc tê x2"
+    And máy khác vừa sửa ghi chú "thuốc tê x2" thành "thuốc tê x5"
+    When tôi sửa ghi chú "thuốc tê x2" thành "thuốc tê x3"
+    Then tôi thấy lỗi "Ghi chú này vừa được sửa ở máy khác. Xem bản mới rồi thử lại."
+    And trang không có lỗi trợ năng
+    When tôi bấm "Huỷ"
+    Then ghi chú "thuốc tê x5" hiện trong hôm nay
+    And không còn ghi chú "thuốc tê x2"
 
   Scenario: Sửa thành trống thì bị từ chối ngay tại chỗ
     Given hôm nay chỉ có ghi chú "giữ nguyên"
@@ -59,15 +76,15 @@ Feature: Ghi nhanh
   Scenario: Mất mạng thì chữ được giữ lại
     Given hôm nay chưa có ghi chú nào
     And mất kết nối mạng
-    When tôi gõ "Đơn cửa hàng Hoà Bình: 3 hộp bìa hồ sơ" và gửi
+    When tôi gõ "Đơn nha khoa Hoà Bình: 3 hộp kim nha khoa" và gửi
     Then tôi thấy lỗi "Chưa gửi được. Kiểm tra mạng rồi thử lại."
-    And ô nhập vẫn còn "Đơn cửa hàng Hoà Bình: 3 hộp bìa hồ sơ"
+    And ô nhập vẫn còn "Đơn nha khoa Hoà Bình: 3 hộp kim nha khoa"
 
   @desktop-only
   Scenario: Trên máy tính, Enter là gửi
     Given hôm nay chưa có ghi chú nào
-    When tôi gõ "nhớ gọi cửa hàng Hoà Bình" rồi nhấn Enter
-    Then ghi chú "nhớ gọi cửa hàng Hoà Bình" hiện trong hôm nay
+    When tôi gõ "nhớ gọi nha khoa Hoà Bình" rồi nhấn Enter
+    Then ghi chú "nhớ gọi nha khoa Hoà Bình" hiện trong hôm nay
 
   @phone-only
   Scenario: Trên điện thoại, Enter là xuống dòng

@@ -2,7 +2,7 @@ import { and, desc, eq, isNotNull, max, or } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
-import { accountIdSchema } from "@/features/access/domain/account";
+import { accountIdSchema } from "@/shared/domain/account-id";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
 import { toAccessEvent } from "./access-event-mapping";

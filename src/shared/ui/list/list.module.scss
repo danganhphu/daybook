@@ -8,7 +8,7 @@
 
 .heading,
 .footer {
-  padding-inline: space(4);
+  padding-inline: space(5);
   color: color(text-muted);
 
   @include text(body-sm);
@@ -30,19 +30,61 @@
   > li + li::before {
     position: absolute;
     inset-block-start: 0;
-    inset-inline: space(4) 0;
+    inset-inline: space(5);
     block-size: 1px;
     content: "";
     background: color(border);
   }
+
+  // With icons, the hairline starts past them, where the words do, as ColorOS draws it
+  &:has(.row-icon) > li + li::before {
+    inset-inline-start: calc(#{space(5)} + #{size(icon-row)} + #{space(4)});
+  }
 }
 
+// ColorOS rows are tall and airy: the words at 17px, a second line beneath, room around both
 .row {
   display: flex;
-  gap: space(3);
+  gap: space(4);
   align-items: center;
-  min-block-size: size(control-lg);
-  padding: space(2) space(2) space(2) space(4);
+  min-block-size: size(row);
+  padding: space(3) space(3) space(3) space(5);
+}
+
+// The leading icon, in the colour of what the row is about (icon-tone.ts)
+.row-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: color(text-muted);
+
+  svg {
+    inline-size: size(icon-row);
+    block-size: size(icon-row);
+  }
+
+  &[data-tone="green"] {
+    color: color(icon-green);
+  }
+
+  &[data-tone="blue"] {
+    color: color(icon-blue);
+  }
+
+  &[data-tone="orange"] {
+    color: color(icon-orange);
+  }
+
+  &[data-tone="red"] {
+    color: color(icon-red);
+  }
+
+  &[data-tone="purple"] {
+    color: color(icon-purple);
+  }
+
+  &[data-tone="amber"] {
+    color: color(icon-amber);
+  }
 }
 
 .text {
@@ -61,21 +103,67 @@
   @include text(body-sm);
 }
 
+// A row that opens a page: the whole row takes the tap
+.link {
+  display: flex;
+  gap: space(4);
+  align-items: center;
+  min-block-size: size(row);
+  padding: space(3) space(4) space(3) space(5);
+  color: inherit;
+  text-decoration: none;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: 2px solid color(accent);
+    outline-offset: -2px;
+  }
+
+  &:active {
+    background: color(surface-subtle);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: color(surface-subtle);
+    }
+  }
+}
+
+.value {
+  flex-shrink: 0;
+  color: color(text-muted);
+
+  @include text(body-sm);
+  @include tabular-nums;
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+}
+
+.chevron {
+  flex-shrink: 0;
+  inline-size: size(icon);
+  block-size: size(icon);
+  color: color(text-muted);
+}
+
 // Anything that needs the whole row, such as a field being edited
 .content {
   display: grid;
   gap: space(3);
-  padding: space(3) space(4) space(4);
+  padding: space(4) space(5) space(5);
 }
 
 // A row that is itself the action: the accent text says it can be tapped
 .action {
   display: flex;
-  gap: space(3);
+  gap: space(4);
   align-items: center;
   inline-size: 100%;
-  min-block-size: size(control-lg);
-  padding-inline: space(4);
+  min-block-size: size(row);
+  padding-inline: space(5);
   color: color(accent);
   text-align: start;
   cursor: pointer;
@@ -93,8 +181,8 @@
 
   svg {
     flex-shrink: 0;
-    inline-size: size(icon);
-    block-size: size(icon);
+    inline-size: size(icon-row);
+    block-size: size(icon-row);
   }
 
   &[data-tone="danger"] {

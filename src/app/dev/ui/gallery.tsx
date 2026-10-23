@@ -1,35 +1,113 @@
 "use client";
 
-import { Ellipsis, LogOut, Pencil, Plus, SendHorizontal, Trash2, X } from "lucide-react";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
+import { searchText } from "@/shared/domain/search-text";
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { Button } from "@/shared/ui/button/button";
+import { ButtonLink } from "@/shared/ui/button/button-link";
 import { IconButton } from "@/shared/ui/button/icon-button";
+import { IconLink } from "@/shared/ui/button/icon-link";
+import { ChipLinks } from "@/shared/ui/chip-links/chip-links";
+import { DayPicker } from "@/shared/ui/day-picker/day-picker";
 import { ConfirmDialog } from "@/shared/ui/dialog/confirm-dialog";
 import { Dialog } from "@/shared/ui/dialog/dialog";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
+import { iconTones } from "@/shared/ui/icon/icon-tone";
+import {
+  AddIcon,
+  ArrowBackIcon,
+  CloseIcon,
+  DeleteIcon,
+  EditIcon,
+  Inventory2Icon,
+  LocalShippingIcon,
+  LogoutIcon,
+  MoreHorizIcon,
+  PaymentsIcon,
+  PersonIcon,
+  ReceiptLongIcon,
+  SearchIcon,
+  SendIcon,
+  StickyNote2Icon,
+} from "@/shared/ui/icon/icons";
+import * as icons from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListContent } from "@/shared/ui/list/list-content";
+import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { PageHeader } from "@/shared/ui/page-header/page-header";
+import { SearchField } from "@/shared/ui/search-field/search-field";
+import { SelectField } from "@/shared/ui/select-field/select-field";
+import { Stats } from "@/shared/ui/stats/stats";
 import { Status } from "@/shared/ui/status/status";
+import { SuggestField } from "@/shared/ui/suggest-field/suggest-field";
 import { TextArea } from "@/shared/ui/text-area/text-area";
 import { TextField } from "@/shared/ui/text-field/text-field";
 import { useToast } from "@/shared/ui/toast/use-toast";
+import { routes } from "@/shared/web/routes";
 
 import styles from "./gallery.module.scss";
 
-const sampleNote = "Giao 2 thùng giấy in cho cửa hàng Minh Tâm, thu 850.000đ";
+const sampleNote = "Giao 2 hộp thuốc tê cho nha khoa Minh Tâm, thu 850.000đ";
 
 const sampleActions: ReadonlyArray<MenuAction> = [
-  { label: actionLabels.edit, icon: Pencil, onSelect: () => undefined },
+  { label: actionLabels.edit, icon: EditIcon, onSelect: () => undefined },
 ];
 
-const signOutSample: MenuAction = { label: "Đăng xuất", icon: LogOut, onSelect: () => undefined };
+const signOutSample: MenuAction = {
+  label: "Đăng xuất",
+  icon: LogoutIcon,
+  onSelect: () => undefined,
+};
 
 const addCustomerButton = <Button variant="primary">Thêm khách</Button>;
+
+// Every generated icon, in the generator's order
+const allIcons = Object.entries(icons);
+
+const sampleDay = "2026-10-23";
+
+const sampleKinds = [
+  { value: "clinic", label: "Nha khoa" },
+  { value: "agent", label: "Đại lý" },
+];
+
+const sampleStats = [
+  { label: "Doanh số", value: "900.000đ" },
+  { label: "Đã thu", value: "500.000đ" },
+  { label: "Còn nợ", value: "400.000đ", tone: "danger" as const },
+];
+
+const sampleChips = [
+  { label: "Tất cả", href: routes.componentGallery, current: true },
+  { label: "Chưa giao", href: `${routes.componentGallery}?status=undelivered`, current: false },
+  { label: "Còn nợ", href: `${routes.componentGallery}?status=owed`, current: false },
+];
+
+type SampleProduct = { readonly id: string; readonly name: string; readonly price: string };
+
+const sampleProducts: ReadonlyArray<SampleProduct> = [
+  { id: "1", name: "Thuốc tê Lidocaine", price: "425.000đ" },
+  { id: "2", name: "Găng tay y tế", price: "95.000đ" },
+  { id: "3", name: "Ống hút nước bọt", price: "5.000đ" },
+];
+
+// The server's search, played locally: every word typed, without accents
+async function suggestSamples(text: string): Promise<ReadonlyArray<SampleProduct>> {
+  const words = searchText(text).split(" ");
+  return sampleProducts.filter((product) =>
+    words.every((word) => searchText(product.name).includes(word)),
+  );
+}
+
+function describeSample(product: SampleProduct) {
+  return { key: product.id, label: product.name, detail: product.price };
+}
+
+const sampleMenu = <ActionMenu label={actionLabels.options} actions={sampleActions} />;
 
 export function Gallery() {
   const toast = useToast();
@@ -37,6 +115,12 @@ export function Gallery() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const showSaved = useCallback(() => toast.show({ title: "Đã lưu ghi chú" }), [toast]);
+  const pickSampleDay = useCallback((day: string) => toast.show({ title: day }), [toast]);
+  const [sampleProduct, setSampleProduct] = useState("");
+  const pickSample = useCallback(
+    (product: SampleProduct) => toast.show({ title: product.name }),
+    [toast],
+  );
 
   const deleteSample = useCallback(() => {
     toast.show({
@@ -50,7 +134,7 @@ export function Gallery() {
   }, [toast]);
 
   const deleteAction = useMemo<MenuAction>(
-    () => ({ label: actionLabels.remove, icon: Trash2, onSelect: deleteSample }),
+    () => ({ label: actionLabels.remove, icon: DeleteIcon, onSelect: deleteSample }),
     [deleteSample],
   );
 
@@ -76,7 +160,7 @@ export function Gallery() {
         </Sample>
         <Sample caption="tone danger: secondary, quiet. Primary has no danger tone">
           <Button tone="danger">
-            <Trash2 />
+            <DeleteIcon />
             {actionLabels.remove}
           </Button>
           <Button variant="quiet" tone="danger">
@@ -100,11 +184,153 @@ export function Gallery() {
           </div>
         </Sample>
         <Sample caption="IconButton: square, label read aloud; quiet, or primary for send">
-          <IconButton icon={Ellipsis} label={actionLabels.options} />
-          <IconButton icon={X} label="Đóng" />
-          <IconButton icon={Trash2} label={actionLabels.remove} tone="danger" />
-          <IconButton icon={Ellipsis} label={actionLabels.options} size="lg" />
-          <IconButton icon={SendHorizontal} label="Ghi" variant="primary" size="lg" />
+          <IconButton icon={MoreHorizIcon} label={actionLabels.options} />
+          <IconButton icon={CloseIcon} label="Đóng" />
+          <IconButton icon={DeleteIcon} label={actionLabels.remove} tone="danger" />
+          <IconButton icon={MoreHorizIcon} label={actionLabels.options} size="lg" />
+          <IconButton icon={SendIcon} label="Ghi" variant="primary" size="lg" />
+        </Sample>
+        <Sample caption="IconLink: looks like a quiet IconButton, goes to another page, read as a link">
+          <IconLink icon={ArrowBackIcon} label={actionLabels.back} href={routes.componentGallery} />
+          <IconLink icon={SearchIcon} label="Tìm ghi chú" href={routes.componentGallery} />
+        </Sample>
+      </Section>
+
+      <Section title="Icons">
+        <Sample caption="Material Symbols Rounded: outlined, then filled for the current tab and a row's icon">
+          <ul className={styles.icons}>
+            {allIcons.map(([name, Icon]) => (
+              <li key={name} className={styles.icon}>
+                <span className={styles.iconForms}>
+                  <Icon />
+                  <Icon filled />
+                </span>
+                <span className={styles.iconName}>{name}</span>
+              </li>
+            ))}
+          </ul>
+        </Sample>
+        <Sample caption="tones: one colour per meaning, the same on every screen">
+          <div className={styles.block}>
+            <List>
+              <ListRow
+                title="850.000đ"
+                detail="money"
+                icon={PaymentsIcon}
+                iconTone={iconTones.money}
+              />
+              <ListRow
+                title="Hướng Dương"
+                detail="customer"
+                icon={PersonIcon}
+                iconTone={iconTones.customer}
+              />
+              <ListRow
+                title="Còn nợ 800.000đ"
+                detail="owed"
+                icon={ReceiptLongIcon}
+                iconTone={iconTones.owed}
+              />
+              <ListRow
+                title={actionLabels.remove}
+                detail="danger"
+                icon={DeleteIcon}
+                iconTone={iconTones.danger}
+              />
+              <ListRow
+                title="Đã giao"
+                detail="delivery"
+                icon={LocalShippingIcon}
+                iconTone={iconTones.delivery}
+              />
+              <ListRow
+                title="Giao trước 10 giờ"
+                detail="note"
+                icon={StickyNote2Icon}
+                iconTone={iconTones.note}
+              />
+              <ListRow
+                title="Kim nha khoa"
+                detail="item"
+                icon={Inventory2Icon}
+                iconTone={iconTones.item}
+              />
+            </List>
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="SearchField">
+        <Sample caption="a pill with a magnifier; the browser adds the clear button">
+          <SearchField label="Tìm ghi chú" placeholder="Tìm ghi chú" defaultValue="minh tam" />
+        </Sample>
+      </Section>
+
+      <Section title="PageHeader, ButtonLink, Stats">
+        <Sample caption="back, title and subtitle, actions; buttons that go somewhere; a summary in one card">
+          <div className={styles.stack}>
+            <PageHeader
+              title="Hướng Dương"
+              subtitle="Nha khoa, Quận 3"
+              back={routes.componentGallery}
+              actions={sampleMenu}
+            />
+            <ButtonLink href={routes.componentGallery} variant="primary">
+              <AddIcon aria-hidden />
+              Tạo đơn
+            </ButtonLink>
+            <Stats label="Tháng 10/2026" items={sampleStats} />
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="ChipLinks, ListLink">
+        <Sample caption="one filter at a time, as links; a row that opens a page, with what is owed in red">
+          <div className={styles.stack}>
+            <ChipLinks label="Lọc" chips={sampleChips} />
+            <List>
+              <ListLink
+                href={routes.componentGallery}
+                title="Hướng Dương"
+                detail="Nha khoa, Quận 3"
+                value="Còn nợ 400.000đ"
+                valueTone="danger"
+              />
+              <ListLink href={routes.componentGallery} title="Sao Mai" value="900.000đ" />
+            </List>
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="SuggestField">
+        <Sample caption="free text, with suggestions as it is typed (try thuoc); nothing found is said under it">
+          <SuggestField
+            label="Món hàng"
+            value={sampleProduct}
+            onValueChange={setSampleProduct}
+            suggest={suggestSamples}
+            describe={describeSample}
+            onPick={pickSample}
+            placeholder="Gõ tên hàng"
+            emptyText="Món mới, sẽ được thêm khi lưu đơn."
+          />
+        </Sample>
+      </Section>
+
+      <Section title="SelectField">
+        <Sample caption="the browser's own select: the phone's picker opens; an empty first choice when none is fine">
+          <SelectField
+            label="Loại khách"
+            emptyLabel="Không chọn"
+            options={sampleKinds}
+            defaultValue=""
+          />
+        </Sample>
+      </Section>
+
+      <Section title="DayPicker">
+        <Sample caption="an icon that opens the phone's own date picker">
+          <DayPicker label="Chọn ngày" day={sampleDay} max={sampleDay} onPick={pickSampleDay} />
         </Sample>
       </Section>
 
@@ -164,8 +390,8 @@ export function Gallery() {
               <ListRow title="Lan" detail="Tên">
                 <Button variant="quiet">{actionLabels.edit}</Button>
               </ListRow>
-              <ListAction label="Thêm Face ID hoặc vân tay" icon={Plus} />
-              <ListAction label="Đăng xuất các thiết bị khác" icon={LogOut} tone="danger" />
+              <ListAction label="Thêm Face ID hoặc vân tay" icon={AddIcon} />
+              <ListAction label="Đăng xuất các thiết bị khác" icon={LogoutIcon} tone="danger" />
             </List>
           </div>
         </Sample>
@@ -200,7 +426,7 @@ export function Gallery() {
         <Sample caption="a sheet at the bottom on a phone, a card in the middle from md">
           <Button onClick={openDialog}>Mở hộp thoại</Button>
           <Button tone="danger" onClick={openConfirm}>
-            Xác nhận xoá
+            CloseIconác nhận xoá
           </Button>
           <Dialog
             open={dialogOpen}

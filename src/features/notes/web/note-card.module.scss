@@ -1,0 +1,23 @@
+@use "abstracts" as *;
+
+// The same card as a row on a day's screen, without the menu
+.card {
+  display: grid;
+  gap: space(1);
+  padding: space(3) space(4) space(2);
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+.content {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.time {
+  justify-self: end;
+  color: color(text-muted);
+
+  @include text(caption);
+  @include tabular-nums;
+}

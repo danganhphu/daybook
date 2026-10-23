@@ -1,9 +1,10 @@
 # UI guidelines
 
 daybook should look like a product from a team with a real design system - calm, quiet, obviously deliberate - and
-never like a generated app. It is a phone app first, so it should feel like one, not like office software. Numbers
-below come from Microsoft Fluent 2, AWS Cloudscape, Apple's Human Interface Guidelines and, for shape, Material 3;
-where they disagree, the choice and the reason are stated.
+never like a generated app. It is a phone app first, so it should feel like one, not like office software. The look
+follows Oppo's ColorOS, the owner's pick (2026-10-23): large type, generous corners, one green, coloured icons.
+Numbers come from Apple's Human Interface Guidelines, Material 3 and WCAG; interaction rules from Microsoft Fluent 2
+and AWS Cloudscape. Where they disagree, the choice and the reason are stated.
 
 ## Principles
 
@@ -16,9 +17,11 @@ when the space changes: a desktop table becomes a list of rows, a long legend be
 **Disclose progressively.** Summary first, detail on tap. A row shows the one or two values that matter; the rest
 waits behind it.
 
-**Color carries meaning, nothing else.** Surfaces are neutral. The accent marks the primary action, links and focus.
-Red means danger. That is the whole palette. No gradients, no tinted overlays, no glass, no glow, no color per
-section or per category - categories are told apart by words and position.
+**Color carries meaning.** Surfaces are neutral. The green accent marks the primary action, the current tab, links
+and focus; red means danger. An icon takes the tone of what it is about - money green, people blue, debt orange - the
+same on every screen (see Icon tones), and a word or a shape always says it too, so colour is never the only cue. The
+one decoration is the wash, a faint green at the top of a tab's own screen fading into the grey, as ColorOS's first
+screens have it. No glass, no glow, no shadows on cards.
 
 **Motion only when it explains something.** An overlay entering, a toast appearing, an error pointing at a field.
 Never decoration, never on frequent interactions, and none at all under reduced motion.
@@ -54,22 +57,42 @@ unknown name fails the build.
 
 | Role | Value | Used for | Contrast |
 |---|---|---|---|
-| `canvas` | `#f2f3f6` | Page background: a neutral grey, so white cards stand out without borders | |
-| `surface` | `#ffffff` | Cards, sheets, inputs | 1.11:1 on canvas, decorative |
-| `surface-subtle` | `#ebedf1` | Hover and pressed states, disabled controls | |
-| `border` | `#dfe1e6` | Separators that carry no meaning | decorative |
-| `border-strong` | `#82868f` | Input outlines and other control boundaries | 3.29:1 or more |
-| `text` | `#16181c` | Body text | 16.01:1 or more |
-| `text-muted` | `#60636a` | Secondary text, timestamps | 5.11:1 or more |
-| `accent` | `#0672e2` | Primary action, focus ring, accent text on a surface | 4.65:1 on surface; white on it 4.65:1 |
-| `accent-hover` | `#005ecc` | Hover and pressed accent; links, and any accent text on the canvas | 5.50:1 on canvas |
-| `on-accent` | `#ffffff` | Text on accent | 4.65:1 |
-| `danger` | `#cc2827` | Destructive actions, errors | 4.85:1 or more |
+| `canvas` | `#eff0f2` | Page background: a neutral grey, so white cards stand out without borders | |
+| `surface` | `#ffffff` | Cards, sheets, inputs, the tab bar | decorative on canvas |
+| `surface-subtle` | `#e6e8ea` | Secondary buttons, hover and pressed states, disabled controls, the track behind filter chips | text 14.73:1, accent 4.59:1, danger 4.97:1 on it |
+| `border` | `#dbdee1` | Separators that carry no meaning; a secondary button's hover and press | danger on it 4.54:1 |
+| `border-strong` | `#82878c` | Input outlines and other control boundaries | 3.19:1 or more |
+| `text` | `#141618` | Body text | 15.88:1 or more |
+| `text-muted` | `#606468` | Secondary text, timestamps, tabs not shown | 4.88:1 or more |
+| `accent` | `#00790f` | Primary action, current tab, focus ring, links | 4.59:1 or more; white on it 5.64:1 |
+| `accent-hover` | `#006911` | Hover and pressed accent | white on it 6.93:1 |
+| `accent-wash` | `#e4f9e4` | The top of a tab's own screen, fading into the canvas | text 16.30:1, muted 5.40:1, accent 5.08:1 |
+| `on-accent` | `#ffffff` | Text on accent | 5.64:1 |
+| `danger` | `#c2181d` | Destructive actions, errors | 4.54:1 or more |
 | `scrim` | `text` at 40% | Dims the page behind a dialog | not read on |
+| `icon-*` | see Icon tones | An icon's colour by what it is about | 3:1 or more on white |
 
-The accent is the brightest blue that still passes AA with white text, close to Google's `#1a73e8`; Telegram's
-`#3390ec` would fail at 3.31:1. As text it passes on a white surface but not on the canvas (4.20:1), where links use
-`accent-hover`.
+The accent is Oppo's green darkened until it reads at AA everywhere it is used as text, the hover grey included:
+Oppo's own button green `#1cb84c` gives white 2.62:1, `#00790f` gives 5.64:1, close to Google's `#188038` (5.02:1).
+The first pick, `#007d16`, passed on white but fell to 4.32:1 on `surface-subtle`, which axe caught on a hovered list
+action. Danger was darkened for the same reason, to stay readable on a secondary button's hover grey; Material 3's
+error red is darker still.
+
+### Icon tones
+
+A screen asks for a meaning - `iconTones.money` from `src/shared/ui/icon/icon-tone.ts` - never for a colour, so one
+meaning has one colour everywhere. A tone colours an icon, a graphic held to 3:1 (WCAG 1.4.11); it is never used for
+text.
+
+| Meaning | Tone | Value | On white |
+|---|---|---|---|
+| Money that came in or will: a total, revenue, a payment | `icon-green` | `#189a30` | 3.67:1 |
+| People: a customer, a call | `icon-blue` | `#1177e7` | 4.36:1 |
+| What is still owed | `icon-orange` | `#e56900` | 3.31:1 |
+| Removing, deleting | `icon-red` | `#db2c2b` | 4.76:1 |
+| Getting goods to the customer | `icon-purple` | `#864ad2` | 5.34:1 |
+| Words written down: a note, an address, the history | `icon-amber` | `#c57800` | 3.46:1 |
+| Things the book lists: a product, a kind | `text-muted` | `#606468` | 5.99:1 |
 
 Text pairs meet WCAG AA 4.5:1 and control boundaries 3:1, checked on every background each role is used on. The
 values are oklch in the source; the hex is for reading. Change a value, re-check the ratios (the script that
@@ -85,30 +108,53 @@ Inter with the Vietnamese subset (Geist, a common default, has no Vietnamese gly
 
 | Style | Size / line height | Use |
 |---|---|---|
-| `caption` | 12 / 16 | The smallest anything gets |
-| `body-sm` | 14 / 20 | Secondary lines |
-| `body` | 16 / 24 | Default. 16px also stops iOS zooming into inputs |
-| `label` | 16 / 24, 600 | Field labels, row titles |
-| `title` | 20 / 28, 600 | Screen titles |
-| `display` | 28 / 36, 600 | The one key number on a summary |
+| `caption` | 13 / 18 | The smallest anything gets: tab labels, small print |
+| `body-sm` | 15 / 20 | Secondary lines, a row's second line |
+| `body` | 17 / 24 | Default. Above 16px, so iOS never zooms into an input |
+| `label` | 17 / 24, 600 | Field labels, row titles |
+| `title` | 22 / 28, 600 | A page's title within a tab |
+| `display` | 30 / 38, 600 | A tab's own screen title, as ColorOS sets "Tiện ích" |
+| `hero` | 36 / 44, 600 | A screen's one big number, in the accent |
 
-Fluent's web body is 14px and HIG's is 17pt; 16px sits between and is the right size for a phone-first form.
+ColorOS sets its lists large and airy. 17px is Apple's body size; the first version's 16px read as a form, not a
+phone app.
+
+### Icons
+
+Material Symbols Rounded (Google, Apache-2.0), weight 400 on its 24-unit grid. Outlined by default; filled for the
+current tab and the icon leading a row, as Material and ColorOS mark what is chosen. `scripts/generate-symbols.ts`
+lists the icons the app uses, and `pnpm symbols` writes each as a component into `src/shared/ui/icon/icons.tsx`: one
+`<path>`, no icon library at run time, no style attribute for the CSP to refuse. The output is committed. To add one,
+put its name from https://fonts.google.com/icons in the list, run the command and import `<Name>Icon`. Its size comes
+from the CSS around it: `size(icon)` 20px in buttons, `size(icon-row)` 24px in rows and tabs.
+
+Why this set (2026-10-23): Lucide, the most active, has no filled forms by design. Phosphor has six weights, but its
+React package last shipped in May 2025. Heroicons last shipped in November 2024, with about 300 icons. Tabler fills
+only part of its set; Fluent's React icons inject styles at run time; Hugeicons is free in one style only; Solar asks
+for attribution. Material Symbols has an outlined and a filled form of every icon, Google updates it every week, and
+Android's own apps use it, closest to ColorOS's rounded glyphs. The paths come through Iconify's packages
+(`@iconify-json/material-symbols`, `@iconify/utils`), both maintained; `unplugin-icons` was passed over because its
+React output needs svgr, last released in August 2023.
 
 ### Space, size, shape
 
 - **Spacing** is a 4px grid: steps 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (4px to 64px). Page gutter `space(4)`.
-- **Touch targets** are at least 44px (HIG, Fluent); primary actions and list rows 48px; at least 8px between
-  neighbours.
-- **Radius** follows Material 3's corner scale: 12px on controls, 16px on cards, menus and toasts, 24px on the
-  message field (half its 48px height, so one line is a pill). Icon buttons are circles.
-- **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow, as in Telegram's
-  settings and profile. What floats over the page - the message field, later a tab bar or a floating button - takes a
-  soft, wide shadow (`--shadow-float`). Anything that overlaps - popover, sheet, dialog, toast - takes the overlay
-  shadow (Cloudscape's rule).
-- **Why these shapes, not Fluent's:** the first version took Fluent 2's 8px corners, one bordered list with divider
-  rows, and a boxed input. On the phone it read as office software ("hơi ERP, company, system, enterprise", the
-  owner, 2026-10-20). Shape now comes from Material 3 and the phone's own apps; colour, type and spacing stay as
-  they were.
+- **Touch targets** are at least 44px (HIG, Fluent); primary actions 48px; list rows 60px, as tall as ColorOS's; at
+  least 8px between neighbours.
+- **Radius:** ColorOS rounds generously. 14px on fields, 24px on cards, menus and toasts, and on the message field
+  (half its 48px height, so one line is a pill). Buttons, chips and icon buttons are pills or circles.
+- **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow. What floats over the
+  page - the message field, the tab bar - takes a soft, wide shadow (`--shadow-float`). Anything that overlaps -
+  popover, sheet, dialog, toast - takes the overlay shadow (Cloudscape's rule).
+- **Tab bar:** ColorOS's floating pill, white, centred at the bottom, 88px per tab. It keeps a row of its own instead
+  of covering the page, so the message field is never under it, and hides while the keyboard is up. From `md` it
+  stands down the left side. The current tab is green with a filled icon; the others are grey and outlined.
+- **The wash:** `--wash`, the faint green at the top of a tab's own screen, gone 280px down. Only there; a page
+  within a tab is plain canvas, so the wash also says "you are at the top".
+- **How the look got here:** the first version took Fluent 2's 8px corners, one bordered list with divider rows and
+  a boxed input; on the phone it read as office software ("hơi ERP, company, system, enterprise", the owner,
+  2026-10-20). The second took its shapes from Material 3 and Telegram, in blue. The third, this one, follows ColorOS
+  (2026-10-23), whose apps the owner likes best.
 - **Content width** stops at 640px; text never runs wider than about 60 characters.
 - **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
 - **Sign-in and setup** put their one action at the bottom of a phone screen, at most 400px wide (`size(panel)`).
@@ -145,12 +191,23 @@ change.
 
 | Component | For | Rules it holds |
 |---|---|---|
-| `Button` | An action with a text label | `variant` primary, secondary (default) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action and list rows |
+| `Button` | An action with a text label | A pill. `variant` primary (filled green), secondary (default, grey) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action |
 | `IconButton` | An action shown as an icon alone | A circle; quiet and muted unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
+| `IconLink` | Going to another page, shown as an icon alone | Looks exactly like a quiet `IconButton` but is a real link over `next/link`, so a screen reader says "link" and it opens in a new tab. A Base UI button rendered as a link would be announced as a button |
+| `SearchField` | The box at the top of a search screen | A pill with a magnifier; `type="search"`, so the browser adds a clear button and the phone keyboard's Enter says search. `label` is the accessible name. Wrapped by the screen in `<search>` and a `next/form` GET form, so a search is a URL that back and reload keep |
+| `DayPicker` | Jumping to a date | An icon button that opens the phone's own date picker through `showPicker()`. The input stays rendered under the button, unseen, since `showPicker()` refuses an input that is not rendered and the popover anchors to it |
+| `ButtonLink` | Going somewhere, shown as a button with words: "Tạo đơn", "Gọi" | A `Button`'s look over `next/link`, read as a link; a `tel:` link dials. No prefetch unless asked |
+| `SelectField` | One choice from a short list | The browser's own `<select>`, labelled like `TextField`: a phone opens its own picker. `emptyLabel` adds a first "none" choice |
+| `SuggestField` | Free text with suggestions from the server: a customer, a product | Base UI's Autocomplete, async; a newer answer replaces an older one. The popup opens only with something in it, since an open popup hides the rest of the form from a screen reader; "nothing matches" is said under the field. Built after hydration: its hidden input carries a style attribute the CSP refuses in server HTML |
+| `ChipLinks` | One filter at a time: a status, a kind | ColorOS's segmented choice: a grey pill track, the current chip white on it; scrolls sideways when it does not fit. Links, so the filter is in the URL and works before scripts load |
+| `ListLink` | A row that opens a page of its own | The whole row is the link, with a chevron, an optional `icon` and `iconTone` leading it, an optional value at the end (`valueTone="danger"` for what is owed). No prefetch |
+| `PageHeader` | The top of a screen | Back on the left, the title and a subtitle, actions at the end. Without `back` it is a tab's own screen and the title is large (`display`) |
+| `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, in the accent |
+| `Screen` | The column a list or detail screen sits in | Content width, gutters, room at the bottom, one gap. Its single column is `minmax(0, 1fr)`, so a wide field can never push the page sideways. `wash` only on a tab's own screen |
 | `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby`. `appearance="bare"` drops its own edge and focus ring to sit inside a field that draws them, such as the message field (which uses `:focus-within`) |
 | `TextField` | One line of text, or a password | A label above, an optional `description` hint and an `error` below, both read out with the field. A password field has a show/hide button instead of a second "confirm" field (NIST 800-63B-4) |
 | `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color. An action with `href` is a real link (`Menu.LinkItem` over `next/link`) |
-| `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One white card per group, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does. `ListRow` shows a value large and what it is beneath, with what can be done to it as children. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
+| `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One white card per group, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does, past a leading icon. `ListRow` shows a value large and what it is beneath, with what can be done to it as children, and takes an `icon` and `iconTone` as `ListLink` does. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
 | `Dialog`, `ConfirmDialog` | A question that must be answered before going on | A sheet at the bottom on a phone, a card in the middle from `md`; focus stays inside until it closes. `ConfirmDialog` is only for what cannot be undone: a question as the title, the verb on the button, never "OK" |
 | `Status` | The outcome of an action, in one line | An `<output>`, so a new message is read out without moving focus. Keeps its line when empty, so nothing below jumps |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
@@ -161,7 +218,8 @@ change.
 - **Keyboard:** menus open with Enter and move with the arrow keys; Escape closes and returns focus to the trigger.
   F6 moves into the toast region, Tab reaches the toast and its action. Checked on `/dev/ui`.
 - **Base UI hides a toast's close button from screen readers** (`aria-hidden`) until the toast is focused or
-  expanded. That is its design, not a bug of ours.
+  expanded, but leaves it in the tab order: a button the keyboard reaches and a screen reader never names, which axe
+  reports as `aria-hidden-focus`. `Toaster` sets `aria-hidden={false}` on it, so it is always a named button.
 
 ## How styles are written
 
@@ -187,6 +245,8 @@ change.
   states: https://cloudscape.design
 - Apple HIG typography, accessibility, buttons, alerts, motion, lists: https://developer.apple.com/design/human-interface-guidelines
 - Base UI button, menu, toast, field, composition, styling: https://base-ui.com/react (pages end in `.md` for plain text)
+- Material Symbols: https://fonts.google.com/icons and https://github.com/google/material-design-icons; the paths
+  from Iconify: https://iconify.design/docs/icons/json.html
 - Material 3 corner tokens, from Google's material-web:
   https://github.com/material-components/material-web/blob/main/tokens/versions/v0_192/_md-sys-shape.scss
 - `field-sizing`: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing

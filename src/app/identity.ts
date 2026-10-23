@@ -3,4 +3,4 @@ export const appName = "daybook";
 export const appDescription = "Ghi đơn hàng, khách và việc cần nhắc";
 
 // The canvas role from docs/ui/design-system.md as hex, so the status bar and the splash screen match the page
-export const canvasColor = "#f2f3f6";
+export const canvasColor = "#eff0f2";

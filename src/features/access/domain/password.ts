@@ -1,6 +1,7 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 import type { z } from "zod";
 
+import type { AccountId } from "@/shared/domain/account-id";
 import { base64UrlSchema } from "@/shared/domain/base64url-schema";
 
 import {
@@ -10,7 +11,6 @@ import {
   passwordLockAfter,
   passwordSaltByteLength,
 } from "./access-policy";
-import type { AccountId } from "./account";
 
 // Read as a module: `import * as Passwords` then `Passwords.set(...)`
 

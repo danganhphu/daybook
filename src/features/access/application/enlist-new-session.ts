@@ -2,10 +2,10 @@ import type { Temporal } from "temporal-polyfill/implementation";
 
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { AccessEventDetail, RequestOrigin } from "@/features/access/domain/access-event";
-import type { AccountId } from "@/features/access/domain/account";
 import type { PasskeyId } from "@/features/access/domain/passkey";
 import * as Sessions from "@/features/access/domain/session";
 import type { AuthenticationMethod, Session, SessionId } from "@/features/access/domain/session";
+import type { AccountId } from "@/shared/domain/account-id";
 
 import type { AccessEventWrites, SessionWrites } from "./access-writes";
 import { hashSecretToken, newSecretToken } from "./secret-tokens";

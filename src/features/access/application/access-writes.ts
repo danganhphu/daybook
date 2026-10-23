@@ -1,12 +1,13 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEvent } from "@/features/access/domain/access-event";
-import type { Account, AccountId } from "@/features/access/domain/account";
+import type { Account } from "@/features/access/domain/account";
 import type { Ceremony, CeremonyId, Challenge } from "@/features/access/domain/ceremony";
 import type { Passkey, PasskeyId } from "@/features/access/domain/passkey";
 import type { Password } from "@/features/access/domain/password";
 import type { Session, SessionId } from "@/features/access/domain/session";
 import type { PendingSetupLink, RedeemedSetupLink } from "@/features/access/domain/setup-link";
+import type { AccountId } from "@/shared/domain/account-id";
 
 // What the access feature writes, store by store. Each queues on the current unit of work; nothing is stored until
 // it commits.

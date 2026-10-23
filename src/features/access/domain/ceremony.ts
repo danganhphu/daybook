@@ -2,8 +2,9 @@ import { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
+import type { AccountId } from "@/shared/domain/account-id";
+
 import { ceremonyLifetime, setupLinkLifetime } from "./access-policy";
-import type { AccountId } from "./account";
 import type { PasswordSalt } from "./password";
 import { randomValueSchema, type SecretHash } from "./secret";
 import type { RedeemedSetupLink, SetupLinkId } from "./setup-link";

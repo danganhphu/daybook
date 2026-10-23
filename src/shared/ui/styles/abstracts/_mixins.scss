@@ -25,6 +25,17 @@
   }
 }
 
+// The other side of `from`: styles inside apply below the named width only
+@mixin until($breakpoint) {
+  @if not map.has-key(tokens.$breakpoints, $breakpoint) {
+    @error "Unknown breakpoint `#{$breakpoint}`. Known: #{map.keys(tokens.$breakpoints)}";
+  }
+
+  @media (width < map.get(tokens.$breakpoints, $breakpoint)) {
+    @content;
+  }
+}
+
 @mixin focus-ring {
   &:focus-visible {
     outline: 2px solid fn.color(accent);

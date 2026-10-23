@@ -3,9 +3,14 @@ import { and, desc, eq, gte, isNull, lt } from "drizzle-orm";
 import type { LiveNote } from "@/features/notes/domain/note";
 import type { NoteRepository } from "@/features/notes/domain/note-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { containsLiterally } from "@/shared/infrastructure/d1/like-pattern";
 
 import { toNote } from "./note-mapping";
 import { noteTable } from "./note.table";
+
+function onlyLive(rows: ReadonlyArray<typeof noteTable.$inferSelect>): ReadonlyArray<LiveNote> {
+  return rows.map(toNote).filter((note): note is LiveNote => note.status === "live");
+}
 
 export function createNoteRepository(db: Database): NoteRepository {
   return {
@@ -29,7 +34,24 @@ export function createNoteRepository(db: Database): NoteRepository {
         // UUIDv7 ids sort by creation, which settles notes created in the same millisecond
         .orderBy(desc(noteTable.createdAt), desc(noteTable.id));
 
-      return rows.map(toNote).filter((note): note is LiveNote => note.status === "live");
+      return onlyLive(rows);
+    },
+
+    // A scan of the live notes: a substring cannot use an index, and two people's notes stay small
+    async searchLive(term, limit) {
+      const rows = await db
+        .select()
+        .from(noteTable)
+        .where(
+          and(
+            isNull(noteTable.deletedAt),
+            ...term.split(" ").map((word) => containsLiterally(noteTable.searchText, word)),
+          ),
+        )
+        .orderBy(desc(noteTable.createdAt), desc(noteTable.id))
+        .limit(limit);
+
+      return onlyLive(rows);
     },
   };
 }

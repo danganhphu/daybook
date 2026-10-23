@@ -1,0 +1,12 @@
+@use "abstracts" as *;
+
+// The main action first and widest, as a phone app puts its call to action
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+
+  > :first-child {
+    flex: 1;
+  }
+}

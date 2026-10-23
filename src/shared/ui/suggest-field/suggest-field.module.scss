@@ -1,0 +1,94 @@
+@use "abstracts" as *;
+
+// Labelled and boxed as TextField, so the two sit together in a form
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: space(1);
+}
+
+.label {
+  @include text(label);
+}
+
+.input {
+  min-inline-size: 0;
+  min-block-size: size(control-lg);
+  padding: space(3);
+  color: color(text);
+  background: color(surface);
+  border: 1px solid color(border-strong);
+  border-radius: radius(control);
+
+  @include text(body);
+  @include focus-ring;
+
+  &[aria-invalid="true"] {
+    border-color: color(danger);
+  }
+}
+
+.error {
+  color: color(danger);
+
+  @include text(body-sm);
+}
+
+// The same floating card as the menus
+.positioner {
+  z-index: z(overlay);
+  outline: 0;
+}
+
+.popup {
+  inline-size: var(--anchor-width);
+  max-inline-size: var(--available-width);
+  padding: space(1);
+  color: color(text);
+  background: color(surface);
+  border: 1px solid color(border);
+  border-radius: radius(surface);
+  outline: 0;
+  box-shadow: var(--shadow-overlay);
+}
+
+.list {
+  max-block-size: min(var(--available-height), #{size(suggestions)});
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.hint {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.item {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: size(control);
+  padding-inline: space(3);
+  cursor: default;
+  user-select: none;
+  border-radius: radius(control);
+  outline: 0;
+
+  &[data-highlighted] {
+    background: color(surface-subtle);
+  }
+}
+
+.item-label {
+  overflow-wrap: anywhere;
+}
+
+.item-detail {
+  flex-shrink: 0;
+  color: color(text-muted);
+
+  @include text(body-sm);
+  @include tabular-nums;
+}

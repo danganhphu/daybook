@@ -1,11 +1,11 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import { accountIdSchema } from "@/features/access/domain/account";
 import {
   passwordSaltSchema,
   passwordVerifierSchema,
   type Password,
 } from "@/features/access/domain/password";
+import { accountIdSchema } from "@/shared/domain/account-id";
 
 import type { passwordTable } from "./password.table";
 

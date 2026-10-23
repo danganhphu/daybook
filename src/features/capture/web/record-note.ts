@@ -1,6 +1,6 @@
 import type { App } from "@/composition/create-app";
-import type { AccountId } from "@/features/access/domain/account";
 import { toNoteView, type NoteResult } from "@/features/notes/web/note-view";
+import type { AccountId } from "@/shared/domain/account-id";
 import { parseContent } from "@/shared/domain/content";
 import { ok } from "@/shared/domain/result";
 

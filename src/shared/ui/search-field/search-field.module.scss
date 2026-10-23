@@ -1,0 +1,40 @@
+@use "abstracts" as *;
+
+// The box draws the edge and the focus ring, so the magnifier sits inside it
+.search-field {
+  display: flex;
+  gap: space(2);
+  align-items: center;
+  min-block-size: size(control-lg);
+  padding-inline: space(4) space(2);
+  background: color(surface);
+  border-radius: radius(field);
+
+  &:focus-within {
+    outline: 2px solid color(accent);
+    outline-offset: -2px;
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  inline-size: size(icon);
+  block-size: size(icon);
+  color: color(text-muted);
+}
+
+.input {
+  flex: 1;
+  min-inline-size: 0;
+  padding-block: space(3);
+  color: color(text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+
+  @include text(body);
+
+  &::placeholder {
+    color: color(text-muted);
+  }
+}

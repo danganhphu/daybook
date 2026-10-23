@@ -3,8 +3,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 import { chromium } from "@playwright/test";
 
-// The accent and on-accent roles from docs/ui/design-system.md as hex; an image file cannot read the SCSS tokens
-const accent = "#0672e2";
+// The icon-green role from docs/ui/design-system.md as hex (an image file cannot read the SCSS tokens): Oppo's bright
+// green, which white letters on it clear at 3.67:1 as a graphic
+const accent = "#189a30";
 const onAccent = "#ffffff";
 
 // Lowercase pn drawn as strokes, in units where the x-height is 180: p is a stem and a bowl, n a stem and an arch

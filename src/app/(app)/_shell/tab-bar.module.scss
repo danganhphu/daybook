@@ -1,0 +1,71 @@
+@use "abstracts" as *;
+
+// ColorOS's floating tab bar: a white pill in the middle of the bottom edge, its shadow lifting it off the page. It
+// keeps a row of its own rather than covering the page, so the box on Hôm nay is never under it. From `md` it stands
+// as a pill down the left side instead.
+.tab-bar {
+  // The home indicator's room on a phone that runs edge to edge
+  --tab-bar-safe-area: env(safe-area-inset-bottom, 0);
+
+  padding: space(2) space(4) var(--tab-bar-safe-area);
+
+  @include from(md) {
+    padding: space(4);
+  }
+
+  // A text field has focus on a phone (use-typing.ts): the keyboard and the box being typed in take its room
+  &[data-typing] {
+    @include until(md) {
+      display: none;
+    }
+  }
+}
+
+.list {
+  display: grid;
+  grid-auto-columns: size(tab);
+  grid-auto-flow: column;
+  inline-size: fit-content;
+  padding: space(1);
+  margin: 0 auto space(2);
+  list-style: none;
+  background: color(surface);
+  border-radius: radius(full);
+  box-shadow: var(--shadow-float);
+
+  @include from(md) {
+    grid-auto-flow: row;
+    gap: space(1);
+    margin: 0;
+  }
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  align-items: center;
+  justify-content: center;
+  min-block-size: size(control-lg);
+  padding-block: space(2);
+  color: color(text-muted);
+  text-decoration: none;
+  border-radius: radius(full);
+  touch-action: manipulation;
+
+  @include focus-ring;
+
+  svg {
+    inline-size: size(icon-row);
+    block-size: size(icon-row);
+  }
+
+  // Green as ColorOS has it; the filled icon says it too, for anyone who cannot tell the colour
+  &[aria-current="page"] {
+    color: color(accent);
+  }
+}
+
+.label {
+  @include text(caption);
+}

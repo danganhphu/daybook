@@ -10,6 +10,7 @@ Every script in `package.json`. Run them from the repository root.
 | `pnpm build` | Production build into `.cloudflare/output` |
 | `pnpm start` | Serve the production build locally; needs `APP_ORIGIN` and `PASSWORD_PEPPER` ([configuration](configuration.md)) |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`; commit the output |
+| `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx` ([icons](../ui/design-system.md#icons)); commit the output |
 | `pnpm deploy` | Deploy the Worker. Not done yet; see [deployment](deployment.md) |
 
 ## Check
