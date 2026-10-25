@@ -144,6 +144,30 @@ and deleted are independent states, so each Undo is one update.
 - **Made from a live note**, it keeps the note's `capture_id`; from the form, it has none (decision 5).
 - **Who finished it** is kept beside when (`done_by`, approved 2026-10-23): `updated_by` changes with the next edit.
 
+## Reports
+
+`src/features/reports/`. Reads only: it owns no table and changes nothing. The numbers mean what sales reports
+usually mean, each on its own basis:
+
+- **Doanh số** (sales): the lines of live orders placed in the period, by the day each was placed. Summed over lines,
+  so a report narrowed to one product counts that product's lines, not whole orders.
+- **Thu về** (money in): live payments made in the period, by payment day, whatever day their orders were placed.
+- **Khách còn nợ** (owed): what every live order placed by the period's end still owed at that end - or today, while
+  the period runs - each order at least zero.
+
+The two money figures have different bases, so they are never drawn as parts of one whole. A payment pays an order,
+not a product, so under a product filter they are not told; the units sold are, instead.
+
+- **A period** is a week from Monday, a month, a quarter, a year, or a range of days up to two years
+  (`report-period.ts`). A calendar period moves by whole periods; a range moves by its own length. Its sales are
+  compared with the period before of the same kind.
+- **A chart's columns** are days (a week, a month, a range of up to 31 days), weeks from Monday (a quarter, a range of
+  up to 92 days) or months. Every column of the period is there; a day without sales is zero.
+- **A customer has gone quiet** when their last live order is 21 days old or more (`gone-quiet.ts`), and they are not
+  hidden. A constant for now, not a setting.
+- **Breakdowns** - by kind, the top five products and customers, the quiet ones - leave out what the report is
+  filtered to: no breakdown by kind under a kind or customer filter, no top customers for one customer.
+
 ## Access
 
 Two people share one book; `src/features/access/` decides who is signing in. The decisions and their sources are in
@@ -219,6 +243,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
 | `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
 | `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted` |
+| `readReport` | A period's figures, narrowed by kind, customer or product: sales against the period before, money in, owed, sales over time, by kind, top products and customers, quiet customers | - |
 | `authenticate` | The session behind a cookie; records its use at most hourly | `unauthenticated` |
 | `redeemSetupLink` | Spends a setup link and starts a setup ceremony bound to this browser | `setup_link_unusable`, `rate_limited` |
 | `startPasskeySetup` | The passkey prompt for a setup, with a new challenge | `setup_link_unusable` |
@@ -248,7 +273,8 @@ through `createApp` in `src/composition/create-app.ts`.
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
 order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
 the free plan. Open reminders are one indexed read (`reminder_open_by_due_on`), with one more for the customers'
-names.
+names. A report is nine aggregate statements run together (`report-queries.ts`), plus the kinds and the names of
+what it is filtered to.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence the user

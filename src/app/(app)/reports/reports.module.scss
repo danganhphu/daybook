@@ -1,0 +1,37 @@
+@use "abstracts" as *;
+
+.filters {
+  display: grid;
+  gap: space(2);
+}
+
+// From and to side by side, the button under them
+.range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: space(3);
+  align-items: end;
+
+  > button {
+    grid-column: 1 / -1;
+  }
+}
+
+.error {
+  grid-column: 1 / -1;
+  color: color(danger);
+
+  @include text(body-sm);
+}
+
+// Back a period, the period, on a period: the arrows at the ends, as on the orders screen
+.periods {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  @include text(label);
+}

@@ -9,11 +9,13 @@ import { Button } from "@/shared/ui/button/button";
 import { ButtonLink } from "@/shared/ui/button/button-link";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { IconLink } from "@/shared/ui/button/icon-link";
+import { ColumnChart, type ChartColumn } from "@/shared/ui/chart/column-chart";
 import { ChipLinks } from "@/shared/ui/chip-links/chip-links";
 import { DayPicker } from "@/shared/ui/day-picker/day-picker";
 import { ConfirmDialog } from "@/shared/ui/dialog/confirm-dialog";
 import { Dialog } from "@/shared/ui/dialog/dialog";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
+import { FilterChips } from "@/shared/ui/filter-chips/filter-chips";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
   AddIcon,
@@ -35,6 +37,7 @@ import {
 import * as icons from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
+import { ListBar } from "@/shared/ui/list/list-bar";
 import { ListContent } from "@/shared/ui/list/list-content";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
@@ -47,6 +50,8 @@ import { SuggestField } from "@/shared/ui/suggest-field/suggest-field";
 import { TextArea } from "@/shared/ui/text-area/text-area";
 import { TextField } from "@/shared/ui/text-field/text-field";
 import { useToast } from "@/shared/ui/toast/use-toast";
+import { shareOf } from "@/shared/web/chart-scale";
+import { moneyText } from "@/shared/web/money-text";
 import { routes } from "@/shared/web/routes";
 
 import styles from "./gallery.module.scss";
@@ -80,6 +85,42 @@ const sampleStats = [
   { label: "Đã thu", value: "500.000đ" },
   { label: "Còn nợ", value: "400.000đ", tone: "danger" as const },
 ];
+
+const sampleHero = {
+  label: "Doanh số",
+  value: "3.325.000đ",
+  change: { text: "+12% so với tháng trước", direction: "up" as const },
+};
+
+// A week of sales, Monday first, on an axis up to 2.000.000đ
+const sampleWeek = [
+  { short: "T2", day: "Thứ Hai, 19/10", sales: 400_000, orders: 1 },
+  { short: "T3", day: "Thứ Ba, 20/10", sales: 0, orders: 0 },
+  { short: "T4", day: "Thứ Tư, 21/10", sales: 1_200_000, orders: 2 },
+  { short: "T5", day: "Thứ Năm, 22/10", sales: 650_000, orders: 1 },
+  { short: "T6", day: "Thứ Sáu, 23/10", sales: 800_000, orders: 1 },
+  { short: "T7", day: "Thứ Bảy, 24/10", sales: 275_000, orders: 1 },
+  { short: "CN", day: "Chủ Nhật, 25/10", sales: 0, orders: 0 },
+];
+
+const sampleColumns: ReadonlyArray<ChartColumn> = sampleWeek.map((each) => ({
+  key: each.short,
+  axisLabel: each.short,
+  label: each.day,
+  value: moneyText(each.sales),
+  detail: `${each.orders} đơn`,
+  share: shareOf(each.sales, 2_000_000),
+}));
+
+const sampleTicks = ["2tr", "1tr", "0"] as const;
+
+const sampleTableHeads = ["Ngày", "Doanh số", "Số đơn"] as const;
+
+const sampleFilters = [{ label: "Kim nha khoa", removeHref: routes.componentGallery }];
+
+function removeSampleFilter(label: string) {
+  return `Bỏ lọc ${label}`;
+}
 
 const sampleChips = [
   { label: "Tất cả", href: routes.componentGallery, current: true },
@@ -280,6 +321,41 @@ export function Gallery() {
               Tạo đơn
             </ButtonLink>
             <Stats label="Tháng 10/2026" items={sampleStats} />
+            <Stats label="Tháng 10/2026" hero={sampleHero} items={sampleStats} />
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="ColumnChart, ListBar, FilterChips">
+        <Sample caption="tap, drag or use the arrow keys on the plot, the table has every value; a filter in force; ranking rows, the last one not a link">
+          <div className={styles.stack}>
+            <ColumnChart
+              heading="Doanh số theo ngày"
+              columns={sampleColumns}
+              ticks={sampleTicks}
+              peak={2}
+              peakLabel="Cao nhất"
+              tableLabel="Xem dạng bảng"
+              tableHeads={sampleTableHeads}
+            />
+            <FilterChips label="Đang lọc" chips={sampleFilters} removeLabel={removeSampleFilter} />
+            <List heading="Món bán chạy" footer="Các món khác: 45.000đ">
+              <ListBar
+                title="Thuốc tê Lidocaine"
+                detail="Số lượng 3"
+                value="1.220.000đ"
+                share={100}
+                href={routes.componentGallery}
+              />
+              <ListBar
+                title="Găng tay y tế"
+                detail="Số lượng 6"
+                value="600.000đ"
+                share={49}
+                href={routes.componentGallery}
+              />
+              <ListBar title="Bông gòn" detail="Số lượng 12" value="60.000đ" share={5} />
+            </List>
           </div>
         </Sample>
       </Section>

@@ -49,6 +49,24 @@
   }
 }
 
+// A length set by data without a style attribute, which the CSP refuses: the element carries data-share="0" to "100"
+// and takes that percentage of its track
+@mixin share-steps($property) {
+  @for $step from 0 through 100 {
+    &[data-share="#{$step}"] {
+      #{$property}: $step * 1%;
+    }
+  }
+}
+
+// The small heading above a card of rows or a chart
+@mixin group-heading {
+  padding-inline: fn.space(5);
+  color: fn.color(text-muted);
+
+  @include text(body-sm);
+}
+
 @mixin tabular-nums {
   font-variant-numeric: tabular-nums;
 }

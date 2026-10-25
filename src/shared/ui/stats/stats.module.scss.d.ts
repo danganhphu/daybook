@@ -12,6 +12,7 @@ declare const hero: string;
 declare const label: string;
 declare const value: string;
 declare const heroValue: string;
+declare const change: string;
 
 declare const __default_export__: {
 	stats: typeof stats;
@@ -20,6 +21,7 @@ declare const __default_export__: {
 	label: typeof label;
 	value: typeof value;
 	heroValue: typeof heroValue;
+	change: typeof change;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3RhdHMubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsic3RhdHMubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FJQTtjQVVBO2NBQ0E7Y0FXQTtjQU1BO2NBQ0E7OztDQTdCQTtDQVVBO0NBQ0E7Q0FXQTtDQU1BO0NBQ0E7OyJ9
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3RhdHMubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsic3RhdHMubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FJQTtjQVVBO2NBQ0E7Y0FXQTtjQU1BO2NBQ0E7Y0FzQkE7OztDQW5EQTtDQVVBO0NBQ0E7Q0FXQTtDQU1BO0NBQ0E7Q0FzQkE7OyJ9

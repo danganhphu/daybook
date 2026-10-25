@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { moneyMax } from "@/shared/domain/money";
 
-import { groupedDigits, moneyText, parseMoneyInput } from "./money-text";
+import { compactMoneyText, groupedDigits, moneyText, parseMoneyInput } from "./money-text";
 
 describe("moneyText", () => {
   it.each([
@@ -17,6 +17,19 @@ describe("moneyText", () => {
 
   it("given an amount, when grouped for a field, then the đ is left off", () => {
     expect(groupedDigits(1_250_000)).toBe("1.250.000");
+  });
+});
+
+describe("compactMoneyText", () => {
+  it.each([
+    [0, "0"],
+    [500, "500đ"],
+    [500_000, "500k"],
+    [2_000_000, "2tr"],
+    [2_500_000, "2,5tr"],
+    [1_200_000_000, "1,2 tỷ"],
+  ])("given %d, when shortened for an axis, then it reads %s", (amount, text) => {
+    expect(compactMoneyText(amount)).toBe(text);
   });
 });
 

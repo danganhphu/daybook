@@ -52,3 +52,27 @@
 
   @include text(hero);
 }
+
+.change {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  margin: 0;
+  color: color(text-muted);
+
+  @include text(body-sm);
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+  }
+
+  &[data-direction="up"] {
+    color: color(accent-text);
+  }
+
+  &[data-direction="down"] {
+    color: color(danger);
+  }
+}

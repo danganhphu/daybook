@@ -9,6 +9,23 @@ export function moneyText(amount: number): string {
   return `${amount < 0 ? "-" : ""}${grouped}đ`;
 }
 
+const compactScales = [
+  { size: 1_000_000_000, suffix: " tỷ" },
+  { size: 1_000_000, suffix: "tr" },
+  { size: 1_000, suffix: "k" },
+] as const;
+
+// Money short enough for a chart's axis, as people say it: "500k", "2,5tr", "1,2 tỷ". Meant for round values; one
+// decimal at most.
+export function compactMoneyText(amount: number): string {
+  const scale = compactScales.find((each) => Math.abs(amount) >= each.size);
+  if (scale === undefined) {
+    return amount === 0 ? "0" : moneyText(amount);
+  }
+
+  return `${String(Math.round((amount / scale.size) * 10) / 10).replace(".", ",")}${scale.suffix}`;
+}
+
 // The digits of what was typed into a money field: "850.000", "850 000" and "850,000đ" are all 850000. Undefined when
 // there are none, or the number is not money.
 export function parseMoneyInput(text: string): Money | undefined {

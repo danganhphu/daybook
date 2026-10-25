@@ -129,6 +129,8 @@ import {
 import type { ReminderId } from "@/features/reminders/domain/reminder";
 import type { OpenReminderFilter } from "@/features/reminders/domain/reminder-repository";
 import { createReminderRepository } from "@/features/reminders/infrastructure/reminder-repository";
+import { readReport, type ReportRequest } from "@/features/reports/application/read-report";
+import { createReportQueries } from "@/features/reports/infrastructure/report-queries";
 import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import type { AccountId } from "@/shared/domain/account-id";
@@ -158,6 +160,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const products = createProductRepository(db);
   const orders = createOrderRepository(db);
   const orderQueries = createOrderQueries(db);
+  const reportQueries = createReportQueries(db);
   const reminders = createReminderRepository(db);
   const accounts = createAccountRepository(db);
   const ceremonies = createCeremonyRepository(db);
@@ -189,6 +192,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const customerBook = { clock, customers, kinds, startUnitOfWork };
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
+  const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
 
   return {
     recordCapture: (input: RecordCaptureInput) => recordCapture({ clock, startUnitOfWork }, input),
@@ -238,6 +242,8 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     removePayment: (input: RemovePaymentInput) => removePayment(orderBook, input),
     deleteOrder: (input: RecordChange<OrderId>) => deleteOrder(orderBook, input),
     restoreOrder: (input: RecordChange<OrderId>) => restoreOrder(orderBook, input),
+
+    readReport: (request: ReportRequest) => readReport(reports, request),
 
     getReminder: (id: ReminderId) => reminders.get(id),
     listOpenReminders: (filter: OpenReminderFilter, limit: number) =>

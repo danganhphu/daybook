@@ -149,11 +149,13 @@ React output needs svgr, last released in August 2023.
 - **Touch targets** are at least 44px (HIG, Fluent); primary actions 48px; list rows 60px; at least 8px between
   neighbours.
 - **Radius:** 14px on fields, 24px on cards, menus and toasts, and on the message field (half its 48px height, so one
-  line is a pill). Buttons, chips and icon buttons are pills or circles.
+  line is a pill). Buttons, chips and icon buttons are pills or circles. A chart's bar is round only at its data end,
+  4px (`radius(mark)`).
 - **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow. What floats over the
   page - the message field, the tab bar - takes a soft, wide shadow (`--shadow-float`). Anything that overlaps -
   popover, sheet, dialog, toast - takes the overlay shadow (Cloudscape's rule).
-- **Tab bar:** a pill floating at the bottom centre over the foot of the page, 64px tall, 88px per tab, 28px icons.
+- **Tab bar:** a pill floating at the bottom centre over the foot of the page, 64px tall, 88px per tab, 28px icons;
+  four tabs, which give up some width on a phone narrower than 392px rather than push the pill off the screen.
   The page runs under it, fading into the canvas behind the bar (`--tab-bar-fade`) and showing through the pill
   blurred (`surface-float`); under reduced transparency the pill is plain white. Only the pill is blurred, a small
   area, and the fade is a plain gradient, so scrolling stays cheap. The page keeps the bar's height as room at its end
@@ -170,6 +172,30 @@ React output needs svgr, last released in August 2023.
 - **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
 - **Sign-in and setup** put their one action at the bottom of a phone screen, at most 400px wide (`size(panel)`).
 - **Breakpoints:** mobile first; `md` from 640px, `lg` from 1024px.
+
+### Charts
+
+Drawn in HTML, with no chart library. A bar's length is a `data-share` step from 0 to 100, which `share-steps`
+turns into a percentage in SCSS, so nothing needs a `style` attribute, which the CSP refuses. Charts render on the
+server with real text, and only the column chart's picking runs in the browser. Libraries looked at (2026-10-25):
+Recharts (150 KB gzip, writes `style=""`), Chart.js (70 KB) and uPlot (22 KB, last release 03/2025) draw on canvas,
+which a screen reader cannot read; ECharts (368 KB) and ApexCharts (270 KB) are too heavy for a phone.
+
+- **Form by job.** A period's headline numbers are `Stats`, not a chart. Change over time is a column chart. A
+  ranking is rows with a bar under each (`ListBar`). A breakdown into one part is not shown at all. Two figures on
+  different bases (money in during a period, debt at its end) are never stacked into one bar.
+- **Marks.** Columns at most 24px wide and never the whole slot, so the card shows between them; round only at the
+  data end; hairline gridlines in `border`. Money is `icon-green`, the meaning it has everywhere (3.14:1 on white,
+  above the 3:1 marks need). The picked column turns `accent-text` and its slot is shaded.
+- **Axis.** It tops out at 1, 2, 4, 5 or 10 times a power of ten, so the halfway line is round too; numbers are short
+  (`500k`, `2,5tr`, `1,2 tỷ`); at most about seven columns carry a label.
+- **Reading values.** Text is in text colours, never the series colour. A readout above the plot names one column -
+  the highest until another is picked - and holds two lines whatever is picked, so nothing moves. A finger or a mouse
+  picks the column under it; the keyboard and screen readers move through the columns with a native
+  `<input type="range">`, whose value text is the column's label and value, and whose focus ring is drawn on the plot.
+  Every value is also in a table under the chart, behind "Xem dạng bảng".
+- **Change.** Against the period before, as a percentage with its sign and an arrow, green up and red down; from ten
+  times up, "Gấp 48 lần" instead of "+4653%"; nothing when the period before had nothing.
 
 ### Motion
 
@@ -213,7 +239,10 @@ change.
 | `ChipLinks` | One filter at a time: a status, a kind | A grey pill track with the current chip white on it; scrolls sideways when it does not fit. Links, so the filter is in the URL and works before scripts load |
 | `ListLink` | A row that opens a page of its own | The whole row is the link, with a chevron, an optional `icon` and `iconTone` leading it, an optional value at the end (`valueTone="danger"` for what is owed). No prefetch |
 | `PageHeader` | The top of a screen | Back on the left, the title and a subtitle, actions at the end. Without `back` it is a tab's own screen and the title is large (`display`) |
-| `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, in the accent |
+| `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, in the accent. A stat's `change` says how it moved against an earlier one, with a sign and an arrow as well as the colour |
+| `ColumnChart` | A figure over time | Columns as `data-share` steps, a readout above, a native slider for the keyboard and screen readers, a table view under it. See Charts |
+| `ListBar` | A row of a ranking | A `List` row with the figure written and a bar under it against the largest row; a link when the row narrows the screen to itself |
+| `FilterChips` | The filters in force | Green chips beside what they filter, each a link that drops it; named "Bỏ lọc ..." with the chip's own words in it |
 | `Screen` | The column a list or detail screen sits in | Content width, gutters, room at the bottom, one gap. Its single column is `minmax(0, 1fr)`, so a wide field can never push the page sideways. `wash` only on a tab's own screen |
 | `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby`. `appearance="bare"` drops its own edge and focus ring to sit inside a field that draws them, such as the message field (which uses `:focus-within`) |
 | `TextField` | One line of text, or a password | A label above, an optional `description` hint and an `error` below, both read out with the field. A password field has a show/hide button instead of a second "confirm" field (NIST 800-63B-4) |
