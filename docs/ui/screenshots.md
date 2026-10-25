@@ -15,6 +15,10 @@ customer is invented. The images live in [`docs/images/`](../images/).
 | --- | --- |
 | ![One customer: what they bought and owe, how to reach them](../images/customer.png) | ![Account, sign-in methods, devices, people, customer kinds](../images/settings.png) |
 
+| Reports | Reports, further down |
+| --- | --- |
+| ![A month's sales against the last, money in, what customers owe](../images/reports.png) | ![Sales by kind of customer and by product, each a bar](../images/reports-ranking.png) |
+
 On a desktop the tab bar stands down the side:
 
 ![The orders screen on a desktop](../images/desktop-orders.png)

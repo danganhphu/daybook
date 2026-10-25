@@ -1,0 +1,33 @@
+@use "abstracts" as *;
+
+// Green on the faint green, as a choice that is made; the cross says a tap takes it away
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  gap: space(1);
+  align-items: center;
+  min-block-size: size(chip);
+  padding-inline: space(4) space(3);
+  color: color(accent-text);
+  text-decoration: none;
+  background: color(accent-wash);
+  border-radius: radius(full);
+  touch-action: manipulation;
+
+  @include text(body-sm);
+  @include focus-ring;
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+  }
+}

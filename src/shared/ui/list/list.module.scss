@@ -8,10 +8,7 @@
 
 .heading,
 .footer {
-  padding-inline: space(5);
-  color: color(text-muted);
-
-  @include text(body-sm);
+  @include group-heading;
 }
 
 .list {
@@ -139,6 +136,18 @@
   &[data-tone="danger"] {
     color: color(danger);
   }
+}
+
+// A ranking's bar: money, so the money green, square where it starts and round at its end
+.bar {
+  display: block;
+  block-size: size(bar);
+  margin-block-start: space(2);
+  background: color(icon-green);
+  border-start-end-radius: radius(mark);
+  border-end-end-radius: radius(mark);
+
+  @include share-steps(inline-size);
 }
 
 .chevron {

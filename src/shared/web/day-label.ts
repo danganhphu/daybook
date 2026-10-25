@@ -12,6 +12,13 @@ const weekdays = [
   "Chủ Nhật",
 ] as const;
 
+const shortWeekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"] as const;
+
+// "T2" for a Monday, "CN" for a Sunday, as a calendar's column heads write them
+export function shortWeekday(day: Temporal.PlainDate): string {
+  return shortWeekdays[day.dayOfWeek - 1] ?? "";
+}
+
 // "Thứ Hai, 19/10", with the year only when it is not this one: "Thứ Tư, 31/12/2025"
 export function dayLabel(day: Temporal.PlainDate, today: Temporal.PlainDate): string {
   const date = `${day.day}/${day.month}`;

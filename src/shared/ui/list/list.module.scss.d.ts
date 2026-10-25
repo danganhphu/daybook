@@ -17,6 +17,7 @@ declare const title: string;
 declare const detail: string;
 declare const link: string;
 declare const value: string;
+declare const bar: string;
 declare const chevron: string;
 declare const content: string;
 declare const action: string;
@@ -33,9 +34,10 @@ declare const __default_export__: {
 	detail: typeof detail;
 	link: typeof link;
 	value: typeof value;
+	bar: typeof bar;
 	chevron: typeof chevron;
 	content: typeof content;
 	action: typeof action;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBT0E7Y0F1QlE7Y0FLUjtjQTRDQTtjQU1BO2NBSUE7Y0FPQTtjQTBCQTtjQVlBO2NBUUE7Y0FPQTs7O0NBM0pBO0NBS0E7Q0FDQTtDQU9BO0NBdUJRO0NBS1I7Q0E0Q0E7Q0FNQTtDQUlBO0NBT0E7Q0EwQkE7Q0FZQTtDQVFBO0NBT0E7OyJ9
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBSUE7Y0F1QlE7Y0FLUjtjQTRDQTtjQU1BO2NBSUE7Y0FPQTtjQTBCQTtjQWFBO2NBV0E7Y0FRQTtjQU9BOzs7Q0FwS0E7Q0FLQTtDQUNBO0NBSUE7Q0F1QlE7Q0FLUjtDQTRDQTtDQU1BO0NBSUE7Q0FPQTtDQTBCQTtDQWFBO0NBV0E7Q0FRQTtDQU9BOzsifQ==

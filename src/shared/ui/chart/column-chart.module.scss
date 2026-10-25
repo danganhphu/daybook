@@ -1,0 +1,194 @@
+@use "abstracts" as *;
+
+.section {
+  display: grid;
+  gap: space(2);
+}
+
+.heading {
+  @include group-heading;
+}
+
+// Positioned, so the hidden slider sits inside the card and focusing it never scrolls the page elsewhere
+.card {
+  position: relative;
+  display: grid;
+  gap: space(3);
+  padding: space(5);
+  background: color(surface);
+  border-radius: radius(surface);
+}
+
+// Two lines kept whatever is picked, so nothing below moves
+.readout {
+  display: grid;
+}
+
+.readout-label {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.readout-value {
+  @include text(label);
+  @include tabular-nums;
+}
+
+// The axis numbers in a gutter on the left, the plot beside them
+.frame {
+  display: grid;
+  grid-template-columns: size(chart-gutter) minmax(0, 1fr);
+}
+
+.ticks {
+  position: relative;
+}
+
+.tick,
+.gridline {
+  position: absolute;
+
+  &[data-place="top"] {
+    inset-block-start: 0;
+  }
+
+  &[data-place="middle"] {
+    inset-block-start: 50%;
+  }
+
+  &[data-place="bottom"] {
+    inset-block-start: 100%;
+  }
+}
+
+// Centred on its line
+.tick {
+  inset-inline-start: 0;
+  color: color(text-muted);
+  transform: translateY(-50%);
+
+  @include text(caption);
+  @include tabular-nums;
+}
+
+.gridline {
+  inset-inline: 0;
+  block-size: 1px;
+  background: color(border);
+}
+
+// A horizontal drag picks columns; a vertical one still scrolls the page
+.plot {
+  position: relative;
+  block-size: size(chart);
+  touch-action: pan-y;
+  border-radius: radius(control);
+}
+
+// The slider is unseen; its focus shows on the plot it moves through
+.card:has(.slider:focus-visible) .plot {
+  outline: 2px solid color(accent-text);
+  outline-offset: 2px;
+}
+
+.columns,
+.axis {
+  display: flex;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  > li {
+    flex: 1 1 0;
+    min-inline-size: 0;
+  }
+}
+
+.columns {
+  position: relative;
+  block-size: 100%;
+}
+
+.column {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  // The picked column's slot is shaded, so a day with nothing still shows where the pick is
+  &[data-picked] {
+    background: color(control-fill);
+
+    .mark {
+      background: color(accent-text);
+    }
+  }
+}
+
+// At most a column's width, and never the whole slot, so neighbours keep a gap of the card between them
+.mark {
+  inline-size: min(#{size(column)}, 70%);
+  background: color(icon-green);
+  border-start-start-radius: radius(mark);
+  border-start-end-radius: radius(mark);
+
+  @include share-steps(block-size);
+}
+
+.axis {
+  padding-inline-start: size(chart-gutter);
+  color: color(text-muted);
+
+  @include text(caption);
+  @include tabular-nums;
+
+  > li {
+    overflow: visible;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+.slider {
+  @include visually-hidden;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  min-block-size: size(control);
+  color: color(accent-text);
+  cursor: pointer;
+  border-radius: radius(control);
+
+  @include text(label);
+  @include focus-ring;
+}
+
+.values {
+  inline-size: 100%;
+  border-collapse: collapse;
+
+  @include text(body-sm);
+  @include tabular-nums;
+
+  th,
+  td {
+    padding-block: space(2);
+    text-align: end;
+    border-block-start: 1px solid color(border);
+  }
+
+  th:first-child {
+    text-align: start;
+  }
+
+  thead th {
+    color: color(text-muted);
+    border-block-start: 0;
+  }
+
+  tbody th {
+    font-weight: inherit;
+  }
+}

@@ -4,9 +4,9 @@ import styles from "./list.module.scss";
 
 export type ListProps = {
   // What the rows have in common, e.g. "Thiết bị"
-  readonly heading?: string;
+  readonly heading?: string | undefined;
   // One line under the card, when the rows need it explained
-  readonly footer?: string;
+  readonly footer?: string | undefined;
   // ListRow, ListAction and ListContent
   readonly children: ReactNode;
 };

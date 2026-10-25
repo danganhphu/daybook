@@ -1,7 +1,7 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
-import { dayHeading, dayLabel } from "./day-label";
+import { dayHeading, dayLabel, shortWeekday } from "./day-label";
 
 const today = Temporal.PlainDate.from("2026-10-23"); // a Friday
 
@@ -18,6 +18,16 @@ describe("dayLabel", () => {
     ["2025-12-31", "Thứ Tư, 31/12/2025"],
   ])("given %s, when labelled, then it reads %j", (date, expected) => {
     expect(dayLabel(day(date), today)).toBe(expected);
+  });
+});
+
+describe("shortWeekday", () => {
+  it("given a week from Monday, when shortened, then it reads T2 to T7, then CN", () => {
+    const monday = day("2026-10-19");
+
+    expect(
+      Array.from({ length: 7 }, (_, index) => shortWeekday(monday.add({ days: index }))),
+    ).toEqual(["T2", "T3", "T4", "T5", "T6", "T7", "CN"]);
   });
 });
 

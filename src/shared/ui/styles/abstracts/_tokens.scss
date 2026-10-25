@@ -45,6 +45,8 @@ $space: (
 // Buttons and chips are pills (`full`). `field` is half the 48px message field, so one line is a pill and more lines
 // stay a soft rectangle.
 $radius: (
+  // The data end of a chart's bar; its base stays square on the baseline
+  mark: 4px,
   control: 14px,
   surface: 24px,
   field: 24px,
@@ -120,6 +122,12 @@ $sizes: (
   chip: 36px,
   // The tallest a list of suggestions grows before it scrolls: about six rows
   suggestions: 280px,
+  // A chart over time: the plot's height, the gutter for its axis numbers, the widest a column gets
+  chart: 160px,
+  chart-gutter: 40px,
+  column: 24px,
+  // A bar under a row of a ranking
+  bar: 6px,
   toast: 360px,
   // The sign-in and setup action: one thumb's width on a phone, not a banner on a desk
   panel: 400px,

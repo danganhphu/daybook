@@ -17,7 +17,8 @@ rendered on the Worker. The Telegram bot and the cron jobs come later and will s
 ## Feature slices
 
 `src/features/` holds one folder per thing the product does - `access` (who is signing in), `capture` (words coming
-in), `notes` (the notes kept) - each in four layers:
+in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, and `reports` (a period's figures,
+reads only) - each in four layers:
 
 | Layer | Holds | Depends on |
 | --- | --- | --- |

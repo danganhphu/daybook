@@ -92,8 +92,12 @@ src/
   features/
     access/       who is signing in: accounts, passkeys, sessions, setup links, the access events
     capture/      the user's words coming in: the Capture aggregate, recordCapture
-    notes/        the notes kept: the Note aggregate, edit, delete, restore, the day's list
-                  (later: orders/, reminders/, customers/ - one folder per feature)
+    notes/        the notes kept: the Note aggregate, edit, delete, restore, the day's list, search
+    customers/    customers and the owner's kinds of customer
+    products/     what is sold, made the first time an order names it
+    orders/       the Order aggregate with its lines and payments, its change log, the order lists' reads
+    reminders/    what to do and when, for a customer or not
+    reports/      a period's figures: the period and its buckets, the aggregate reads (no writes)
   shared/
     domain/       Result, Content, the Vietnamese day
     application/  Clock, the UnitOfWork type

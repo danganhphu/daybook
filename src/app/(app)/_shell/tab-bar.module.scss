@@ -44,9 +44,12 @@
   // Above the fade
   position: relative;
   display: grid;
-  grid-auto-columns: size(tab);
+
+  // Tabs give up some width on a narrow phone rather than push the pill off the screen
+  grid-auto-columns: minmax(0, size(tab));
   grid-auto-flow: column;
   inline-size: fit-content;
+  max-inline-size: 100%;
   padding: space(1);
   margin: 0 auto;
   list-style: none;

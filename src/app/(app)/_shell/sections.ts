@@ -1,5 +1,5 @@
 import type { Icon } from "@/shared/ui/icon/icon";
-import { EditNoteIcon, GroupIcon, ReceiptLongIcon } from "@/shared/ui/icon/icons";
+import { AnalyticsIcon, EditNoteIcon, GroupIcon, ReceiptLongIcon } from "@/shared/ui/icon/icons";
 import { routes } from "@/shared/web/routes";
 
 export type Section = {
@@ -34,5 +34,11 @@ export const sections = {
     icon: GroupIcon,
     owns: (pathname) =>
       pathname === routes.customers || pathname.startsWith(`${routes.customers}/`),
+  },
+  reports: {
+    label: "Báo cáo",
+    href: routes.reports,
+    icon: AnalyticsIcon,
+    owns: (pathname) => pathname === routes.reports,
   },
 } as const satisfies Record<string, Section>;

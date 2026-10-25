@@ -11,6 +11,13 @@ What it looks like: [screenshots](docs/ui/screenshots.md).
 ## Features
 
 - **Quick capture.** Today's notes as a chat: type, send, saved at once. Edit in place, delete with one tap and Undo.
+- **History.** Any past day, and a search across every note, with or without diacritics.
+- **Customers and orders.** Customers by kind; orders with their lines, delivery and payments; what each customer
+  owes; every change to an order logged.
+- **Reminders.** What to do and when, for a customer or not; what is due sits on Today. Done with one tap and Undo.
+- **Reports.** A week, month, quarter, year or any range: sales, money in and what customers owe, against the period
+  before; sales over time, by kind of customer, by product and by customer; customers gone quiet. Tapping a product
+  or a customer narrows the whole report to it.
 - **Installable.** Adds to a phone's home screen as an app, with its own icon.
 - **Passkeys.** Sign in with Face ID or a fingerprint; a password is the fallback, hashed with Argon2id in the
   browser and checked against known breaches.

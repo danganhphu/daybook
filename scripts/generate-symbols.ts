@@ -7,7 +7,10 @@ import { getIconData, iconToSVG } from "@iconify/utils";
 // Material Symbols names, as https://fonts.google.com/icons lists them; each becomes <PascalName>Icon
 const names = [
   "add",
+  "analytics",
   "arrow-back",
+  "arrow-downward",
+  "arrow-upward",
   "calendar-month",
   "call",
   "chevron-left",
