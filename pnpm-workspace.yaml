@@ -13,6 +13,15 @@ audit:
     # braces, no fixed release: only build and lint tools match globs with it, on our own patterns
     - GHSA-vfj7-8cjw-p6xm
 
+# Security patches the packages that pull these in have not taken up yet; drop each once they do
+overrides:
+  # miniflare pins undici 7.29.1: GHSA-xjj6-f33q-929c and two moderate advisories
+  "undici@>=7.0.0 <7.30.1": 7.30.1
+  # @cloudflare/config pins zod 4.6.5: GHSA-mrhx-c7xc-m3w5
+  "zod@>=4.0.0 <4.6.6": 4.6.7
+  # ajv allows it but the lockfile holds 3.1.8; pnpm warns once ajv's range moves past it
+  "fast-uri@": 3.1.9
+
 # An app pins exact versions; the lockfile is not the only record of what runs
 savePrefix: ""
 
