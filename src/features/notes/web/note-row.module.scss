@@ -1,7 +1,8 @@
 @use "abstracts" as *;
 
 // Each note its own card, as a message is in a chat: flat white on the grey canvas.
-// The words and the menu share the first row; the time sits in the bottom-right corner, as a chat puts it.
+// The words and the menu share the first row; what the message became sits under the words; the time sits in the
+// bottom-right corner, as a chat puts it.
 .card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -30,8 +31,14 @@
   white-space: pre-wrap;
 }
 
-.time {
+.footer {
   grid-row: 2;
+  grid-column: 1;
+  min-inline-size: 0;
+}
+
+.time {
+  grid-row: 3;
   grid-column: 1 / -1;
   justify-self: end;
   padding-inline-end: space(3);

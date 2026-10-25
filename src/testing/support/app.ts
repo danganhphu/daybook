@@ -9,6 +9,7 @@ import { createAccountRepository } from "@/features/access/infrastructure/accoun
 import { peppersFrom } from "@/features/access/infrastructure/pepper-keys";
 import type { RelyingParty } from "@/features/access/infrastructure/simple-webauthn-verifier";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
+import type { MessageReader } from "@/features/reading/application/message-reader";
 import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import { accountIdSchema, type AccountId } from "@/shared/domain/account-id";
@@ -40,8 +41,9 @@ export const relyingParty: RelyingParty = {
 // A fixed pepper, so tests can compute verifiers; never the production one
 export const testPeppers = peppersFrom("dGVzdC1wZXBwZXItZm9yLWRheWJvb2stdGVzdHMtb2s");
 
-export function testApp(clock: Clock) {
-  return createApp({ db: env.DB, relyingParty, peppers: testPeppers }, clock);
+// A reader stands in for the model where a test reads notes; none, and notes stay notes
+export function testApp(clock: Clock, reader?: MessageReader) {
+  return createApp({ db: env.DB, relyingParty, peppers: testPeppers, reader }, clock);
 }
 
 export function content(text: string): Content {

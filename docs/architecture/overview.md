@@ -7,7 +7,7 @@ How the pieces fit. The rules for writing code against them are in [AGENTS.md](.
 
 ```
 Telegram (later) --webhook--+                             +-- D1 (SQLite)
-                            +--> Cloudflare Worker -------+-- Workers AI (parsing, later)
+                            +--> Cloudflare Worker -------+-- Workers AI (reading notes)
 Browser / installed PWA ----+    (vinext + the core)      +-- cron: digests (later)
 ```
 
@@ -17,8 +17,8 @@ rendered on the Worker. The Telegram bot and the cron jobs come later and will s
 ## Feature slices
 
 `src/features/` holds one folder per thing the product does - `access` (who is signing in), `capture` (words coming
-in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, and `reports` (a period's figures,
-reads only) - each in four layers:
+in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, `reading` (a message read into an
+order or a reminder), and `reports` (a period's figures, reads only) - each in four layers:
 
 | Layer | Holds | Depends on |
 | --- | --- | --- |
@@ -43,6 +43,13 @@ feature's `web/`.
 3. It calls a use case on the `App`. Expected failures come back as a `Result` with a code from the feature's closed
    set, each with the Vietnamese sentence the person sees; faults throw.
 4. Writes are queued on a unit of work and committed as one D1 batch, atomically.
+
+## Reading a note
+
+Saving a note never waits for a model. Once the note is saved, the page asks for it to be read, in a request of its
+own: the model on Workers AI returns the words of the message sorted into fields, checked by a Zod schema; the code
+matches the customer and products, and places the order or adds the reminder through the same use cases as the forms,
+in one batch with a record of the reading. The rules are in [domain.md](domain.md#reading), the reasons in ADR 0012.
 
 ## Sign-in
 

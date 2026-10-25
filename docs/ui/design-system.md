@@ -257,6 +257,11 @@ change.
   point `aria-describedby` at the sentence beneath it.
 - **Keyboard:** menus open with Enter and move with the arrow keys; Escape closes and returns focus to the trigger.
   F6 moves into the toast region, Tab reaches the toast and its action. Checked on `/dev/ui`.
+- **What a note's message became** sits under its words, inside the card and quieter than them
+  (`src/features/reading/web/note-reading.tsx`): a line that opens the order or reminder made, its kind in
+  `caption-strong` over the summary in the accent; a question with its answers as grey chips the size of filter
+  chips, a long name cut with an ellipsis rather than let out of the card; or why it could not be read, with "Đọc
+  lại" as a chip. A reading under way says so in place, as a status, never a spinner.
 - **Base UI hides a toast's close button from screen readers** (`aria-hidden`) until the toast is focused or
   expanded, but leaves it in the tab order: a button the keyboard reaches and a screen reader never names, which axe
   reports as `aria-hidden-focus`. `Toaster` sets `aria-hidden={false}` on it, so it is always a named button.

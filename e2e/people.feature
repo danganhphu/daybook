@@ -5,7 +5,7 @@ Feature: Người dùng
   # WebKit in Playwright has no passkeys, and the newcomer's first way in is one
   @chromium-only
   Scenario: Mời một người mới
-    Given tôi đã đăng nhập
+    Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt
     And tôi mời một người dùng mới
     Then tôi được hỏi "Link mời"
@@ -21,7 +21,7 @@ Feature: Người dùng
 
   @chromium-only
   Scenario: Gửi link khôi phục cho người kia
-    Given tôi đã đăng nhập
+    Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt
     And tôi tạo link khôi phục cho "Minh"
     Then tôi được hỏi "Tạo link khôi phục cho Minh"

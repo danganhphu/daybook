@@ -1,0 +1,80 @@
+@use "abstracts" as *;
+
+// Under a note's words, inside its card: what the message became, as a line that opens it; a question with its
+// answers as chips; or why it could not be read. Quieter than the words, which stay the note.
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  align-items: start;
+  padding-block-start: space(2);
+}
+
+.made {
+  display: flex;
+  gap: space(2);
+  align-items: start;
+  color: color(accent-text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+
+  @include text(body-sm);
+  @include focus-ring;
+
+  svg {
+    flex-shrink: 0;
+    inline-size: size(icon);
+    block-size: size(icon);
+  }
+}
+
+// What was made, above what it is
+.made-label {
+  display: block;
+  color: color(text-muted);
+
+  @include text(caption-strong);
+}
+
+.quiet {
+  color: color(text-muted);
+
+  @include text(body-sm);
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}
+
+// A chip, as a filter is: smaller than a button, a fair target still. A long customer name is cut, not let out of
+// the card.
+.choice {
+  display: inline-block;
+  max-inline-size: 100%;
+  padding: space(2) space(4);
+  overflow: hidden;
+  color: color(text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: color(control-fill);
+  border: 0;
+  border-radius: radius(full);
+  touch-action: manipulation;
+
+  @include text(body-sm);
+  @include focus-ring;
+
+  &:active {
+    background: color(surface-subtle);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: color(surface-subtle);
+    }
+  }
+}

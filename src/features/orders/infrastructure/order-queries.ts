@@ -15,6 +15,7 @@ import {
 import { Temporal } from "temporal-polyfill/implementation";
 import { z } from "zod";
 
+import { captureIdSchema } from "@/features/capture/domain/capture";
 import { customerIdSchema } from "@/features/customers/domain/customer";
 import { customerTable } from "@/features/customers/infrastructure/customer.table";
 import type { OrderFilter, OrderQueries } from "@/features/orders/application/order-queries";
@@ -46,6 +47,12 @@ const nameSeparator = "\u001F";
 const productNames = sql<
   string | null
 >`(select group_concat(name, char(31)) from (select ${productTable.name} as name from ${orderLineTable} join ${productTable} on ${productTable.id} = ${orderLineTable.productId} where ${orderLineTable.orderId} = ${salesOrderTable.id} order by ${orderLineTable.position}))`;
+
+// Each line as "name, quantity, unit price" joined by the record separator, the lines by the unit separator
+const fieldSeparator = "\u001E";
+const lineFields = sql<
+  string | null
+>`(select group_concat(line, char(31)) from (select ${productTable.name} || char(30) || ${orderLineTable.quantity} || char(30) || ${orderLineTable.unitPrice} as line from ${orderLineTable} join ${productTable} on ${productTable.id} = ${orderLineTable.productId} where ${orderLineTable.orderId} = ${salesOrderTable.id} order by ${orderLineTable.position}))`;
 
 const live = isNull(salesOrderTable.deletedAt);
 
@@ -202,6 +209,44 @@ export function createOrderQueries(db: Database): OrderQueries {
         before: row.before === null ? undefined : orderSnapshotSchema.parse(JSON.parse(row.before)),
         after: orderSnapshotSchema.parse(JSON.parse(row.after)),
       }));
+    },
+
+    async madeFrom(captureIds) {
+      if (captureIds.length === 0) {
+        return [];
+      }
+      const rows = await db
+        .select({
+          id: salesOrderTable.id,
+          captureId: salesOrderTable.captureId,
+          customerName: customerTable.name,
+          lines: lineFields,
+          total: orderTotal,
+        })
+        .from(salesOrderTable)
+        .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
+        .where(and(live, inArray(salesOrderTable.captureId, [...captureIds])));
+
+      return rows.flatMap((row) =>
+        row.captureId === null
+          ? []
+          : [
+              {
+                captureId: captureIdSchema.parse(row.captureId),
+                orderId: orderIdSchema.parse(row.id),
+                customerName: row.customerName,
+                total: money(row.total),
+                lines: (row.lines === null ? [] : row.lines.split(nameSeparator)).map((line) => {
+                  const [productName = "", quantity, unitPrice] = line.split(fieldSeparator);
+                  return {
+                    productName,
+                    quantity: Number(quantity),
+                    unitPrice: money(Number(unitPrice)),
+                  };
+                }),
+              },
+            ],
+      );
     },
   };
 }

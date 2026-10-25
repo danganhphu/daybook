@@ -66,6 +66,8 @@ import {
   recordCapture,
   type RecordCaptureInput,
 } from "@/features/capture/application/record-capture";
+import type { CaptureId } from "@/features/capture/domain/capture";
+import { createCaptureRepository } from "@/features/capture/infrastructure/capture-repository";
 import { addCustomer, type AddCustomerInput } from "@/features/customers/application/add-customer";
 import {
   addCustomerKind,
@@ -116,6 +118,15 @@ import { createOrderQueries } from "@/features/orders/infrastructure/order-queri
 import { createOrderRepository } from "@/features/orders/infrastructure/order-repository";
 import type { ProductId } from "@/features/products/domain/product";
 import { createProductRepository } from "@/features/products/infrastructure/product-repository";
+import {
+  answerReading,
+  type AnswerReadingInput,
+} from "@/features/reading/application/answer-reading";
+import type { MessageReader } from "@/features/reading/application/message-reader";
+import { readNote, type ReadNoteInput } from "@/features/reading/application/read-note";
+import type { ReadingDeps } from "@/features/reading/application/reading-deps";
+import { readingStates } from "@/features/reading/application/reading-states";
+import { createInterpretationRepository } from "@/features/reading/infrastructure/interpretation-repository";
 import { addReminder, type AddReminderInput } from "@/features/reminders/application/add-reminder";
 import {
   completeReminder,
@@ -143,11 +154,13 @@ import { createUnitOfWork } from "./unit-of-work";
 
 export type App = ReturnType<typeof createApp>;
 
-// What the app runs on: the database, who the passkeys belong to, and the pepper for passwords
+// What the app runs on: the database, who the passkeys belong to, the pepper for passwords, and what reads messages -
+// none where no model is bound, and then notes stay notes
 export type AppBindings = {
   readonly db: D1Database;
   readonly relyingParty: RelyingParty;
   readonly peppers: Peppers;
+  readonly reader?: MessageReader | undefined;
 };
 
 // The composition root: the one place that knows which implementation stands behind each port.
@@ -162,6 +175,8 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const orderQueries = createOrderQueries(db);
   const reportQueries = createReportQueries(db);
   const reminders = createReminderRepository(db);
+  const captures = createCaptureRepository(db);
+  const interpretations = createInterpretationRepository(db);
   const accounts = createAccountRepository(db);
   const ceremonies = createCeremonyRepository(db);
   const passkeys = createPasskeyRepository(db);
@@ -193,6 +208,18 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
   const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
+  const reading: ReadingDeps = {
+    clock,
+    reader: bindings.reader,
+    notes,
+    captures,
+    interpretations,
+    customers,
+    products,
+    orderQueries,
+    reminders,
+    startUnitOfWork,
+  };
 
   return {
     recordCapture: (input: RecordCaptureInput) => recordCapture({ clock, startUnitOfWork }, input),
@@ -254,6 +281,12 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     reopenReminder: (input: RecordChange<ReminderId>) => reopenReminder(reminderBook, input),
     deleteReminder: (input: RecordChange<ReminderId>) => deleteReminder(reminderBook, input),
     restoreReminder: (input: RecordChange<ReminderId>) => restoreReminder(reminderBook, input),
+
+    // Whether notes can be read here, so a screen offers to read again only where it can
+    canRead: () => bindings.reader !== undefined,
+    readNote: (input: ReadNoteInput) => readNote(reading, input),
+    answerReading: (input: AnswerReadingInput) => answerReading(reading, input),
+    readingStates: (captureIds: ReadonlyArray<CaptureId>) => readingStates(reading, captureIds),
 
     authenticate: (cookie: string | undefined) => authenticate(access, cookie),
     redeemSetupLink: (token: string, origin: RequestOrigin) =>

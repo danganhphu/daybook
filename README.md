@@ -11,6 +11,9 @@ What it looks like: [screenshots](docs/ui/screenshots.md).
 ## Features
 
 - **Quick capture.** Today's notes as a chat: type, send, saved at once. Edit in place, delete with one tap and Undo.
+- **Reading.** A note like "bán 2 hộp thuốc tê cho nk Hướng Dương 500k" becomes the order, and "mai gọi nk Sao Mai"
+  a reminder, a second after it is saved, with Undo. A name the customer list does not hold is asked about on the
+  note. Read by a model on Workers AI's free allowance; the model only extracts the words, the code matches them.
 - **History.** Any past day, and a search across every note, with or without diacritics.
 - **Customers and orders.** Customers by kind; orders with their lines, delivery and payments; what each customer
   owes; every change to an order logged.
@@ -26,8 +29,7 @@ What it looks like: [screenshots](docs/ui/screenshots.md).
   to confirm again.
 - **Accessible.** Every screen is checked against WCAG 2.2 AA on an iPhone, an Android phone and a desktop.
 
-**Status:** early, and not deployed yet. The Telegram bot, parsing messages into orders and reminders, and the
-first deploy come next.
+**Status:** early, and not deployed yet. The Telegram bot and the first deploy come next.
 
 ## Quick start
 
@@ -59,7 +61,7 @@ All of it: [docs/README.md](docs/README.md).
 ## Stack
 
 TypeScript 7, [vinext](https://github.com/cloudflare/vinext) (the Next.js API on Vite) on Cloudflare Workers, D1
-through Drizzle ORM, Zod, Base UI under a design system written in SCSS, SimpleWebAuthn for passkeys. Tests: Vitest
+through Drizzle ORM, Workers AI, Zod, Base UI under a design system written in SCSS, SimpleWebAuthn for passkeys. Tests: Vitest
 inside workerd, Playwright with playwright-bdd and axe. Tooling: pnpm, Oxlint, Oxfmt, Stylelint, the `cf` CLI.
 
 ## Contributing

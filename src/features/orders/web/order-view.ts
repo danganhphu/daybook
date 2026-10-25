@@ -1,3 +1,5 @@
+import type { Suggestion } from "@/shared/ui/suggest-field/suggest-field";
+
 // What the browser gets for orders: plain values that cross the server-client boundary. Days are YYYY-MM-DD,
 // money is whole đồng.
 
@@ -89,6 +91,11 @@ export type CustomerSuggestion = {
   readonly name: string;
   readonly area: string | undefined;
 };
+
+// A customer in a list of suggestions: the name, and the area that tells two of one name apart
+export function describeCustomer(customer: CustomerSuggestion): Suggestion {
+  return { key: customer.id, label: customer.name, detail: customer.area };
+}
 
 export type ProductSuggestion = {
   readonly id: string;
