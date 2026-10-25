@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { cloudflare } from "@cloudflare/vite-plugin";
@@ -14,12 +16,23 @@ const persistTo = process.env["DAYBOOK_PERSIST_TO"];
 // and serve HTTPS with a certificate made on the spot: WebKit keeps no Secure cookie over http://localhost
 const https = process.env["DAYBOOK_HTTPS"] === "1";
 
+const root = fileURLToPath(new URL(".", import.meta.url));
+
+// A class's scoped name from its module's path alone. vite-css-modules hashes the id with its query, and a dev
+// stylesheet <link> is served as "?direct", so a server component's classes missed its own stylesheet.
+function scopedName(local: string, file: string): string {
+  const relative = path.relative(root, file.split("?")[0] ?? file).replaceAll("\\", "/");
+  const hash = createHash("sha256").update(`${relative}\0${local}`).digest("hex").slice(0, 7);
+
+  return `_${local}_${hash}`;
+}
+
 export default defineConfig({
   // Passkeys are bound to the origin: a busy port is an error, not a quiet move to the next one
   server: { port: Number(new URL(developmentOrigin).port), strictPort: true },
   css: {
     // Kebab-case in SCSS, camelCase keys in TypeScript
-    modules: { localsConvention: "camelCaseOnly" },
+    modules: { localsConvention: "camelCaseOnly", generateScopedName: scopedName },
     preprocessorOptions: {
       // Lets every module write `@use "abstracts" as *;`
       scss: { loadPaths: [fileURLToPath(new URL("./src/shared/ui/styles", import.meta.url))] },
