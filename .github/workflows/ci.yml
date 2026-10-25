@@ -55,7 +55,8 @@ jobs:
       # Not cached: Playwright's docs say a restore is no faster than a download, and the Linux packages can't be cached.
       # No headless shell: the Chromium projects run real Chrome.
       - run: pnpm exec playwright install --with-deps --no-shell chromium webkit
-      - run: pnpm build
+      # The production build with a table of answers in place of Workers AI, which has no local stand-in
+      - run: pnpm build:e2e
       - run: pnpm test:e2e
 
       # Failures only: a passing run's report has nothing to look at

@@ -19,11 +19,14 @@ pnpm test:watch     # while working
 - Names read as a sentence: `given <state>, when <action>, then <outcome>`.
 - An architecture test (`src/testing/access-boundary.test.ts`) reads the source and fails when a page or server action
   does not check the session.
+- **No test calls a model** (ADR 0012). Reading is tested with a replay reader that answers from a table of messages
+  (`readerOf` in `src/testing/support/readings.ts`); the Workers AI adapter with a fake binding that answers as the
+  real one did in step 0 of the plan.
 
 ## End-to-end tests
 
 ```sh
-pnpm build
+pnpm build:e2e
 pnpm test:e2e
 ```
 
@@ -33,6 +36,9 @@ pnpm test:e2e
   (`channel: "chromium"`).
 - They test **the production build** over HTTPS on port 4173, on a database of their own in `.cloudflare/e2e-state`,
   made fresh by `e2e/serve.ts` for every run. Nothing else may hold the port.
+- **The build is made with `--mode e2e`**: the same code, without the Workers AI binding, which has no local stand-in.
+  In its place `REPLAY_READINGS` holds the answers for the messages `e2e/reading.feature` sends (`e2e/readings.ts`);
+  any other message reads as a plain note, so the other scenarios see no reading at all.
 - **The seed** (`e2e/seed.ts`) makes random rows with the app's own code: Lan signed in, sessions old enough to need
   step-up, Lan's fallback password, and setup links for Minh. The pepper is random per run.
 - Passkeys come from Chrome's virtual authenticator (`e2e/face-id.ts`), so passkey scenarios are tagged
@@ -51,7 +57,7 @@ HTML report, traces included, is kept as an artifact for 14 days.
 
 - `check`: `pnpm audit`, format, lint, typecheck, unit tests, build, and a check that the committed
   `*.module.scss.d.ts` files match what the build wrote.
-- `e2e`: installs Chromium and WebKit, builds, runs the end-to-end suite.
+- `e2e`: installs Chromium and WebKit, makes the end-to-end build, runs the end-to-end suite.
 
 Pull requests also check their title against Conventional Commits and refuse a new dependency with a known
 vulnerability.

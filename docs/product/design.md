@@ -107,7 +107,7 @@ Nothing in the model is tied to one trade; another business needs only different
 | `reminder` | what, when, done |
 | `capture` | **every message word for word**, never edited or deleted |
 | `note` | an entry in the list, made from a capture; editable, deletable, restorable |
-| `interpretation` | how a capture was parsed and how sure; parsing again adds a row |
+| `interpretation` | how a capture was read, by which model, and what came of it; reading again adds a row |
 
 `capture` matters most. It keeps exactly what was typed, even when parsing fails, so odd numbers can be traced back and
 a better parser can re-read everything. Everything derived from a message keeps its `capture_id`. Parse results live

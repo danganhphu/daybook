@@ -9,6 +9,7 @@
 declare const card: string;
 declare const editing: string;
 declare const content: string;
+declare const footer: string;
 declare const time: string;
 declare const menuSpace: string;
 
@@ -16,8 +17,9 @@ declare const __default_export__: {
 	card: typeof card;
 	editing: typeof editing;
 	content: typeof content;
+	footer: typeof footer;
 	time: typeof time;
 	menuSpace: typeof menuSpace;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZS1yb3cubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsibm90ZS1yb3cubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FJQTtjQVdBO2NBU0E7Y0FRQTtjQVlBOzs7Q0F4Q0E7Q0FXQTtDQVNBO0NBUUE7Q0FZQTs7In0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibm90ZS1yb3cubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsibm90ZS1yb3cubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FLQTtjQVdBO2NBU0E7Y0FRQTtjQU1BO2NBWUE7OztDQTlDQTtDQVdBO0NBU0E7Q0FRQTtDQU1BO0NBWUE7OyJ9

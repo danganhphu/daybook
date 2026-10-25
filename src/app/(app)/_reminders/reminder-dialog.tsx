@@ -12,7 +12,7 @@ import {
 
 import { findCustomers } from "@/app/(app)/orders/actions";
 import { addReminder, reviseReminder } from "@/app/(app)/reminders/actions";
-import type { CustomerSuggestion } from "@/features/orders/web/order-view";
+import { describeCustomer, type CustomerSuggestion } from "@/features/orders/web/order-view";
 import type { ReminderView } from "@/features/reminders/web/reminder-view";
 import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
@@ -38,12 +38,6 @@ export type ReminderDialogProps = {
   // Set and not changeable, on a customer's page
   readonly customer?: Customer | undefined;
 };
-
-const describeCustomer = (customer: CustomerSuggestion) => ({
-  key: customer.id,
-  label: customer.name,
-  detail: customer.area,
-});
 
 const suggestCustomers = (text: string) => findCustomers(text);
 

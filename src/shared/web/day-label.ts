@@ -1,17 +1,8 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-// Monday first, as Temporal numbers them (dayOfWeek 1 to 7). Written out rather than asked of Intl: the Worker's ICU
-// and a browser's do not always agree on Vietnamese dates.
-const weekdays = [
-  "Thứ Hai",
-  "Thứ Ba",
-  "Thứ Tư",
-  "Thứ Năm",
-  "Thứ Sáu",
-  "Thứ Bảy",
-  "Chủ Nhật",
-] as const;
+import { weekdayName } from "@/shared/domain/weekday";
 
+// Monday first, as Temporal numbers them
 const shortWeekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"] as const;
 
 // "T2" for a Monday, "CN" for a Sunday, as a calendar's column heads write them
@@ -23,7 +14,7 @@ export function shortWeekday(day: Temporal.PlainDate): string {
 export function dayLabel(day: Temporal.PlainDate, today: Temporal.PlainDate): string {
   const date = `${day.day}/${day.month}`;
 
-  return `${weekdays[day.dayOfWeek - 1]}, ${day.year === today.year ? date : `${date}/${day.year}`}`;
+  return `${weekdayName(day)}, ${day.year === today.year ? date : `${date}/${day.year}`}`;
 }
 
 export type DayHeading = {

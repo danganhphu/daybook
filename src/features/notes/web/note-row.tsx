@@ -1,11 +1,11 @@
 "use client";
 
-import { startTransition, useCallback, useMemo, useState } from "react";
+import { startTransition, useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
-import { DeleteIcon, EditIcon, NotificationsIcon } from "@/shared/ui/icon/icons";
+import { DeleteIcon, EditIcon, NotificationsIcon, ReceiptLongIcon } from "@/shared/ui/icon/icons";
 import { attempt } from "@/shared/web/attempt";
 
 import { NoteEditor } from "./note-editor";
@@ -23,11 +23,23 @@ export type NoteRowProps = {
   readonly onDelete: (note: NoteView) => void;
   // Opens the reminder form with the note's words
   readonly onRemind: (note: NoteView) => void;
+  // Reads a note never read into an order or a reminder, labelled as given; none where it cannot be read
+  readonly read?: { readonly label: string; readonly onRead: (note: NoteView) => void } | undefined;
+  // Beneath the words: what the note's message became
+  readonly children?: ReactNode;
 };
 
 type Editing = { readonly draft: string; readonly error?: string };
 
-export function NoteRow({ note, edit, onPending, onDelete, onRemind }: NoteRowProps) {
+export function NoteRow({
+  note,
+  edit,
+  onPending,
+  onDelete,
+  onRemind,
+  read,
+  children,
+}: NoteRowProps) {
   const [editing, setEditing] = useState<Editing>();
 
   const startEditing = useCallback(() => setEditing({ draft: note.content }), [note.content]);
@@ -56,8 +68,11 @@ export function NoteRow({ note, edit, onPending, onDelete, onRemind }: NoteRowPr
     () => [
       { label: actionLabels.edit, icon: EditIcon, onSelect: startEditing },
       { label: remindersCopy.fromNote, icon: NotificationsIcon, onSelect: () => onRemind(note) },
+      ...(read === undefined
+        ? []
+        : [{ label: read.label, icon: ReceiptLongIcon, onSelect: () => read.onRead(note) }]),
     ],
-    [note, onRemind, startEditing],
+    [note, onRemind, read, startEditing],
   );
 
   const destructive = useMemo<MenuAction>(
@@ -70,6 +85,7 @@ export function NoteRow({ note, edit, onPending, onDelete, onRemind }: NoteRowPr
       {editing === undefined ? (
         <>
           <p className={styles.content}>{note.content}</p>
+          {children === undefined ? null : <div className={styles.footer}>{children}</div>}
           <time className={styles.time} dateTime={note.createdAt}>
             {note.time}
           </time>

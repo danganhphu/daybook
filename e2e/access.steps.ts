@@ -9,6 +9,18 @@ Given("tôi đã đăng nhập", async ({ access }) => {
   await access.signIn();
 });
 
+// Signed in at the start of the scenario, not when the run began: security settings need a sign-in from the last five
+// minutes, and a whole run takes longer
+Given("tôi vừa đăng nhập bằng mật khẩu", async ({ page, context, access }) => {
+  await context.clearCookies();
+  await page.goto("/sign-in");
+  await page.getByRole("button", { name: "Dùng mật khẩu", exact: true }).click();
+  await page.getByLabel("Tên đăng nhập", { exact: true }).fill("lan");
+  await page.getByLabel("Mật khẩu", { exact: true }).fill(access.lanPassword);
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Hôm nay", level: 1 })).toBeVisible();
+});
+
 Given("tôi chưa đăng nhập", async ({ context }) => {
   await context.clearCookies();
 });

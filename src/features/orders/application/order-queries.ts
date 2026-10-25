@@ -1,5 +1,6 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
+import type { CaptureId } from "@/features/capture/domain/capture";
 import type { CustomerId } from "@/features/customers/domain/customer";
 import type { CustomerKindId } from "@/features/customers/domain/customer-kind";
 import type { OrderId } from "@/features/orders/domain/order";
@@ -49,6 +50,20 @@ export type CustomerAccount = {
   readonly lastOrderedOn: Temporal.PlainDate | undefined;
 };
 
+// A live order a message became, as the message shows it
+export type OrderMadeFrom = {
+  readonly captureId: CaptureId;
+  readonly orderId: OrderId;
+  readonly customerName: string;
+  // In line order
+  readonly lines: ReadonlyArray<{
+    readonly productName: string;
+    readonly quantity: number;
+    readonly unitPrice: Money;
+  }>;
+  readonly total: Money;
+};
+
 export type OrderQueries = {
   // Newest first, at most `limit`
   list(filter: OrderFilter, limit: number): Promise<ReadonlyArray<OrderRow>>;
@@ -63,4 +78,5 @@ export type OrderQueries = {
   ): Promise<ReadonlyMap<ProductId, Money>>;
   // Oldest first
   history(orderId: OrderId): Promise<ReadonlyArray<OrderChange>>;
+  madeFrom(captureIds: ReadonlyArray<CaptureId>): Promise<ReadonlyArray<OrderMadeFrom>>;
 };

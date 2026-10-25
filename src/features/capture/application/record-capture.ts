@@ -23,7 +23,8 @@ export type RecordCaptureInput = {
   readonly authorId: AccountId;
 };
 
-// Keeps the user's words as a capture and, until there is a parser, files them as a note - both or neither
+// Keeps the user's words as a capture and files them as a note - both or neither. Reading them into an order or a
+// reminder comes after, in a request of its own, so saving never waits for a model.
 export async function recordCapture(
   deps: RecordCaptureDeps,
   input: RecordCaptureInput,

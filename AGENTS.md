@@ -97,6 +97,7 @@ src/
     products/     what is sold, made the first time an order names it
     orders/       the Order aggregate with its lines and payments, its change log, the order lists' reads
     reminders/    what to do and when, for a customer or not
+    reading/      a message read into an order or a reminder: the Interpretation, the Workers AI reader, the answers
     reports/      a period's figures: the period and its buckets, the aggregate reads (no writes)
   shared/
     domain/       Result, Content, the Vietnamese day

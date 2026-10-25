@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, lte } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte } from "drizzle-orm";
 
 import type { LiveReminder } from "@/features/reminders/domain/reminder";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
@@ -33,6 +33,22 @@ export function createReminderRepository(db: Database): ReminderRepository {
         )
         .orderBy(asc(reminderTable.dueOn), asc(reminderTable.id))
         .limit(limit);
+
+      return rows
+        .map(toReminder)
+        .filter((reminder): reminder is LiveReminder => reminder.status === "live");
+    },
+
+    async madeFrom(captureIds) {
+      if (captureIds.length === 0) {
+        return [];
+      }
+      const rows = await db
+        .select()
+        .from(reminderTable)
+        .where(
+          and(isNull(reminderTable.deletedAt), inArray(reminderTable.captureId, [...captureIds])),
+        );
 
       return rows
         .map(toReminder)

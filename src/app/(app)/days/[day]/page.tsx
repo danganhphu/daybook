@@ -5,6 +5,7 @@ import { DayScreen } from "@/app/(app)/_day/day-screen";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { dayNotes } from "@/features/notes/web/commands";
+import { dayReadings } from "@/features/reading/web/commands";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { routes } from "@/shared/web/routes";
 
@@ -27,5 +28,7 @@ export default async function DayPage({ params }: DayPageProps) {
     redirect(routes.today);
   }
 
-  return <DayScreen view={await dayNotes(app, day.data)} />;
+  const [view, readings] = await Promise.all([dayNotes(app, day.data), dayReadings(app, day.data)]);
+
+  return <DayScreen view={view} readings={readings} />;
 }

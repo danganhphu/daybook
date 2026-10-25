@@ -6,8 +6,9 @@ Every script in `package.json`. Run them from the repository root.
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | Dev server on http://localhost:5173, on workerd, with hot reload |
+| `pnpm dev` | Dev server on http://localhost:5173, on workerd, with hot reload. Notes are read by the account's real Workers AI ([configuration](configuration.md)) |
 | `pnpm build` | Production build into `.cloudflare/output` |
+| `pnpm build:e2e` | The same build for the end-to-end tests: a table of answers in place of Workers AI |
 | `pnpm start` | Serve the production build locally; needs `APP_ORIGIN` and `PASSWORD_PEPPER` ([configuration](configuration.md)) |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`; commit the output |
 | `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx` ([icons](../ui/design-system.md#icons)); commit the output |
@@ -21,7 +22,7 @@ Every script in `package.json`. Run them from the repository root.
 | `pnpm lint` | Oxlint, type-aware, then Stylelint over every `.scss` |
 | `pnpm format` / `pnpm format:check` | Oxfmt: format, or only check |
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, once or watching |
-| `pnpm test:e2e` | Playwright on three devices, against the last `pnpm build` ([testing](testing.md)) |
+| `pnpm test:e2e` | Playwright on three devices, against the last `pnpm build:e2e` ([testing](testing.md)) |
 
 ## Database
 

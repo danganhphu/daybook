@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { findCustomers, findProducts, placeOrder, reviseOrder } from "@/app/(app)/orders/actions";
-import type { CustomerSuggestion, OrderFormView } from "@/features/orders/web/order-view";
+import {
+  describeCustomer,
+  type CustomerSuggestion,
+  type OrderFormView,
+} from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { Button } from "@/shared/ui/button/button";
@@ -29,12 +33,6 @@ function emptyLine(): LineState {
     price: "",
   };
 }
-
-const describeCustomer = (customer: CustomerSuggestion) => ({
-  key: customer.id,
-  label: customer.name,
-  detail: customer.area,
-});
 
 // The lines as the server takes them, or undefined when one is not complete. Empty lines are left out.
 function parseLines(lines: ReadonlyArray<LineState>) {

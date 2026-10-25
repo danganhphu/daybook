@@ -35,13 +35,14 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Order change | lịch sử | One entry of an order's log: who, when, what kind, and the order before and after |
 | Reminder | việc cần nhắc | Something to do on a day, for a customer or not. Done with who and when; deleted with Undo. Made from a note, it keeps that note's capture |
 | Due | đến hạn | A reminder still open whose day is today or earlier |
+| Reading | đọc tin | What a message says, in its own words: an order, a reminder or a note, the customer as written, each line's product, quantity and price as written, the day it names |
+| Interpretation | | One reading of a capture: by which model and prompt, or by a person answering, what came of it, and what it cost. Never changed; reading again adds one |
 
 Planned, not built:
 
 | Term | Meaning |
 |---|---|
-| Interpretation | How a model read a capture: what it thinks was meant, which model, how sure. Many per capture - reading again with a better model adds one, never overwrites |
-| Interaction | What an interpretation turns into, beside orders and reminders. Keeps the `capture_id` it came from |
+| Interaction | What a reading turns into, beside orders and reminders: a visit, a call. Keeps the `capture_id` it came from |
 
 ## Why a capture and a note, not one row
 
@@ -49,8 +50,8 @@ The words and the entry worked with obey different rules. As one row, editing an
 record of what was sent, and re-reading old messages with a better parser - the reason `capture` exists, see
 design.md "Data" - would read the corrections instead of the words.
 
-So the capture is the evidence and the note is the working copy. Today a note is a plain copy of the capture; once
-parsing exists, the entries shown are derived from captures the same way.
+So the capture is the evidence and the note is the working copy. The note stays the entry shown; what a reading of
+its capture made - an order, a reminder - shows beneath it.
 
 ## Capture
 
@@ -143,6 +144,41 @@ and deleted are independent states, so each Undo is one update.
 - **A new customer must be shown**, not hidden; the one a reminder already has may stay.
 - **Made from a live note**, it keeps the note's `capture_id`; from the form, it has none (decision 5).
 - **Who finished it** is kept beside when (`done_by`, approved 2026-10-23): `updated_by` changes with the next edit.
+
+## Reading
+
+`src/features/reading/`, ADR 0012. A note is read once it is saved, in a request of its own, so saving never waits for
+a model. What is read is the capture - the words as sent - as of the Vietnam day it was sent, not the note's
+current words.
+
+- **The model extracts, the code decides.** The model (`MessageReader`) returns a `Reading`, checked by the same Zod
+  schema it was asked to follow. The code matches the customer and the products, turns "500k", "1tr2" and "2 củ" into
+  money (`money-words.ts`), and checks the day.
+- **A customer is matched by the words of their name**, without the titles written before it - "chị", "anh", "nk",
+  "nha khoa" (`customer-words.ts`) - with or without accents. A name that is exactly one active customer's is them;
+  otherwise one customer holding every word is them; none or several, and an order waits for a person.
+- **An amount is a line's total** unless the message says it is for one unit, or the product's last price is nearer
+  the amount than the amount split per unit (`line-price.ts`). A line without an amount takes its last price, or 0
+  until someone fills it in. A line without a quantity is one.
+- **An order is placed through the order's own checks** (`prepareOrder`), on the day the message was sent, with its
+  `capture_id`, in the same batch as the interpretation. Refused - a product name too long, say - nothing is made and
+  the interpretation is `failed` with `refused`.
+- **A reminder is not asked about**: its customer is set only when the name is plainly one; it is due on the day the
+  reading names, or the day the message was sent when that is all it says or the named day is past or not real. Its
+  text is the message.
+- **Unsure** means an order whose customer matched nobody (`unknown`) or several (`ambiguous`, up to four offered).
+  Nothing is made until a person answers: a customer, a new customer named as written (added only with the order),
+  or "not an order". The answer is an interpretation of its own, by `person`, read from the words kept; the model is
+  not asked again.
+- **Read once.** A message is read again only after a failed reading, and answered only while unsure. Something made
+  from it, by a reading or by hand from the note, settles it too. Two requests at once cannot both make an order: the
+  database refuses an interpretation after a settled one, the batch reports it stale, and the second request answers
+  "already read".
+- **Failures are readings too**: `schema` (the answer broke the schema, on both models), `quota` (the day's 10,000
+  free Neurons are spent; they come back at 07:00 in Vietnam), `timeout`, `error`, `refused`. The note stays a note
+  and says so.
+- **What a note shows** (`readingStates`): what was made, live, before anything else; then the latest reading if it
+  is unsure or failed; `unread` for a message never read, which the note's menu offers to read.
 
 ## Reports
 
@@ -243,6 +279,9 @@ through `createApp` in `src/composition/create-app.ts`.
 | `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
 | `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
 | `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted` |
+| `readNote` | Reads a note's message and makes the order or reminder it describes, or asks, or keeps the failure | `note_unavailable`, `reader_unavailable`, `already_read` |
+| `answerReading` | Settles an unsure reading with a customer, a new customer, or as a note | `note_unavailable`, `not_asked`, `customer_unavailable`, `customer_unnamed` |
+| `readingStates` | What each of a day's notes shows about its message, in four queries | - |
 | `readReport` | A period's figures, narrowed by kind, customer or product: sales against the period before, money in, owed, sales over time, by kind, top products and customers, quiet customers | - |
 | `authenticate` | The session behind a cookie; records its use at most hourly | `unauthenticated` |
 | `redeemSetupLink` | Spends a setup link and starts a setup ceremony bound to this browser | `setup_link_unusable`, `rate_limited` |
@@ -277,8 +316,8 @@ names. A report is nine aggregate statements run together (`report-queries.ts`),
 what it is filtered to.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
-`AccessError` in `src/features/access/application/access-errors.ts` - each with the Vietnamese sentence the user
-sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
+`AccessError` in `src/features/access/application/access-errors.ts`, `ReadingError` in
+`src/features/reading/application/reading-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
 
 ## Tables
 
@@ -327,6 +366,7 @@ The book's tables, all `STRICT`, every one but the lines and the log with the au
 | `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`, `payment_no_delete` |
 | `order_change` | order, kind, who and when, before and after as JSON | known kinds; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
 | `reminder` | text, due on, customer, capture, done at and by | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither |
+| `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_no_delete`, and `interpretation_once_settled`, which refuses a row after an `order`, `reminder` or `note` one of the same capture with `stale_version` |
 
 The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets as the base64url of their SHA-256.
 Every number a `CHECK` holds - lengths, the Argon2id floor, the algorithms - is the domain's own constant, written
@@ -361,15 +401,13 @@ concurrency). Every note on screen carries its version, and every change sends i
 Either way the person sees one sentence and the page refreshes with the other change, so they decide again with the
 newer words in front of them.
 
-## Where feature 2 (parsing) attaches
+## How reading attaches
 
-- A new aggregate, `Interpretation`, in `src/features/capture/domain/` with its own table carrying `capture_id`,
-  the model, the Zod-checked result and a confidence. What it derives gets a feature of its own: `orders/`,
-  `reminders/`.
-- Recording does not change: the capture is stored first, always. Parsing runs afterwards in `ctx.waitUntil` and
-  writes the interpretation and what it derives - an order, a reminder - in one unit of work.
-- A `CaptureReceived` domain event arrives then, when a capture has two things reacting to it. With one, an event
-  would be indirection with nothing to show for it.
-- Re-parsing runs a newer model over old captures and adds interpretations. Captures are not touched.
-- Whether the note stays the entry shown, or becomes one view beside orders and reminders, is decided with
-  feature 2, against what is actually typed.
+- Recording does not change: the capture and its note are stored first, always. The page then asks for the note to
+  be read, and the bot will do the same after it answers. Reading writes the interpretation and what it made in one
+  unit of work.
+- A `CaptureReceived` domain event arrives when a capture has two things reacting to it. With one, an event would be
+  indirection with nothing to show for it.
+- Re-reading old captures with a newer model or prompt adds interpretations; the model and prompt version on each
+  row let the two be compared on the same messages first. Captures are not touched.
+- The note stays the entry shown, with what was made beneath it.
