@@ -23,6 +23,9 @@ export const orderChangeKinds = [
   "payment_removed",
   "deleted",
   "restored",
+  // A merge moved the order to the customer, or a line to the product, that was kept
+  "customer_merged",
+  "product_merged",
 ] as const;
 
 export type OrderChangeKind = (typeof orderChangeKinds)[number];

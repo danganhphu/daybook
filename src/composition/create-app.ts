@@ -75,6 +75,11 @@ import {
 } from "@/features/customers/application/add-customer-kind";
 import { archiveCustomer } from "@/features/customers/application/archive-customer";
 import { archiveCustomerKind } from "@/features/customers/application/archive-customer-kind";
+import {
+  addCustomerAlias,
+  removeCustomerAlias,
+  type AddCustomerAliasInput,
+} from "@/features/customers/application/customer-aliases";
 import { listCustomers } from "@/features/customers/application/list-customers";
 import {
   renameCustomerKind,
@@ -87,10 +92,18 @@ import {
   type ReviseCustomerInput,
 } from "@/features/customers/application/revise-customer";
 import type { CustomerId } from "@/features/customers/domain/customer";
+import type { CustomerAliasId } from "@/features/customers/domain/customer-alias";
 import type { CustomerKindId } from "@/features/customers/domain/customer-kind";
 import type { CustomerFilter } from "@/features/customers/domain/customer-repository";
 import { createCustomerKindRepository } from "@/features/customers/infrastructure/customer-kind-repository";
 import { createCustomerRepository } from "@/features/customers/infrastructure/customer-repository";
+import { mergeCustomers } from "@/features/merging/application/merge-customers";
+import {
+  customerMergePreview,
+  productMergePreview,
+} from "@/features/merging/application/merge-preview";
+import { mergeProducts } from "@/features/merging/application/merge-products";
+import type { MergeInput, MergingDeps } from "@/features/merging/application/merging-deps";
 import { deleteNote } from "@/features/notes/application/delete-note";
 import { editNote, type EditNoteInput } from "@/features/notes/application/edit-note";
 import { listNotesForDay } from "@/features/notes/application/list-notes-for-day";
@@ -116,7 +129,21 @@ import { reviseOrder, type ReviseOrderInput } from "@/features/orders/applicatio
 import type { OrderId } from "@/features/orders/domain/order";
 import { createOrderQueries } from "@/features/orders/infrastructure/order-queries";
 import { createOrderRepository } from "@/features/orders/infrastructure/order-repository";
+import { addProduct, type AddProductInput } from "@/features/products/application/add-product";
+import { archiveProduct, restoreProduct } from "@/features/products/application/archive-product";
+import { listProducts } from "@/features/products/application/list-products";
+import {
+  addProductAlias,
+  removeProductAlias,
+  type AddProductAliasInput,
+} from "@/features/products/application/product-aliases";
+import {
+  renameProduct,
+  type RenameProductInput,
+} from "@/features/products/application/rename-product";
 import type { ProductId } from "@/features/products/domain/product";
+import type { ProductAliasId } from "@/features/products/domain/product-alias";
+import type { ProductFilter } from "@/features/products/domain/product-repository";
 import { createProductRepository } from "@/features/products/infrastructure/product-repository";
 import {
   answerReading,
@@ -138,7 +165,10 @@ import {
   type ReviseReminderInput,
 } from "@/features/reminders/application/revise-reminder";
 import type { ReminderId } from "@/features/reminders/domain/reminder";
-import type { OpenReminderFilter } from "@/features/reminders/domain/reminder-repository";
+import type {
+  DoneCursor,
+  OpenReminderFilter,
+} from "@/features/reminders/domain/reminder-repository";
 import { createReminderRepository } from "@/features/reminders/infrastructure/reminder-repository";
 import { readReport, type ReportRequest } from "@/features/reports/application/read-report";
 import { createReportQueries } from "@/features/reports/infrastructure/report-queries";
@@ -205,6 +235,9 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   };
   const customerKinds = { clock, kinds, startUnitOfWork };
   const customerBook = { clock, customers, kinds, startUnitOfWork };
+  const customerNames = { clock, customers, startUnitOfWork };
+  const productBook = { clock, products, startUnitOfWork };
+  const merging: MergingDeps = { clock, customers, products, orders, reminders, startUnitOfWork };
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
   const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
@@ -230,6 +263,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     searchNotes: (term: SearchTerm) => searchNotes({ notes }, term),
     // The user's day in Vietnam by the injected clock, so it can be tested either side of midnight
     today: () => vietnamDate(clock()),
+    now: () => clock(),
 
     listCustomerKinds: () => kinds.list(),
     addCustomerKind: (input: AddCustomerKindInput) => addCustomerKind(customerKinds, input),
@@ -246,9 +280,27 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     reviseCustomer: (input: ReviseCustomerInput) => reviseCustomer(customerBook, input),
     archiveCustomer: (input: RecordChange<CustomerId>) => archiveCustomer(customerBook, input),
     restoreCustomer: (input: RecordChange<CustomerId>) => restoreCustomer(customerBook, input),
+    customerAliases: async (id: CustomerId) => (await customers.aliasesOf([id])).get(id) ?? [],
+    addCustomerAlias: (input: AddCustomerAliasInput) => addCustomerAlias(customerNames, input),
+    removeCustomerAlias: (id: CustomerAliasId) => removeCustomerAlias(customerNames, id),
 
     searchProducts: (term: SearchTerm, limit: number) => products.search(term, limit),
+    getProduct: (id: ProductId) => products.get(id),
     getProducts: (ids: ReadonlyArray<ProductId>) => products.getMany(ids),
+    listProducts: (filter: ProductFilter) => listProducts({ products }, filter),
+    productUsage: () => orderQueries.productUsage(),
+    addProduct: (input: AddProductInput) => addProduct(productBook, input),
+    renameProduct: (input: RenameProductInput) => renameProduct(productBook, input),
+    archiveProduct: (input: RecordChange<ProductId>) => archiveProduct(productBook, input),
+    restoreProduct: (input: RecordChange<ProductId>) => restoreProduct(productBook, input),
+    productAliases: (id: ProductId) => products.aliasesOf(id),
+    addProductAlias: (input: AddProductAliasInput) => addProductAlias(productBook, input),
+    removeProductAlias: (id: ProductAliasId) => removeProductAlias(productBook, id),
+
+    customerMergePreview: (from: CustomerId) => customerMergePreview(merging, from),
+    mergeCustomers: (input: MergeInput<CustomerId>) => mergeCustomers(merging, input),
+    productMergePreview: (from: ProductId) => productMergePreview(merging, from),
+    mergeProducts: (input: MergeInput<ProductId>) => mergeProducts(merging, input),
     lastPrices: (ids: ReadonlyArray<ProductId>, customerId: CustomerId | undefined) =>
       orderQueries.lastPrices(ids, customerId),
 
@@ -269,12 +321,19 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     removePayment: (input: RemovePaymentInput) => removePayment(orderBook, input),
     deleteOrder: (input: RecordChange<OrderId>) => deleteOrder(orderBook, input),
     restoreOrder: (input: RecordChange<OrderId>) => restoreOrder(orderBook, input),
+    listDeletedOrders: (since: Temporal.Instant, limit: number) =>
+      orderQueries.listDeleted(since, limit),
+    listDeletedNotes: (since: Temporal.Instant, limit: number) => notes.listDeleted(since, limit),
 
     readReport: (request: ReportRequest) => readReport(reports, request),
 
     getReminder: (id: ReminderId) => reminders.get(id),
     listOpenReminders: (filter: OpenReminderFilter, limit: number) =>
       reminders.listOpen(filter, limit),
+    listDoneReminders: (after: DoneCursor | undefined, limit: number) =>
+      reminders.listDone(after, limit),
+    listDeletedReminders: (since: Temporal.Instant, limit: number) =>
+      reminders.listDeleted(since, limit),
     addReminder: (input: AddReminderInput) => addReminder(reminderBook, input),
     reviseReminder: (input: ReviseReminderInput) => reviseReminder(reminderBook, input),
     completeReminder: (input: RecordChange<ReminderId>) => completeReminder(reminderBook, input),

@@ -1,15 +1,53 @@
-import { and, asc, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
-import type { ProductRepository } from "@/features/products/domain/product-repository";
+import type { Product } from "@/features/products/domain/product";
+import type {
+  ProductFilter,
+  ProductRepository,
+} from "@/features/products/domain/product-repository";
 import { searchText } from "@/shared/domain/search-text";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { containsLiterally } from "@/shared/infrastructure/d1/like-pattern";
 
-import { toProduct } from "./product-mapping";
+import { productAliasTable } from "./product-alias.table";
+import { toProduct, toProductAlias } from "./product-mapping";
 import { productTable } from "./product.table";
 
 export function createProductRepository(db: Database): ProductRepository {
+  async function list(filter: ProductFilter, limit: number) {
+    const words = filter.search?.split(" ") ?? [];
+    // Every word in the name, or every word in one other name of the same product
+    const found =
+      words.length === 0
+        ? undefined
+        : or(
+            and(...words.map((word) => containsLiterally(productTable.searchName, word))),
+            sql`exists (select 1 from ${productAliasTable} where ${productAliasTable.productId} = ${productTable.id} and ${and(...words.map((word) => containsLiterally(productAliasTable.searchName, word)))})`,
+          );
+    const rows = await db
+      .select()
+      .from(productTable)
+      .where(
+        and(
+          filter.status === "active"
+            ? isNull(productTable.archivedAt)
+            : isNotNull(productTable.archivedAt),
+          found,
+        ),
+      )
+      .orderBy(asc(productTable.searchName), asc(productTable.id))
+      .limit(limit);
+
+    return rows.map(toProduct);
+  }
+
   return {
+    async get(id) {
+      const [row] = await db.select().from(productTable).where(eq(productTable.id, id)).limit(1);
+
+      return row === undefined ? undefined : toProduct(row);
+    },
+
     async getMany(ids) {
       if (ids.length === 0) {
         return [];
@@ -22,37 +60,98 @@ export function createProductRepository(db: Database): ProductRepository {
       return rows.map(toProduct);
     },
 
+    // Three reads of one table each, in one round trip: no join, since a batch maps result columns by name and the
+    // two tables share several. A product's own name wins over another product's alias.
     async findActiveNamed(names) {
-      if (names.length === 0) {
-        return [];
+      const wanted = [...new Set(names.map(searchText))];
+      if (wanted.length === 0) {
+        return new Map();
       }
-      const rows = await db
-        .select()
-        .from(productTable)
-        .where(
-          and(
-            inArray(productTable.searchName, names.map(searchText)),
-            isNull(productTable.archivedAt),
+      const aliasesOfWanted = and(
+        inArray(productAliasTable.searchName, wanted),
+        inArray(
+          productAliasTable.productId,
+          db
+            .select({ id: productTable.id })
+            .from(productTable)
+            .where(isNull(productTable.archivedAt)),
+        ),
+      );
+      const [named, aliases, aliasedProducts] = await db.batch([
+        db
+          .select()
+          .from(productTable)
+          .where(and(inArray(productTable.searchName, wanted), isNull(productTable.archivedAt))),
+        db
+          .select({
+            searchName: productAliasTable.searchName,
+            productId: productAliasTable.productId,
+          })
+          .from(productAliasTable)
+          .where(aliasesOfWanted),
+        db
+          .select()
+          .from(productTable)
+          .where(
+            inArray(
+              productTable.id,
+              db
+                .select({ id: productAliasTable.productId })
+                .from(productAliasTable)
+                .where(aliasesOfWanted),
+            ),
           ),
-        );
+      ]);
 
-      return rows.map(toProduct);
+      const products = new Map(aliasedProducts.map((row) => [row.id, toProduct(row)]));
+      const byName = new Map<string, Product>();
+      for (const alias of aliases) {
+        const product = products.get(alias.productId);
+        if (product !== undefined) {
+          byName.set(alias.searchName, product);
+        }
+      }
+      for (const row of named) {
+        byName.set(row.searchName, toProduct(row));
+      }
+
+      return byName;
     },
 
-    async search(term, limit) {
+    search(term, limit) {
+      return list({ search: term, status: "active" }, limit);
+    },
+
+    list,
+
+    async aliasesOf(id) {
       const rows = await db
         .select()
-        .from(productTable)
-        .where(
-          and(
-            isNull(productTable.archivedAt),
-            ...term.split(" ").map((word) => containsLiterally(productTable.searchName, word)),
-          ),
-        )
-        .orderBy(asc(productTable.searchName))
-        .limit(limit);
+        .from(productAliasTable)
+        .where(eq(productAliasTable.productId, id))
+        .orderBy(asc(productAliasTable.createdAt), asc(productAliasTable.id));
 
-      return rows.map(toProduct);
+      return rows.map(toProductAlias);
+    },
+
+    async getAlias(id) {
+      const [row] = await db
+        .select()
+        .from(productAliasTable)
+        .where(eq(productAliasTable.id, id))
+        .limit(1);
+
+      return row === undefined ? undefined : toProductAlias(row);
+    },
+
+    async findAliasNamed(name) {
+      const [row] = await db
+        .select()
+        .from(productAliasTable)
+        .where(eq(productAliasTable.searchName, searchText(name)))
+        .limit(1);
+
+      return row === undefined ? undefined : toProductAlias(row);
     },
   };
 }

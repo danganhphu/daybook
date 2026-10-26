@@ -1,0 +1,17 @@
+@use "abstracts" as *;
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  align-items: center;
+  justify-content: space-between;
+  padding: space(3) space(4);
+  color: color(text-muted);
+  background: color(surface);
+  border-radius: radius(surface);
+
+  &[data-tone="danger"] {
+    color: color(danger);
+  }
+}

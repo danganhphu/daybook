@@ -1,5 +1,11 @@
 import { sql } from "drizzle-orm";
-import { check, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  check,
+  sqliteTable,
+  text,
+  uniqueIndex,
+  type AnySQLiteColumn,
+} from "drizzle-orm/sqlite-core";
 
 import { accountTable } from "@/features/access/infrastructure/account.table";
 import { productNameMaxLength } from "@/features/products/domain/product";
@@ -11,13 +17,15 @@ import {
 } from "@/shared/infrastructure/d1/audit-columns";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
-// "thuốc tê", "Thuốc Tê" and "thuoc te" are one product: two active products never share a search name
+// "thuốc tê", "Thuốc Tê" and "thuoc te" are one product: two active products never share a search name. A product
+// merged into another is hidden and names it; the migration's trigger refuses a merged one that is not hidden.
 export const productTable = sqliteTable(
   "product",
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     searchName: text("search_name").notNull(),
+    mergedIntoId: text("merged_into_id").references((): AnySQLiteColumn => productTable.id),
     ...auditColumns(() => accountTable.id),
     ...archivalColumns(() => accountTable.id),
   },

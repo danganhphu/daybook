@@ -14,7 +14,7 @@ export const notesCopy = {
   pickDay: "Chọn ngày",
   search: "Tìm ghi chú",
   searchPrompt: "Tìm trong mọi ghi chú",
-  searchHint: "Gõ tên khách, món hàng hay chữ bất kỳ. Gõ không dấu cũng được.",
+  searchHint: "Gõ tên khách, sản phẩm hay chữ bất kỳ. Gõ không dấu cũng được.",
   notFound: "Không tìm thấy ghi chú nào",
   notFoundHint: "Thử gõ ít chữ hơn.",
   moreFound: `Chỉ hiện ${notesSearchLimit} ghi chú gần nhất. Gõ thêm chữ để tìm trúng hơn.`,

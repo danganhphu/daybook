@@ -5,8 +5,8 @@
 A notebook for a salesperson on the move: orders, customers and follow-ups, typed the way you would text a friend.
 The usual alternative is the phone's notes app, where things get scattered and half of them forgotten.
 
-Telegram is the main way in, because chat is where the day already happens. A PWA covers the things chat is bad at -
-correcting an old entry, browsing, reading numbers off a table. Both are thin adapters over one core.
+Two equal doors, each usable alone: the web app (a PWA) does everything, and a Telegram bot is an optional way in for
+whoever lives in Telegram. Anything the bot does, the web does too. Both are thin adapters over one core.
 
 The design is in [docs/product/design.md](docs/product/design.md). Read it before proposing changes to the
 interaction model; the decisions in it have reasons attached, and several of them are deliberate reversals of the
@@ -14,12 +14,11 @@ obvious choice. [docs/README.md](docs/README.md) lists every document.
 
 ## Status
 
-Quick capture works locally: `/` is today's notes as a chat - the box at the bottom, saved the moment it is sent,
-editable in place, deleted with one tap and an Undo, and covered end to end on a phone and a desktop. It installs
-to a phone's home screen as an app (a manifest and icons; no service worker yet). Sign-in works locally: every page
-and action needs a session; a passkey (Face ID, a fingerprint) is the way in, a password the fallback; Settings
-(`/settings`) covers the account, its passkeys and password, its devices, its activity, and the people - invites and
-recovery links - with step-up for every security setting. Nothing is deployed; the first deploy is the next step.
+The web app works locally, whole: today's notes as a chat, read into orders and reminders by Workers AI; days and a
+search; customers, products (with the other names each is known by, and merging two that are one), orders with
+delivery, payments and history; reminders, open and finished; reports; what was deleted lately, to restore; and
+sign-in with passkeys, a password as the fallback, and Settings for the account, its devices and the people. It
+installs to a phone's home screen (no service worker yet). Nothing is deployed; the deploy is next, then the bot.
 
 ## Hard constraint: $0, no card
 
@@ -93,12 +92,13 @@ src/
     access/       who is signing in: accounts, passkeys, sessions, setup links, the access events
     capture/      the user's words coming in: the Capture aggregate, recordCapture
     notes/        the notes kept: the Note aggregate, edit, delete, restore, the day's list, search
-    customers/    customers and the owner's kinds of customer
-    products/     what is sold, made the first time an order names it
+    customers/    customers, the other names they are known by, and the owner's kinds of customer
+    products/     what is sold: made the first time an order names it, or added; its other names
     orders/       the Order aggregate with its lines and payments, its change log, the order lists' reads
     reminders/    what to do and when, for a customer or not
     reading/      a message read into an order or a reminder: the Interpretation, the Workers AI reader, the answers
     reports/      a period's figures: the period and its buckets, the aggregate reads (no writes)
+    merging/      two customers or two products that are one: everything moved to one, in one batch, and recorded
   shared/
     domain/       Result, Content, the Vietnamese day
     application/  Clock, the UnitOfWork type
@@ -204,9 +204,10 @@ Two people share one book and sign in with passkeys, a password being the fallba
 - **Schema change:** edit the feature's `infrastructure/*.table.ts`, run `pnpm db:generate --name <what_it_does>`, read
   the generated `migrations/<timestamp>_<name>/migration.sql`, add what Drizzle cannot emit (below), then
   `pnpm db:migrate` to apply it to the local database the dev server uses. The drizzle-kit skills cover the commands.
-- **Added by hand: `STRICT` on every table, and the triggers** that make `capture` and `access_event` append-only and
-  let a `setup_link` be redeemed once. Drizzle cannot emit either and its snapshot does not know about them, so a
-  migration that rebuilds a table drops them silently. `src/shared/infrastructure/d1/schema.test.ts` and
+- **Added by hand: `STRICT` on every table, and the triggers**: the logs and records that are append-only (`capture`,
+  `access_event`, `order_change`, `interpretation`, the merge records), a `setup_link` redeemed once, the audit
+  triggers, and a merged customer or product only while hidden. Drizzle cannot emit either and its snapshot does not
+  know about them, so a migration that rebuilds a table drops them silently. `src/shared/infrastructure/d1/schema.test.ts` and
   `src/features/access/infrastructure/access-schema.test.ts` fail when that happens. Say what was hand-edited at the
   top of the file.
 - **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank

@@ -1,6 +1,6 @@
-import { and, asc, eq, inArray, isNull, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or } from "drizzle-orm";
 
-import type { LiveReminder } from "@/features/reminders/domain/reminder";
+import type { DeletedReminder, LiveReminder } from "@/features/reminders/domain/reminder";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
@@ -37,6 +37,62 @@ export function createReminderRepository(db: Database): ReminderRepository {
       return rows
         .map(toReminder)
         .filter((reminder): reminder is LiveReminder => reminder.status === "live");
+    },
+
+    // By the partial index on (done_at, id), read backwards; a cursor rather than an offset, so a reminder reopened
+    // or finished between two pages never shifts the next one
+    async listDone(after, limit) {
+      const rows = await db
+        .select()
+        .from(reminderTable)
+        .where(
+          and(
+            isNotNull(reminderTable.doneAt),
+            isNull(reminderTable.deletedAt),
+            after === undefined
+              ? undefined
+              : or(
+                  lt(reminderTable.doneAt, after.doneAt.epochMilliseconds),
+                  and(
+                    eq(reminderTable.doneAt, after.doneAt.epochMilliseconds),
+                    lt(reminderTable.id, after.id),
+                  ),
+                ),
+          ),
+        )
+        .orderBy(desc(reminderTable.doneAt), desc(reminderTable.id))
+        .limit(limit);
+
+      return rows
+        .map(toReminder)
+        .filter((reminder): reminder is LiveReminder => reminder.status === "live");
+    },
+
+    async listDeleted(since, limit) {
+      const rows = await db
+        .select()
+        .from(reminderTable)
+        .where(
+          and(
+            isNotNull(reminderTable.deletedAt),
+            gte(reminderTable.deletedAt, since.epochMilliseconds),
+          ),
+        )
+        .orderBy(desc(reminderTable.deletedAt), desc(reminderTable.id))
+        .limit(limit);
+
+      return rows
+        .map(toReminder)
+        .filter((reminder): reminder is DeletedReminder => reminder.status === "deleted");
+    },
+
+    async forCustomer(customerId) {
+      const rows = await db
+        .select()
+        .from(reminderTable)
+        .where(eq(reminderTable.customerId, customerId));
+
+      return rows.map(toReminder);
     },
 
     async madeFrom(captureIds) {

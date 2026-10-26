@@ -1,6 +1,6 @@
 Feature: Báo cáo
-  Doanh số, tiền thu về và khách còn nợ của một kỳ; doanh số theo thời gian, theo loại khách, theo món, theo khách.
-  Chạm một món hay một khách thì cả báo cáo lọc theo đó. Các kịch bản xem ngày hôm qua, ngày chỉ có đơn có sẵn của
+  Doanh số, tiền thu về và khách còn nợ của một kỳ; doanh số theo thời gian, theo loại khách, theo sản phẩm, theo
+  khách. Chạm một sản phẩm hay một khách thì cả báo cáo lọc theo đó. Các kịch bản xem ngày hôm qua, ngày chỉ có đơn có sẵn của
   Hướng Dương, nên đơn các kịch bản khác tạo hôm nay không làm đổi số.
 
   Background:
@@ -11,12 +11,12 @@ Feature: Báo cáo
     Then báo cáo có "Doanh số" là "800.000đ"
     And báo cáo có "Thu về" là "0đ"
     And báo cáo có "Khách còn nợ" là "800.000đ"
-    And món bán chạy có "Kim nha khoa" với "800.000đ"
+    And sản phẩm bán chạy có "Kim nha khoa" với "800.000đ"
     And trang không có lỗi trợ năng
 
-  Scenario: Chạm một món để lọc, rồi bỏ lọc
+  Scenario: Chạm một sản phẩm để lọc, rồi bỏ lọc
     When tôi xem báo cáo ngày hôm qua
-    And tôi chạm "Kim nha khoa" trong món bán chạy
+    And tôi chạm "Kim nha khoa" trong sản phẩm bán chạy
     Then báo cáo đang lọc theo "Kim nha khoa"
     And báo cáo có "Số lượng" là "2"
     When tôi bỏ lọc "Kim nha khoa"

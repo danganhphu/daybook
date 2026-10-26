@@ -39,7 +39,7 @@ export const reportsCopy = {
   } satisfies Record<BucketKind, string>,
   byKind: "Theo loại khách",
   noKind: "Chưa có loại",
-  products: "Món bán chạy",
+  products: "Sản phẩm bán chạy",
   customers: "Khách mua nhiều",
   quiet: "Khách lâu không đặt",
   quietFooter: `Không có đơn nào trong ${quietAfterDays} ngày qua`,
@@ -86,5 +86,5 @@ export function daysSince(days: number): string {
 }
 
 export function restOf(what: "products" | "customers", amount: string): string {
-  return `${what === "products" ? "Các món khác" : "Các khách khác"}: ${amount}`;
+  return `${what === "products" ? "Các sản phẩm khác" : "Các khách khác"}: ${amount}`;
 }

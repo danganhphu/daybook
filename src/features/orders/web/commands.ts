@@ -8,6 +8,7 @@ import { toKindView, type KindView } from "@/features/customers/web/customer-vie
 import { clockTime } from "@/features/notes/web/note-view";
 import { orderErrorMessages, type OrderError } from "@/features/orders/application/order-errors";
 import type { LineInput, OrderInput } from "@/features/orders/application/order-input";
+import type { OrderFilter } from "@/features/orders/application/order-queries";
 import * as Orders from "@/features/orders/domain/order";
 import {
   orderIdSchema,
@@ -30,6 +31,9 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import { searchTermSchema } from "@/shared/domain/search-text";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayLabel } from "@/shared/web/day-label";
+import { moneyText } from "@/shared/web/money-text";
+import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
+import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
 
 import { monthLabel, shortDay } from "./day-text";
 import { changeText } from "./history-text";
@@ -41,6 +45,7 @@ import type {
   OrderTotalsView,
   ProductSuggestion,
 } from "./order-view";
+import { ordersCopy } from "./orders-copy";
 import { orderStatusFilters, ordersPath, type OrderStatusFilter } from "./orders-path";
 
 // The order screens' work, minus the framework: parse what the browser sent, call the app, answer with a view or the
@@ -139,15 +144,33 @@ export async function ordersScreen(
   };
 }
 
+// Earlier than any order in the book, for a list that is not about a period
+const beforeAnyOrder = Temporal.PlainDate.from("2000-01-01");
+
+export type DatedOrderRowView = OrderRowView & { readonly orderedOn: string };
+
 // The newest orders of one customer, for their page
-export async function customerOrders(
+export function customerOrders(
   app: App,
   customerId: string,
-): Promise<ReadonlyArray<OrderRowView & { readonly orderedOn: string }>> {
-  const id = customerIdSchema.parse(customerId);
-  const today = app.today();
+): Promise<ReadonlyArray<DatedOrderRowView>> {
+  return newestOrders(app, { customerId: customerIdSchema.parse(customerId) });
+}
+
+// The newest orders that sold one product, for its page
+export function productOrders(
+  app: App,
+  productId: string,
+): Promise<ReadonlyArray<DatedOrderRowView>> {
+  return newestOrders(app, { productId: productIdSchema.parse(productId) });
+}
+
+async function newestOrders(
+  app: App,
+  narrowed: Pick<OrderFilter, "customerId" | "productId">,
+): Promise<ReadonlyArray<DatedOrderRowView>> {
   const rows = await app.listOrders(
-    { from: Temporal.PlainDate.from("2000-01-01"), to: today, customerId: id },
+    { from: beforeAnyOrder, to: app.today(), ...narrowed },
     ordersListLimit,
   );
 
@@ -160,6 +183,25 @@ export async function customerOrders(
     total: row.total,
     owed: Math.max(row.total - row.paid, 0),
     delivered: row.deliveredOn !== undefined,
+  }));
+}
+
+// Orders deleted lately, for "Đã xoá gần đây"; `people` names who deleted each
+export async function deletedOrders(
+  app: App,
+  people: ReadonlyMap<AccountId, string>,
+): Promise<ReadonlyArray<DeletedRowView>> {
+  const rows = await app.listDeletedOrders(recentlyDeletedSince(app.now()), recentlyDeleted.limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    version: row.version,
+    title: row.customerName,
+    detail: [
+      `${ordersCopy.order} ${shortDay(row.orderedOn.toString())}`,
+      moneyText(row.total),
+      deletedText(row.deletedAt, people.get(row.deletedBy) ?? "?"),
+    ].join(", "),
   }));
 }
 
@@ -310,7 +352,7 @@ const orderFormSchema = z.object({
 
 export type OrderFormInput = z.input<typeof orderFormSchema>;
 
-const formRefused = "Đơn chưa đủ: cần khách, ngày, và mỗi món có tên, số lượng, giá.";
+const formRefused = "Đơn chưa đủ: cần khách, ngày, và mỗi sản phẩm có tên, số lượng, giá.";
 
 function parseOrderForm(input: unknown): Result<OrderInput, string> {
   const parsed = orderFormSchema.safeParse(input);

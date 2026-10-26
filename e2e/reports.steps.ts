@@ -56,13 +56,18 @@ Then("báo cáo có {string} là {string}", async ({ page }, label: string, valu
   await expect(term.locator("xpath=following-sibling::dd[1]")).toHaveText(value);
 });
 
-Then("món bán chạy có {string} với {string}", async ({ page }, product: string, value: string) => {
-  const row = ranking(page, "Món bán chạy").getByRole("listitem").filter({ hasText: product });
-  await expect(row).toContainText(value);
-});
+Then(
+  "sản phẩm bán chạy có {string} với {string}",
+  async ({ page }, product: string, value: string) => {
+    const row = ranking(page, "Sản phẩm bán chạy")
+      .getByRole("listitem")
+      .filter({ hasText: product });
+    await expect(row).toContainText(value);
+  },
+);
 
-When("tôi chạm {string} trong món bán chạy", async ({ page }, product: string) => {
-  await ranking(page, "Món bán chạy").getByRole("link").filter({ hasText: product }).click();
+When("tôi chạm {string} trong sản phẩm bán chạy", async ({ page }, product: string) => {
+  await ranking(page, "Sản phẩm bán chạy").getByRole("link").filter({ hasText: product }).click();
 });
 
 Then("báo cáo đang lọc theo {string}", async ({ page }, name: string) => {

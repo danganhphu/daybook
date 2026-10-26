@@ -252,7 +252,13 @@ change.
 | `Status` | The outcome of an action, in one line | An `<output>`, so a new message is read out without moving focus. Keeps its line when empty, so nothing below jumps |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
 | `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
+| `Notice` | A record's state, said first on its page: deleted, hidden, merged | One line on the surface, muted, or `tone="danger"` for something gone from where it belongs; the way back or onward (a button, a link) beside it |
+| `QuietLink` | A way to something rarely needed, under a list: the hidden customers, the next page | Muted, underlined, centred, still a full-height target; no prefetch |
 
+- **Names and merges** (`src/app/(app)/_names`, `_merge`): `OtherNames` is the card of a customer's or product's
+  other names, each removed with one tap, added through `NameDialog`, the one-field dialog that also adds and renames
+  a product. `MergeDialog` is the only change that asks before it acts, because a merge has no Undo: pick the one to
+  keep from suggestions that leave out the one being merged, then a `ConfirmDialog` that says what will move.
 - **A disabled control says why.** Pass `focusableWhenDisabled` so keyboard and screen-reader users reach it, and
   point `aria-describedby` at the sentence beneath it.
 - **Keyboard:** menus open with Enter and move with the arrow keys; Escape closes and returns focus to the trigger.

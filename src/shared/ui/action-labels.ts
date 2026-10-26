@@ -10,6 +10,7 @@ export const actionLabels = {
   edit: "Sửa",
   remove: "Xoá",
   undo: "Hoàn tác",
+  restore: "Khôi phục",
   back: "Quay lại",
   options: "Tuỳ chọn",
 } as const;

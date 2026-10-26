@@ -8,10 +8,13 @@ import type { AccountView } from "@/features/access/web/account-view";
 import type { KindView } from "@/features/customers/web/customer-view";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { IconLink } from "@/shared/ui/button/icon-link";
-import { ArrowBackIcon, LogoutIcon } from "@/shared/ui/icon/icons";
+import { iconTones } from "@/shared/ui/icon/icon-tone";
+import { ArrowBackIcon, LogoutIcon, RestoreFromTrashIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
+import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { routes } from "@/shared/web/routes";
 
 import { renameAccount, renameUsername } from "./actions";
@@ -77,6 +80,16 @@ export function SettingsScreen({
       </List>
 
       <CustomerKinds kinds={kinds} />
+
+      <List>
+        <ListLink
+          href={routes.deleted}
+          title={recentlyDeletedCopy.title}
+          detail={recentlyDeletedCopy.window}
+          icon={RestoreFromTrashIcon}
+          iconTone={iconTones.danger}
+        />
+      </List>
 
       <SignInMethods view={view} run={run} />
 

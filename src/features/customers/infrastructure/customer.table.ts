@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { check, index, sqliteTable, text, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 
 import { accountTable } from "@/features/access/infrastructure/account.table";
 import { customerLimits } from "@/features/customers/domain/customer";
@@ -14,7 +14,8 @@ import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 import { customerKindTable } from "./customer-kind.table";
 
 // Optional details are null when not given, never "". search_name is the name and the area as searches match them,
-// and orders lists by it, so "Ánh" sorts beside "Anh" rather than after "Z".
+// and orders lists by it, so "Ánh" sorts beside "Anh" rather than after "Z". A customer merged into another is
+// hidden and names it; the migration's trigger refuses a merged one that is not hidden.
 export const customerTable = sqliteTable(
   "customer",
   {
@@ -26,6 +27,7 @@ export const customerTable = sqliteTable(
     phone: text("phone"),
     address: text("address"),
     note: text("note"),
+    mergedIntoId: text("merged_into_id").references((): AnySQLiteColumn => customerTable.id),
     ...auditColumns(() => accountTable.id),
     ...archivalColumns(() => accountTable.id),
   },

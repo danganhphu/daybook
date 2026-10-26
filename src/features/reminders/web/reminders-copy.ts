@@ -12,7 +12,12 @@ export const remindersCopy = {
   customerOptional: "Không bắt buộc",
   customerUnknown: "Không có khách này. Thêm ở trang Khách hàng.",
   seeAll: "Xem tất cả việc cần nhắc",
+  open: "Đang mở",
   done: "Đã xong",
+  reopen: "Mở lại",
+  reopened: "Đã mở lại",
+  noneDone: "Chưa có việc nào xong",
+  more: "Xem thêm",
   deleted: "Đã xoá việc cần nhắc",
   empty: "Chưa có việc nào cần nhắc",
   emptyHint: "Thêm ở đây, trên trang một khách, hoặc từ menu của một ghi chú.",
@@ -26,6 +31,11 @@ export function overdueBy(days: number): string {
 
 export function markDone(text: string): string {
   return `Xong: ${text}`;
+}
+
+// Under a finished reminder: "Xong 26/10 (Lan)"
+export function doneText(day: string, by: string): string {
+  return `Xong ${day} (${by})`;
 }
 
 export function moreDue(count: number): string {

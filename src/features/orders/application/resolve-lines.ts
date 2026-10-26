@@ -16,8 +16,8 @@ export type ResolvedLines = {
   readonly created: ReadonlyArray<ActiveProduct>;
 };
 
-// Turns the form's lines into order lines. A name matching an active product, ignoring case and diacritics, is that
-// product; any other name is a new one, made once even if two lines name it.
+// Turns the form's lines into order lines. A name matching an active product's name or another name it is known by,
+// ignoring case and diacritics, is that product; any other name is a new one, made once even if two lines name it.
 export async function resolveLines(
   products: ProductRepository,
   lines: ReadonlyArray<LineInput>,
@@ -33,10 +33,7 @@ export async function resolveLines(
   }
 
   const byName = new Map<string, ProductId>(
-    (await products.findActiveNamed(names)).map((product) => [
-      searchText(product.name),
-      product.id,
-    ]),
+    [...(await products.findActiveNamed(names))].map(([name, product]) => [name, product.id]),
   );
   const created: ActiveProduct[] = [];
   for (const name of names) {

@@ -1,7 +1,8 @@
 # daybook - product design
 
 A notebook for a salesperson on the move: orders, customers and things to follow up, typed the way you would text a
-friend. A Telegram bot is the main way in; this web app, installable as a PWA, is the second. Both sit on one core.
+friend. Two doors to one core: this web app, installable as a PWA, does everything on its own, and a Telegram bot is
+an optional second way in for whoever lives in Telegram (see "Two equal doors" below).
 
 Everything runs on Cloudflare's free plan: one Worker, D1, Workers AI. Technical rules are in `AGENTS.md`, the
 interface in [the design system](../ui/design-system.md), the data model in [domain.md](../architecture/domain.md).
@@ -9,7 +10,7 @@ interface in [the design system](../ui/design-system.md), the data model in [dom
 ## The problem
 
 Forgetting, not reporting. Notes get scattered and follow-ups slip. A dashboard does not cure that - it waits to be
-opened. What cures it is the bot speaking first.
+opened. What cures it is the app speaking first, on the phone or in Telegram.
 
 ## The real competitor
 
@@ -26,7 +27,18 @@ One line: **type as if texting a person, not filling in a form for a machine.**
 - **Save first, fix later.** No confirmation step - see below.
 - **Undo is always there.** People type fast only when a mistake is cheap.
 - **Nothing to set up first.** No product catalogue to fill in; products are learned as they are typed.
-- **The bot speaks first.**
+- **The app speaks first.**
+
+## Two equal doors
+
+The first design made Telegram the main way in and the web app the second. Reversed on 2026-10-26: she may prefer
+the web app, the bot, or both, so **the web app does everything on its own** - add, edit and delete anything, orders,
+customers, products, reports - and the bot is optional. Anything the bot can do, the web can do; nothing exists only
+in the bot, and the app runs whole with no bot configured. The reasons for Telegram over Zalo still hold for the bot.
+
+The web app is therefore built and shipped first, and the bot after real use shows whether she wants it. Speaking
+first is not the bot's alone either: the morning list and the Friday summary go out through whichever channels each
+person chooses - the installed app's notifications, or Telegram once linked.
 
 ## Decision: no confirmation per message
 
@@ -37,7 +49,8 @@ unsure - a name that matches two customers.
 
 ## Conversations
 
-The bot and the app speak Vietnamese.
+The bot and the app speak Vietnamese. The examples are the bot's; the web app's Hôm nay box takes the same words and
+answers the same way, on the note.
 
 Recording an order:
 
@@ -69,9 +82,9 @@ One box takes everything; the bot sorts it:
 
 What it cannot sort is kept as a note, with [Ghi thành đơn] [Đặt nhắc nhở] [Để vậy].
 
-The bot speaks first: a morning list (follow-ups due, customers not contacted in a while) and a Friday summary (orders,
-revenue, top customers, who has gone quiet). The morning time and the "gone quiet" threshold are guesses - three weeks
-for now - and both are settings.
+The app speaks first: a morning list (follow-ups due, customers not contacted in a while) and a Friday summary
+(orders, revenue, top customers, who has gone quiet), sent through the channels each person chooses. The morning time
+and the "gone quiet" threshold are guesses - three weeks for now - and both are settings.
 
 Typing a customer's name shows their card: contact, last order, totals, notes.
 
@@ -101,7 +114,7 @@ Nothing in the model is tied to one trade; another business needs only different
 | Table | Holds |
 |---|---|
 | `customer` | customers, with the other names people use for them |
-| `product` | name, latest price; created as typed |
+| `product` | name, other names, latest price; created as typed, or added on its page |
 | `order`, `order_line` | orders and their lines |
 | `interaction` | calls, visits, messages |
 | `reminder` | what, when, done |
@@ -132,14 +145,18 @@ over a limit instead of billing. The price: Workers cannot run .NET, the first p
 
 ## The web app
 
-Not where the work happens - where it is reviewed and corrected:
+Everything, on its own (see "Two equal doors"):
 
-- the same chat box as the bot, for a desk
-- a day at a time: today to write in, earlier days to read and correct, and a search over every note that does not
-  care about diacritics
-- an order table: filter, sort, edit in bulk
-- weekly and monthly numbers
-- a page per customer
+- the same chat box as the bot: today to write in, earlier days to read and correct, and a search over every note
+  that does not care about diacritics
+- orders by month, filtered; each order's delivery, payments and history
+- a page per customer, and per product ("sản phẩm" - the trade's word, not "món"), each with the other names it is
+  known by
+- reminders, open and finished, each one tap from done or open again
+- numbers for any period, with charts
+- what was deleted in the last thirty days, after the Undo toast is gone, to restore
+- two customers, or two products, that turn out to be one: merged, with what moves said first, since a merge has no
+  Undo. The merged one's name becomes the kept one's other name, so a message calling it by that name is understood
 
 Installed to the home screen as a PWA; no app store.
 

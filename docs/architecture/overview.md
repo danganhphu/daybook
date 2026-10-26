@@ -12,13 +12,15 @@ Browser / installed PWA ----+    (vinext + the core)      +-- cron: digests (lat
 ```
 
 Everything runs in one Worker on Cloudflare's free plan. The web app is vinext - the Next.js App Router API on Vite -
-rendered on the Worker. The Telegram bot and the cron jobs come later and will share the same core.
+rendered on the Worker, and it does everything on its own. The Telegram bot, an optional second door, and the cron
+jobs come later and will share the same core.
 
 ## Feature slices
 
 `src/features/` holds one folder per thing the product does - `access` (who is signing in), `capture` (words coming
 in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, `reading` (a message read into an
-order or a reminder), and `reports` (a period's figures, reads only) - each in four layers:
+order or a reminder), `reports` (a period's figures, reads only), and `merging` (two customers or two products that
+are one) - each in four layers:
 
 | Layer | Holds | Depends on |
 | --- | --- | --- |
@@ -50,6 +52,14 @@ Saving a note never waits for a model. Once the note is saved, the page asks for
 own: the model on Workers AI returns the words of the message sorted into fields, checked by a Zod schema; the code
 matches the customer and products, and places the order or adds the reminder through the same use cases as the forms,
 in one batch with a record of the reading. The rules are in [domain.md](domain.md#reading), the reasons in ADR 0012.
+
+## Merging two that are one
+
+A merge moves every order and reminder of the customer (or every line of the product) merged away to the one kept,
+through the order's own domain functions, with a log entry per order; it hides the merged one, naming the kept one,
+turns its names into the kept one's other names, and records what moved - all in one D1 batch, whose first statements
+check both records' versions, so a change made elsewhere meanwhile aborts the lot. There is no Undo; the screen says
+what will move before it does. The rules are in [domain.md](domain.md#merging).
 
 ## Sign-in
 

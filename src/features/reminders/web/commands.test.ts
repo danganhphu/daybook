@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { reminderIdSchema } from "@/features/reminders/domain/reminder";
+import { versionSchema } from "@/shared/domain/audit";
 import { recordNote, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer } from "@/testing/support/orders";
 import { expectOk } from "@/testing/support/result";
@@ -7,10 +9,14 @@ import { expectOk } from "@/testing/support/result";
 import {
   addReminder,
   completeReminder,
+  deletedReminders,
+  doneReminders,
   dueReminders,
   remindersScreen,
   reopenReminder,
 } from "./commands";
+
+const one = versionSchema.parse(1);
 
 // 10:00 in Vietnam on Friday 23 October
 function anApp() {
@@ -126,5 +132,71 @@ describe("reminder commands", () => {
       ok: false,
       error: "Không tìm thấy việc này nữa.",
     });
+  });
+});
+
+describe("finished and deleted reminders", () => {
+  it("given reminders finished one after another, when paged, then a reminder reopened between two pages shifts nothing on the next one", async () => {
+    const time = testClock("2026-10-23T03:00:00Z");
+    const app = testApp(time.clock);
+    const by = await theAuthor();
+    const ids: string[] = [];
+    for (const [text, at] of [
+      ["Đầu tiên", "2026-10-23T04:00:00Z"],
+      ["Thứ hai", "2026-10-23T05:00:00Z"],
+      ["Thứ ba", "2026-10-23T06:00:00Z"],
+    ] as const) {
+      // oxlint-disable-next-line no-await-in-loop -- each is finished at its own time
+      const id = await added(app, text, "2026-10-23");
+      time.setTo(at);
+      // oxlint-disable-next-line no-await-in-loop -- each is finished at its own time
+      expectOk(await completeReminder(app, by, id, 1));
+      ids.push(id);
+    }
+
+    const first = await app.listDoneReminders(undefined, 2);
+    const last = first.at(-1);
+    if (last?.completion === undefined) {
+      throw new Error("The page has no finished reminder");
+    }
+    expectOk(await reopenReminder(app, by, ids[2], 2));
+    const next = await app.listDoneReminders({ doneAt: last.completion.doneAt, id: last.id }, 2);
+
+    expect(first.map((reminder) => reminder.text)).toEqual(["Thứ ba", "Thứ hai"]);
+    expect(next.map((reminder) => reminder.text)).toEqual(["Đầu tiên"]);
+  });
+
+  it("given a finished reminder for a customer, when the screen lists it, then it says when, who and for whom, with no next page", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = await aCustomer(app, "Hướng Dương");
+    const id = await added(app, "Gọi lại", "2026-10-23", customer.id);
+    expectOk(await completeReminder(app, by, id, 1));
+
+    const view = await doneReminders(app, { after: "không phải con trỏ" });
+
+    expect(view).toEqual({
+      reminders: [
+        { id, version: 2, text: "Gọi lại", detail: "Xong 23/10 (Người ghi), Hướng Dương" },
+      ],
+      nextPath: undefined,
+    });
+  });
+
+  it("given reminders deleted now and a month ago, when the recently deleted list is read, then only the recent one is there", async () => {
+    const time = testClock("2026-09-20T03:00:00Z");
+    const app = testApp(time.clock);
+    const by = await theAuthor();
+    const old = await added(app, "Xoá lâu rồi", "2026-09-20");
+    expectOk(await app.deleteReminder({ id: reminderIdSchema.parse(old), by, shown: one }));
+    time.setTo("2026-10-23T03:00:00Z");
+    const recent = await added(app, "Vừa xoá", "2026-10-23");
+    expectOk(await app.deleteReminder({ id: reminderIdSchema.parse(recent), by, shown: one }));
+
+    const rows = await deletedReminders(app, await app.displayNames());
+
+    expect(rows).toEqual([
+      { id: recent, version: 2, title: "Vừa xoá", detail: "Xoá 23/10 (Người ghi)" },
+    ]);
   });
 });

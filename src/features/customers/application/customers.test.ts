@@ -141,3 +141,42 @@ describe("customers", () => {
     expect(await names(app)).toEqual(["Nha khoa Hướng Dương"]);
   });
 });
+
+describe("other names of a customer", () => {
+  it("given a customer with another name, when searched by it, then the customer is found; the name again, or their own, is refused", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = expectOk(
+      await app.addCustomer({ by, details: details({ name: "Nha khoa Lan Anh" }) }),
+    );
+
+    expectOk(await app.addCustomerAlias({ by, customerId: customer.id, name: "chị Lan" }));
+
+    expect(await names(app, "chi lan")).toEqual(["Nha khoa Lan Anh"]);
+    expect(await app.addCustomerAlias({ by, customerId: customer.id, name: "Chị LAN" })).toEqual({
+      ok: false,
+      error: "alias_taken",
+    });
+    expect(
+      await app.addCustomerAlias({ by, customerId: customer.id, name: "nha khoa lan anh" }),
+    ).toEqual({ ok: false, error: "alias_taken" });
+  });
+
+  it("given a hidden customer, when given another name, then it is refused; a name removed is gone from the search", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = expectOk(await app.addCustomer({ by, details: details() }));
+    const alias = expectOk(
+      await app.addCustomerAlias({ by, customerId: customer.id, name: "chị Hương" }),
+    );
+
+    expectOk(await app.removeCustomerAlias(alias.id));
+    const hidden = expectOk(await app.archiveCustomer(changeOf(customer, by)));
+
+    expect(await names(app, "chi huong")).toEqual([]);
+    expect(await app.addCustomerAlias({ by, customerId: hidden.id, name: "chị Hương" })).toEqual({
+      ok: false,
+      error: "customer_archived",
+    });
+  });
+});

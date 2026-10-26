@@ -142,3 +142,22 @@ Then("việc {string} ghi {string}", async ({ page }, text: string, due: string)
 Then("Hôm nay nhắc {string}", async ({ page }, text: string) => {
   await expect(page.getByRole("region", { name: title })).toContainText(text);
 });
+
+When("tôi xem việc đã xong", async ({ page }) => {
+  await openReminders(page);
+  const chip = page.getByRole("link", { name: "Đã xong", exact: true });
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-current", "page");
+});
+
+// Other runs on the same book may have finished one of the same words; any of them will do
+Then("có việc đã xong {string}", async ({ page }, text: string) => {
+  await expect(reminderRow(page, text).first()).toContainText("Xong");
+});
+
+When("tôi mở lại việc {string}", async ({ page }, text: string) => {
+  await reminderRow(page, text)
+    .first()
+    .getByRole("button", { name: "Mở lại", exact: true })
+    .click();
+});

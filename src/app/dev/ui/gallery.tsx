@@ -41,7 +41,9 @@ import { ListBar } from "@/shared/ui/list/list-bar";
 import { ListContent } from "@/shared/ui/list/list-content";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { Notice } from "@/shared/ui/notice/notice";
 import { PageHeader } from "@/shared/ui/page-header/page-header";
+import { QuietLink } from "@/shared/ui/quiet-link/quiet-link";
 import { SearchField } from "@/shared/ui/search-field/search-field";
 import { SelectField } from "@/shared/ui/select-field/select-field";
 import { Stats } from "@/shared/ui/stats/stats";
@@ -339,7 +341,7 @@ export function Gallery() {
               tableHeads={sampleTableHeads}
             />
             <FilterChips label="Đang lọc" chips={sampleFilters} removeLabel={removeSampleFilter} />
-            <List heading="Món bán chạy" footer="Các món khác: 45.000đ">
+            <List heading="Sản phẩm bán chạy" footer="Các sản phẩm khác: 45.000đ">
               <ListBar
                 title="Thuốc tê Lidocaine"
                 detail="Số lượng 3"
@@ -381,14 +383,14 @@ export function Gallery() {
       <Section title="SuggestField">
         <Sample caption="free text, with suggestions as it is typed (try thuoc); nothing found is said under it">
           <SuggestField
-            label="Món hàng"
+            label="Sản phẩm"
             value={sampleProduct}
             onValueChange={setSampleProduct}
             suggest={suggestSamples}
             describe={describeSample}
             onPick={pickSample}
-            placeholder="Gõ tên hàng"
-            emptyText="Món mới, sẽ được thêm khi lưu đơn."
+            placeholder="Gõ tên sản phẩm"
+            emptyText="Sản phẩm mới, sẽ được thêm khi lưu đơn."
           />
         </Sample>
       </Section>
@@ -533,6 +535,32 @@ export function Gallery() {
           <div className={styles.block}>
             <Status message="Đã huỷ." />
             <Status message="Sai tên đăng nhập hoặc mật khẩu." tone="danger" />
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="Notice">
+        <Sample caption="a record's state, first on its page; muted, with the way onward">
+          <div className={styles.block}>
+            <Notice message="Sản phẩm này đã gộp vào sản phẩm khác.">
+              <ButtonLink href="#notice">Xem bản giữ lại</ButtonLink>
+            </Notice>
+          </div>
+        </Sample>
+        <Sample caption="danger, with the way back; and alone">
+          <div className={styles.block}>
+            <Notice message="Đơn này đã bị xoá." tone="danger">
+              <Button>Khôi phục</Button>
+            </Notice>
+            <Notice message="Sản phẩm này đang ẩn: không hiện khi ghi đơn, đơn cũ vẫn giữ." />
+          </div>
+        </Sample>
+      </Section>
+
+      <Section title="QuietLink">
+        <Sample caption="something rarely needed, centred under a list">
+          <div className={styles.block}>
+            <QuietLink href="#quiet-link">Khách đã ẩn</QuietLink>
           </div>
         </Sample>
       </Section>

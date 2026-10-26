@@ -1,6 +1,6 @@
-import { and, desc, eq, gte, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lt } from "drizzle-orm";
 
-import type { LiveNote } from "@/features/notes/domain/note";
+import type { DeletedNote, LiveNote } from "@/features/notes/domain/note";
 import type { NoteRepository } from "@/features/notes/domain/note-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { containsLiterally } from "@/shared/infrastructure/d1/like-pattern";
@@ -52,6 +52,19 @@ export function createNoteRepository(db: Database): NoteRepository {
         .limit(limit);
 
       return onlyLive(rows);
+    },
+
+    async listDeleted(since, limit) {
+      const rows = await db
+        .select()
+        .from(noteTable)
+        .where(
+          and(isNotNull(noteTable.deletedAt), gte(noteTable.deletedAt, since.epochMilliseconds)),
+        )
+        .orderBy(desc(noteTable.deletedAt), desc(noteTable.id))
+        .limit(limit);
+
+      return rows.map(toNote).filter((note): note is DeletedNote => note.status === "deleted");
     },
   };
 }

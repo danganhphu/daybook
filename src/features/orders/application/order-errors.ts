@@ -19,5 +19,5 @@ export const orderErrorMessages = {
   payment_not_found: "Không tìm thấy lần thu tiền này nữa.",
   delivered_before_ordered: "Ngày giao không thể trước ngày đặt.",
   customer_unavailable: "Khách này không còn trong danh sách.",
-  product_not_found: "Không tìm thấy món hàng này nữa.",
+  product_not_found: "Không tìm thấy sản phẩm này nữa.",
 } as const satisfies Record<OrderError, string>;

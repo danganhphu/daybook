@@ -1,0 +1,3883 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "f4a43828-82c2-455c-b7e6-9f9d62eca369",
+  "prevIds": ["f8837411-425d-4f65-944c-69cab366bd53"],
+  "ddl": [
+    {
+      "name": "access_event",
+      "entityType": "tables"
+    },
+    {
+      "name": "account",
+      "entityType": "tables"
+    },
+    {
+      "name": "ceremony",
+      "entityType": "tables"
+    },
+    {
+      "name": "passkey",
+      "entityType": "tables"
+    },
+    {
+      "name": "password",
+      "entityType": "tables"
+    },
+    {
+      "name": "rate_limit",
+      "entityType": "tables"
+    },
+    {
+      "name": "session",
+      "entityType": "tables"
+    },
+    {
+      "name": "setup_link",
+      "entityType": "tables"
+    },
+    {
+      "name": "capture",
+      "entityType": "tables"
+    },
+    {
+      "name": "customer_alias",
+      "entityType": "tables"
+    },
+    {
+      "name": "customer_kind",
+      "entityType": "tables"
+    },
+    {
+      "name": "customer",
+      "entityType": "tables"
+    },
+    {
+      "name": "customer_merge",
+      "entityType": "tables"
+    },
+    {
+      "name": "product_merge",
+      "entityType": "tables"
+    },
+    {
+      "name": "note",
+      "entityType": "tables"
+    },
+    {
+      "name": "order_change",
+      "entityType": "tables"
+    },
+    {
+      "name": "order_line",
+      "entityType": "tables"
+    },
+    {
+      "name": "payment",
+      "entityType": "tables"
+    },
+    {
+      "name": "sales_order",
+      "entityType": "tables"
+    },
+    {
+      "name": "product_alias",
+      "entityType": "tables"
+    },
+    {
+      "name": "product",
+      "entityType": "tables"
+    },
+    {
+      "name": "interpretation",
+      "entityType": "tables"
+    },
+    {
+      "name": "reminder",
+      "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "occurred_at",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "actor_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "passkey_id",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ip",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "device_label",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "detail",
+      "entityType": "columns",
+      "table": "access_event"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "username",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "webauthn_user_handle",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "account"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "binding_hash",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "setup_link_id",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "challenge",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "salt",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "ceremony"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "credential_id",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "public_key",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "algorithm",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sign_count",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "transports",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "aaguid",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "backup_eligible",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "backed_up",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_used_at",
+      "entityType": "columns",
+      "table": "passkey"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "salt",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "argon2_memory_kib",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "argon2_iterations",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "argon2_parallelism",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verifier",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pepper_version",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "consecutive_failures",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "locked_at",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "changed_at",
+      "entityType": "columns",
+      "table": "password"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "key",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "window_start",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "hits",
+      "entityType": "columns",
+      "table": "rate_limit"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "verifier",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "method",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "passkey_id",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "authenticated_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "device_label",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "purpose",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "account_id",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "token_hash",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "expires_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "redeemed_at",
+      "entityType": "columns",
+      "table": "setup_link"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "author_id",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "received_at",
+      "entityType": "columns",
+      "table": "capture"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "customer_id",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_name",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "customer_alias"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_name",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "position",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_at",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_by",
+      "entityType": "columns",
+      "table": "customer_kind"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_name",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind_id",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "area",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phone",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "address",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "note",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_into_id",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_at",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_by",
+      "entityType": "columns",
+      "table": "customer"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "from_id",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "into_id",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "moved",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_at",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_by",
+      "entityType": "columns",
+      "table": "customer_merge"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "from_id",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "into_id",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "moved",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_at",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_by",
+      "entityType": "columns",
+      "table": "product_merge"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "content",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_text",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_by",
+      "entityType": "columns",
+      "table": "note"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "kind",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "changed_at",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "changed_by",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "before",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "after",
+      "entityType": "columns",
+      "table": "order_change"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "table": "order_line"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "position",
+      "entityType": "columns",
+      "table": "order_line"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "product_id",
+      "entityType": "columns",
+      "table": "order_line"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quantity",
+      "entityType": "columns",
+      "table": "order_line"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "unit_price",
+      "entityType": "columns",
+      "table": "order_line"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "amount",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "paid_on",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "method",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "note",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "recorded_at",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "recorded_by",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_by",
+      "entityType": "columns",
+      "table": "payment"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "customer_id",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "ordered_on",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "delivered_on",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "note",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_by",
+      "entityType": "columns",
+      "table": "sales_order"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "product_id",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_name",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "product_alias"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "search_name",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "merged_into_id",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_at",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "archived_by",
+      "entityType": "columns",
+      "table": "product"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "prompt_version",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "outcome",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "result",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "failure",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "real",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "neurons",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "read_at",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "read_by",
+      "entityType": "columns",
+      "table": "interpretation"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "capture_id",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "text",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "due_on",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "customer_id",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "done_at",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "done_by",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "updated_by",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "version",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "deleted_by",
+      "entityType": "columns",
+      "table": "reminder"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_access_event_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "access_event"
+    },
+    {
+      "columns": ["actor_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_access_event_actor_id_account_id_fk",
+      "entityType": "fks",
+      "table": "access_event"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_ceremony_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "ceremony"
+    },
+    {
+      "columns": ["setup_link_id"],
+      "tableTo": "setup_link",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_ceremony_setup_link_id_setup_link_id_fk",
+      "entityType": "fks",
+      "table": "ceremony"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_passkey_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "passkey"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_password_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "password"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_session_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "session"
+    },
+    {
+      "columns": ["passkey_id"],
+      "tableTo": "passkey",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "nameExplicit": false,
+      "name": "fk_session_passkey_id_passkey_id_fk",
+      "entityType": "fks",
+      "table": "session"
+    },
+    {
+      "columns": ["account_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_setup_link_account_id_account_id_fk",
+      "entityType": "fks",
+      "table": "setup_link"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_setup_link_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "setup_link"
+    },
+    {
+      "columns": ["author_id"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_capture_author_id_account_id_fk",
+      "entityType": "fks",
+      "table": "capture"
+    },
+    {
+      "columns": ["customer_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_alias_customer_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "customer_alias"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_alias_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer_alias"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_kind_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer_kind"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_kind_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer_kind"
+    },
+    {
+      "columns": ["archived_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_kind_archived_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer_kind"
+    },
+    {
+      "columns": ["kind_id"],
+      "tableTo": "customer_kind",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_kind_id_customer_kind_id_fk",
+      "entityType": "fks",
+      "table": "customer"
+    },
+    {
+      "columns": ["merged_into_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_merged_into_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "customer"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer"
+    },
+    {
+      "columns": ["archived_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_archived_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer"
+    },
+    {
+      "columns": ["from_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_merge_from_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "customer_merge"
+    },
+    {
+      "columns": ["into_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_merge_into_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "customer_merge"
+    },
+    {
+      "columns": ["merged_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_customer_merge_merged_by_account_id_fk",
+      "entityType": "fks",
+      "table": "customer_merge"
+    },
+    {
+      "columns": ["from_id"],
+      "tableTo": "product",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_merge_from_id_product_id_fk",
+      "entityType": "fks",
+      "table": "product_merge"
+    },
+    {
+      "columns": ["into_id"],
+      "tableTo": "product",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_merge_into_id_product_id_fk",
+      "entityType": "fks",
+      "table": "product_merge"
+    },
+    {
+      "columns": ["merged_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_merge_merged_by_account_id_fk",
+      "entityType": "fks",
+      "table": "product_merge"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["deleted_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_note_deleted_by_account_id_fk",
+      "entityType": "fks",
+      "table": "note"
+    },
+    {
+      "columns": ["order_id"],
+      "tableTo": "sales_order",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_order_change_order_id_sales_order_id_fk",
+      "entityType": "fks",
+      "table": "order_change"
+    },
+    {
+      "columns": ["changed_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_order_change_changed_by_account_id_fk",
+      "entityType": "fks",
+      "table": "order_change"
+    },
+    {
+      "columns": ["order_id"],
+      "tableTo": "sales_order",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_order_line_order_id_sales_order_id_fk",
+      "entityType": "fks",
+      "table": "order_line"
+    },
+    {
+      "columns": ["product_id"],
+      "tableTo": "product",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_order_line_product_id_product_id_fk",
+      "entityType": "fks",
+      "table": "order_line"
+    },
+    {
+      "columns": ["order_id"],
+      "tableTo": "sales_order",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_payment_order_id_sales_order_id_fk",
+      "entityType": "fks",
+      "table": "payment"
+    },
+    {
+      "columns": ["recorded_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_payment_recorded_by_account_id_fk",
+      "entityType": "fks",
+      "table": "payment"
+    },
+    {
+      "columns": ["deleted_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_payment_deleted_by_account_id_fk",
+      "entityType": "fks",
+      "table": "payment"
+    },
+    {
+      "columns": ["customer_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_sales_order_customer_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "sales_order"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_sales_order_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "sales_order"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_sales_order_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "sales_order"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_sales_order_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "sales_order"
+    },
+    {
+      "columns": ["deleted_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_sales_order_deleted_by_account_id_fk",
+      "entityType": "fks",
+      "table": "sales_order"
+    },
+    {
+      "columns": ["product_id"],
+      "tableTo": "product",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_alias_product_id_product_id_fk",
+      "entityType": "fks",
+      "table": "product_alias"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_alias_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "product_alias"
+    },
+    {
+      "columns": ["merged_into_id"],
+      "tableTo": "product",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_merged_into_id_product_id_fk",
+      "entityType": "fks",
+      "table": "product"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "product"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "product"
+    },
+    {
+      "columns": ["archived_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_product_archived_by_account_id_fk",
+      "entityType": "fks",
+      "table": "product"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_interpretation_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "interpretation"
+    },
+    {
+      "columns": ["read_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_interpretation_read_by_account_id_fk",
+      "entityType": "fks",
+      "table": "interpretation"
+    },
+    {
+      "columns": ["capture_id"],
+      "tableTo": "capture",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_capture_id_capture_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["customer_id"],
+      "tableTo": "customer",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_customer_id_customer_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["done_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_done_by_account_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["created_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_created_by_account_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["updated_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_updated_by_account_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["deleted_by"],
+      "tableTo": "account",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "nameExplicit": false,
+      "name": "fk_reminder_deleted_by_account_id_fk",
+      "entityType": "fks",
+      "table": "reminder"
+    },
+    {
+      "columns": ["key", "window_start"],
+      "nameExplicit": false,
+      "name": "rate_limit_pk",
+      "entityType": "pks",
+      "table": "rate_limit"
+    },
+    {
+      "columns": ["order_id", "position"],
+      "nameExplicit": false,
+      "name": "order_line_pk",
+      "entityType": "pks",
+      "table": "order_line"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "access_event_pk",
+      "table": "access_event",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "account_pk",
+      "table": "account",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "ceremony_pk",
+      "table": "ceremony",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "passkey_pk",
+      "table": "passkey",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["account_id"],
+      "nameExplicit": false,
+      "name": "password_pk",
+      "table": "password",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "session_pk",
+      "table": "session",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "setup_link_pk",
+      "table": "setup_link",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "capture_pk",
+      "table": "capture",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "customer_alias_pk",
+      "table": "customer_alias",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "customer_kind_pk",
+      "table": "customer_kind",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "customer_pk",
+      "table": "customer",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "customer_merge_pk",
+      "table": "customer_merge",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "product_merge_pk",
+      "table": "product_merge",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "note_pk",
+      "table": "note",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "order_change_pk",
+      "table": "order_change",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "payment_pk",
+      "table": "payment",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "sales_order_pk",
+      "table": "sales_order",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "product_alias_pk",
+      "table": "product_alias",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "product_pk",
+      "table": "product",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "interpretation_pk",
+      "table": "interpretation",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "reminder_pk",
+      "table": "reminder",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        },
+        {
+          "value": "occurred_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "access_event_by_account",
+      "entityType": "indexes",
+      "table": "access_event"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "passkey_by_account",
+      "entityType": "indexes",
+      "table": "passkey"
+    },
+    {
+      "columns": [
+        {
+          "value": "account_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_by_account",
+      "entityType": "indexes",
+      "table": "session"
+    },
+    {
+      "columns": [
+        {
+          "value": "customer_id",
+          "isExpression": false
+        },
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "customer_alias_per_customer",
+      "entityType": "indexes",
+      "table": "customer_alias"
+    },
+    {
+      "columns": [
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "customer_alias_by_name",
+      "entityType": "indexes",
+      "table": "customer_alias"
+    },
+    {
+      "columns": [
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": "\"customer_kind\".\"archived_at\" is null",
+      "origin": "manual",
+      "name": "customer_kind_active_name",
+      "entityType": "indexes",
+      "table": "customer_kind"
+    },
+    {
+      "columns": [
+        {
+          "value": "position",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "customer_kind_by_position",
+      "entityType": "indexes",
+      "table": "customer_kind"
+    },
+    {
+      "columns": [
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"customer\".\"archived_at\" is null",
+      "origin": "manual",
+      "name": "customer_active_by_name",
+      "entityType": "indexes",
+      "table": "customer"
+    },
+    {
+      "columns": [
+        {
+          "value": "kind_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "customer_by_kind",
+      "entityType": "indexes",
+      "table": "customer"
+    },
+    {
+      "columns": [
+        {
+          "value": "into_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "customer_merge_by_into",
+      "entityType": "indexes",
+      "table": "customer_merge"
+    },
+    {
+      "columns": [
+        {
+          "value": "into_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "product_merge_by_into",
+      "entityType": "indexes",
+      "table": "product_merge"
+    },
+    {
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"note\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "note_live_by_created_at",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": [
+        {
+          "value": "deleted_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"note\".\"deleted_at\" is not null",
+      "origin": "manual",
+      "name": "note_deleted_by_deleted_at",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": [
+        {
+          "value": "capture_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "note_by_capture",
+      "entityType": "indexes",
+      "table": "note"
+    },
+    {
+      "columns": [
+        {
+          "value": "order_id",
+          "isExpression": false
+        },
+        {
+          "value": "changed_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "order_change_by_order",
+      "entityType": "indexes",
+      "table": "order_change"
+    },
+    {
+      "columns": [
+        {
+          "value": "product_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "order_line_by_product",
+      "entityType": "indexes",
+      "table": "order_line"
+    },
+    {
+      "columns": [
+        {
+          "value": "order_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "payment_by_order",
+      "entityType": "indexes",
+      "table": "payment"
+    },
+    {
+      "columns": [
+        {
+          "value": "ordered_on",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"sales_order\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "sales_order_live_by_day",
+      "entityType": "indexes",
+      "table": "sales_order"
+    },
+    {
+      "columns": [
+        {
+          "value": "deleted_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"sales_order\".\"deleted_at\" is not null",
+      "origin": "manual",
+      "name": "sales_order_deleted_by_deleted_at",
+      "entityType": "indexes",
+      "table": "sales_order"
+    },
+    {
+      "columns": [
+        {
+          "value": "customer_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "sales_order_by_customer",
+      "entityType": "indexes",
+      "table": "sales_order"
+    },
+    {
+      "columns": [
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "product_alias_by_name",
+      "entityType": "indexes",
+      "table": "product_alias"
+    },
+    {
+      "columns": [
+        {
+          "value": "product_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "product_alias_by_product",
+      "entityType": "indexes",
+      "table": "product_alias"
+    },
+    {
+      "columns": [
+        {
+          "value": "search_name",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": "\"product\".\"archived_at\" is null",
+      "origin": "manual",
+      "name": "product_active_name",
+      "entityType": "indexes",
+      "table": "product"
+    },
+    {
+      "columns": [
+        {
+          "value": "capture_id",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "interpretation_by_capture",
+      "entityType": "indexes",
+      "table": "interpretation"
+    },
+    {
+      "columns": [
+        {
+          "value": "due_on",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"reminder\".\"done_at\" is null and \"reminder\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "reminder_open_by_due_on",
+      "entityType": "indexes",
+      "table": "reminder"
+    },
+    {
+      "columns": [
+        {
+          "value": "done_at",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"reminder\".\"done_at\" is not null and \"reminder\".\"deleted_at\" is null",
+      "origin": "manual",
+      "name": "reminder_done_by_done_at",
+      "entityType": "indexes",
+      "table": "reminder"
+    },
+    {
+      "columns": [
+        {
+          "value": "deleted_at",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": "\"reminder\".\"deleted_at\" is not null",
+      "origin": "manual",
+      "name": "reminder_deleted_by_deleted_at",
+      "entityType": "indexes",
+      "table": "reminder"
+    },
+    {
+      "columns": [
+        {
+          "value": "customer_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "reminder_by_customer",
+      "entityType": "indexes",
+      "table": "reminder"
+    },
+    {
+      "columns": ["username"],
+      "nameExplicit": false,
+      "name": "account_username_unique",
+      "entityType": "uniques",
+      "table": "account"
+    },
+    {
+      "columns": ["webauthn_user_handle"],
+      "nameExplicit": false,
+      "name": "account_webauthn_user_handle_unique",
+      "entityType": "uniques",
+      "table": "account"
+    },
+    {
+      "columns": ["credential_id"],
+      "nameExplicit": false,
+      "name": "passkey_credential_id_unique",
+      "entityType": "uniques",
+      "table": "passkey"
+    },
+    {
+      "columns": ["token_hash"],
+      "nameExplicit": false,
+      "name": "setup_link_token_hash_unique",
+      "entityType": "uniques",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"kind\" in ('account_created', 'setup_link_issued', 'setup_link_redeemed', 'setup_link_refused', 'session_opened', 'session_ended', 'other_sessions_ended', 'sessions_revoked', 'passkey_added', 'passkey_removed', 'sign_in_failed', 'password_set', 'password_changed', 'password_locked', 'username_changed', 'display_name_changed', 'rate_limited')",
+      "name": "access_event_kind_known",
+      "entityType": "checks",
+      "table": "access_event"
+    },
+    {
+      "value": "\"detail\" is null or (json_valid(\"detail\") and json_type(\"detail\") = 'object')",
+      "name": "access_event_detail_object",
+      "entityType": "checks",
+      "table": "access_event"
+    },
+    {
+      "value": "length(\"username\") between 3 and 32 and \"username\" not glob '*[^a-z0-9._-]*'",
+      "name": "account_username_format",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "length(trim(\"display_name\")) between 1 and 60",
+      "name": "account_display_name_present",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "length(\"webauthn_user_handle\") = 43",
+      "name": "account_user_handle_length",
+      "entityType": "checks",
+      "table": "account"
+    },
+    {
+      "value": "\"kind\" in ('setup', 'passkey_registration', 'passkey_sign_in', 'password_sign_in', 'password_change')",
+      "name": "ceremony_kind_known",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "length(\"binding_hash\") = 43",
+      "name": "ceremony_binding_hash_length",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"challenge\" is null or length(\"challenge\") = 43",
+      "name": "ceremony_challenge_length",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"salt\" is null or length(\"salt\") = 22",
+      "name": "ceremony_salt_length",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"kind\" <> 'setup' or \"setup_link_id\" is not null",
+      "name": "ceremony_setup_names_its_link",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"expires_at\" > \"created_at\"",
+      "name": "ceremony_expires_after_creation",
+      "entityType": "checks",
+      "table": "ceremony"
+    },
+    {
+      "value": "\"algorithm\" in (-7, -8, -257)",
+      "name": "passkey_algorithm_offered",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "\"sign_count\" >= 0",
+      "name": "passkey_sign_count_not_negative",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "json_valid(\"transports\") and json_type(\"transports\") = 'array'",
+      "name": "passkey_transports_array",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "\"backup_eligible\" in (0, 1) and \"backed_up\" in (0, 1)",
+      "name": "passkey_backup_flags",
+      "entityType": "checks",
+      "table": "passkey"
+    },
+    {
+      "value": "length(\"salt\") = 22",
+      "name": "password_salt_length",
+      "entityType": "checks",
+      "table": "password"
+    },
+    {
+      "value": "length(\"verifier\") = 43",
+      "name": "password_verifier_length",
+      "entityType": "checks",
+      "table": "password"
+    },
+    {
+      "value": "\"argon2_memory_kib\" >= 19456 and \"argon2_iterations\" >= 2 and \"argon2_parallelism\" >= 1",
+      "name": "password_argon2_at_least_owasp",
+      "entityType": "checks",
+      "table": "password"
+    },
+    {
+      "value": "\"pepper_version\" >= 1",
+      "name": "password_pepper_version_positive",
+      "entityType": "checks",
+      "table": "password"
+    },
+    {
+      "value": "\"consecutive_failures\" >= 0",
+      "name": "password_failures_not_negative",
+      "entityType": "checks",
+      "table": "password"
+    },
+    {
+      "value": "\"hits\" > 0",
+      "name": "rate_limit_hits_positive",
+      "entityType": "checks",
+      "table": "rate_limit"
+    },
+    {
+      "value": "\"method\" in ('passkey', 'password')",
+      "name": "session_method_known",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "length(\"verifier\") = 43",
+      "name": "session_verifier_length",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"method\" = 'passkey' or \"passkey_id\" is null",
+      "name": "session_password_names_no_passkey",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"expires_at\" > \"authenticated_at\"",
+      "name": "session_ends_after_it_starts",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "length(trim(\"device_label\")) between 1 and 100",
+      "name": "session_device_label_present",
+      "entityType": "checks",
+      "table": "session"
+    },
+    {
+      "value": "\"purpose\" in ('first_setup', 'invite', 'recovery')",
+      "name": "setup_link_purpose_known",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "length(\"token_hash\") = 43",
+      "name": "setup_link_token_hash_length",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "(\"purpose\" = 'invite' and (\"account_id\" is null or \"redeemed_at\" is not null)) or (\"purpose\" <> 'invite' and \"account_id\" is not null)",
+      "name": "setup_link_account_by_purpose",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "(\"purpose\" <> 'first_setup' or \"created_by\" is null) and (\"purpose\" <> 'invite' or \"created_by\" is not null)",
+      "name": "setup_link_author_by_purpose",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"expires_at\" > \"created_at\"",
+      "name": "setup_link_expires_after_creation",
+      "entityType": "checks",
+      "table": "setup_link"
+    },
+    {
+      "value": "\"source\" in ('web', 'telegram')",
+      "name": "capture_source_known",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "capture_content_present",
+      "entityType": "checks",
+      "table": "capture"
+    },
+    {
+      "value": "length(trim(\"name\")) between 1 and 100",
+      "name": "customer_alias_name_present",
+      "entityType": "checks",
+      "table": "customer_alias"
+    },
+    {
+      "value": "length(trim(\"name\")) between 1 and 40",
+      "name": "customer_kind_name_present",
+      "entityType": "checks",
+      "table": "customer_kind"
+    },
+    {
+      "value": "\"position\" >= 0",
+      "name": "customer_kind_position_positive",
+      "entityType": "checks",
+      "table": "customer_kind"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "customer_kind_version_positive",
+      "entityType": "checks",
+      "table": "customer_kind"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "customer_kind_updated_after_created",
+      "entityType": "checks",
+      "table": "customer_kind"
+    },
+    {
+      "value": "(\"archived_at\" is null) = (\"archived_by\" is null)",
+      "name": "customer_kind_archival_whole",
+      "entityType": "checks",
+      "table": "customer_kind"
+    },
+    {
+      "value": "length(trim(\"name\")) between 1 and 100",
+      "name": "customer_name_present",
+      "entityType": "checks",
+      "table": "customer"
+    },
+    {
+      "value": "(\"area\" is null or length(\"area\") between 1 and 60)\n        and (\"phone\" is null or length(\"phone\") between 1 and 20)\n        and (\"address\" is null or length(\"address\") between 1 and 200)\n        and (\"note\" is null or length(\"note\") between 1 and 1000)",
+      "name": "customer_details_length",
+      "entityType": "checks",
+      "table": "customer"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "customer_version_positive",
+      "entityType": "checks",
+      "table": "customer"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "customer_updated_after_created",
+      "entityType": "checks",
+      "table": "customer"
+    },
+    {
+      "value": "(\"archived_at\" is null) = (\"archived_by\" is null)",
+      "name": "customer_archival_whole",
+      "entityType": "checks",
+      "table": "customer"
+    },
+    {
+      "value": "\"from_id\" <> \"into_id\"",
+      "name": "customer_merge_not_itself",
+      "entityType": "checks",
+      "table": "customer_merge"
+    },
+    {
+      "value": "json_valid(\"moved\")",
+      "name": "customer_merge_moved_json",
+      "entityType": "checks",
+      "table": "customer_merge"
+    },
+    {
+      "value": "\"from_id\" <> \"into_id\"",
+      "name": "product_merge_not_itself",
+      "entityType": "checks",
+      "table": "product_merge"
+    },
+    {
+      "value": "json_valid(\"moved\")",
+      "name": "product_merge_moved_json",
+      "entityType": "checks",
+      "table": "product_merge"
+    },
+    {
+      "value": "length(trim(\"content\")) > 0",
+      "name": "note_content_present",
+      "entityType": "checks",
+      "table": "note"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "note_version_positive",
+      "entityType": "checks",
+      "table": "note"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "note_updated_after_created",
+      "entityType": "checks",
+      "table": "note"
+    },
+    {
+      "value": "(\"deleted_at\" is null) = (\"deleted_by\" is null)",
+      "name": "note_deletion_whole",
+      "entityType": "checks",
+      "table": "note"
+    },
+    {
+      "value": "\"kind\" in ('placed', 'revised', 'delivered', 'undelivered', 'payment_added', 'payment_removed', 'deleted', 'restored', 'customer_merged', 'product_merged')",
+      "name": "order_change_kind_known",
+      "entityType": "checks",
+      "table": "order_change"
+    },
+    {
+      "value": "json_valid(\"after\") and (\"before\" is null or json_valid(\"before\"))",
+      "name": "order_change_json",
+      "entityType": "checks",
+      "table": "order_change"
+    },
+    {
+      "value": "\"position\" between 0 and 49",
+      "name": "order_line_position_range",
+      "entityType": "checks",
+      "table": "order_line"
+    },
+    {
+      "value": "\"quantity\" between 1 and 100000",
+      "name": "order_line_quantity_range",
+      "entityType": "checks",
+      "table": "order_line"
+    },
+    {
+      "value": "\"unit_price\" between 0 and 1000000000000",
+      "name": "order_line_price_range",
+      "entityType": "checks",
+      "table": "order_line"
+    },
+    {
+      "value": "\"amount\" between 1 and 1000000000000",
+      "name": "payment_amount_range",
+      "entityType": "checks",
+      "table": "payment"
+    },
+    {
+      "value": "\"paid_on\" glob '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'",
+      "name": "payment_paid_on_day",
+      "entityType": "checks",
+      "table": "payment"
+    },
+    {
+      "value": "\"method\" is null or \"method\" in ('cash', 'transfer')",
+      "name": "payment_method_known",
+      "entityType": "checks",
+      "table": "payment"
+    },
+    {
+      "value": "\"note\" is null or length(\"note\") between 1 and 1000",
+      "name": "payment_note_length",
+      "entityType": "checks",
+      "table": "payment"
+    },
+    {
+      "value": "(\"deleted_at\" is null) = (\"deleted_by\" is null)",
+      "name": "payment_deletion_whole",
+      "entityType": "checks",
+      "table": "payment"
+    },
+    {
+      "value": "\"ordered_on\" glob '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'",
+      "name": "sales_order_ordered_on_day",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "\"delivered_on\" is null or (\"delivered_on\" glob '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]' and \"delivered_on\" >= \"ordered_on\")",
+      "name": "sales_order_delivered_on_day",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "\"note\" is null or length(\"note\") between 1 and 1000",
+      "name": "sales_order_note_length",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "sales_order_version_positive",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "sales_order_updated_after_created",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "(\"deleted_at\" is null) = (\"deleted_by\" is null)",
+      "name": "sales_order_deletion_whole",
+      "entityType": "checks",
+      "table": "sales_order"
+    },
+    {
+      "value": "length(trim(\"name\")) between 1 and 100",
+      "name": "product_alias_name_present",
+      "entityType": "checks",
+      "table": "product_alias"
+    },
+    {
+      "value": "length(trim(\"name\")) between 1 and 100",
+      "name": "product_name_present",
+      "entityType": "checks",
+      "table": "product"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "product_version_positive",
+      "entityType": "checks",
+      "table": "product"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "product_updated_after_created",
+      "entityType": "checks",
+      "table": "product"
+    },
+    {
+      "value": "(\"archived_at\" is null) = (\"archived_by\" is null)",
+      "name": "product_archival_whole",
+      "entityType": "checks",
+      "table": "product"
+    },
+    {
+      "value": "\"outcome\" in ('order', 'reminder', 'note', 'unsure', 'failed')",
+      "name": "interpretation_outcome_known",
+      "entityType": "checks",
+      "table": "interpretation"
+    },
+    {
+      "value": "\"failure\" is null or \"failure\" in ('schema', 'quota', 'timeout', 'error', 'refused')",
+      "name": "interpretation_failure_known",
+      "entityType": "checks",
+      "table": "interpretation"
+    },
+    {
+      "value": "((\"outcome\" = 'failed') = (\"failure\" is not null))\n        and ((\"outcome\" = 'failed') = (\"result\" is null))\n        and (\"result\" is null or json_valid(\"result\"))",
+      "name": "interpretation_result_or_failure",
+      "entityType": "checks",
+      "table": "interpretation"
+    },
+    {
+      "value": "length(\"model\") between 1 and 100",
+      "name": "interpretation_model_present",
+      "entityType": "checks",
+      "table": "interpretation"
+    },
+    {
+      "value": "\"prompt_version\" >= 0 and (\"neurons\" is null or \"neurons\" >= 0)",
+      "name": "interpretation_counts",
+      "entityType": "checks",
+      "table": "interpretation"
+    },
+    {
+      "value": "length(trim(\"text\")) > 0 and length(\"text\") <= 4000",
+      "name": "reminder_text_present",
+      "entityType": "checks",
+      "table": "reminder"
+    },
+    {
+      "value": "\"due_on\" glob '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'",
+      "name": "reminder_due_on_day",
+      "entityType": "checks",
+      "table": "reminder"
+    },
+    {
+      "value": "(\"done_at\" is null) = (\"done_by\" is null)",
+      "name": "reminder_completion_whole",
+      "entityType": "checks",
+      "table": "reminder"
+    },
+    {
+      "value": "\"version\" >= 1",
+      "name": "reminder_version_positive",
+      "entityType": "checks",
+      "table": "reminder"
+    },
+    {
+      "value": "\"updated_at\" >= \"created_at\"",
+      "name": "reminder_updated_after_created",
+      "entityType": "checks",
+      "table": "reminder"
+    },
+    {
+      "value": "(\"deleted_at\" is null) = (\"deleted_by\" is null)",
+      "name": "reminder_deletion_whole",
+      "entityType": "checks",
+      "table": "reminder"
+    }
+  ],
+  "renames": []
+}

@@ -19,19 +19,29 @@ import {
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import { createCaptureWrites } from "@/features/capture/infrastructure/capture-writes";
 import type {
+  CustomerAliasWrites,
   CustomerKindWrites,
   CustomerWrites,
 } from "@/features/customers/application/customer-writes";
 import {
+  createCustomerAliasWrites,
   createCustomerKindWrites,
   createCustomerWrites,
 } from "@/features/customers/infrastructure/customer-writes";
+import type { MergeWrites } from "@/features/merging/application/merge-writes";
+import { createMergeWrites } from "@/features/merging/infrastructure/merge-writes";
 import type { NoteWrites } from "@/features/notes/application/note-writes";
 import { createNoteWrites } from "@/features/notes/infrastructure/note-writes";
 import type { OrderWrites } from "@/features/orders/application/order-writes";
 import { createOrderWrites } from "@/features/orders/infrastructure/order-writes";
-import type { ProductWrites } from "@/features/products/application/product-writes";
-import { createProductWrites } from "@/features/products/infrastructure/product-writes";
+import type {
+  ProductAliasWrites,
+  ProductWrites,
+} from "@/features/products/application/product-writes";
+import {
+  createProductAliasWrites,
+  createProductWrites,
+} from "@/features/products/infrastructure/product-writes";
 import type { InterpretationWrites } from "@/features/reading/application/interpretation-writes";
 import { createInterpretationWrites } from "@/features/reading/infrastructure/interpretation-writes";
 import type { ReminderWrites } from "@/features/reminders/application/reminder-writes";
@@ -45,10 +55,13 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly notes: NoteWrites;
   readonly customerKinds: CustomerKindWrites;
   readonly customers: CustomerWrites;
+  readonly customerAliases: CustomerAliasWrites;
   readonly products: ProductWrites;
+  readonly productAliases: ProductAliasWrites;
   readonly orders: OrderWrites;
   readonly reminders: ReminderWrites;
   readonly interpretations: InterpretationWrites;
+  readonly merges: MergeWrites;
   readonly accounts: AccountWrites;
   readonly passkeys: PasskeyWrites;
   readonly passwords: PasswordWrites;
@@ -65,10 +78,13 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     notes: createNoteWrites(db, batch),
     customerKinds: createCustomerKindWrites(db, batch),
     customers: createCustomerWrites(db, batch),
+    customerAliases: createCustomerAliasWrites(db, batch),
     products: createProductWrites(db, batch),
+    productAliases: createProductAliasWrites(db, batch),
     orders: createOrderWrites(db, batch),
     reminders: createReminderWrites(db, batch),
     interpretations: createInterpretationWrites(db, batch),
+    merges: createMergeWrites(db, batch),
     accounts: createAccountWrites(db, batch),
     passkeys: createPasskeyWrites(db, batch),
     passwords: createPasswordWrites(db, batch),

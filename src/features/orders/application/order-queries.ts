@@ -6,6 +6,8 @@ import type { CustomerKindId } from "@/features/customers/domain/customer-kind";
 import type { OrderId } from "@/features/orders/domain/order";
 import type { OrderChange } from "@/features/orders/domain/order-change";
 import type { ProductId } from "@/features/products/domain/product";
+import type { AccountId } from "@/shared/domain/account-id";
+import type { Version } from "@/shared/domain/audit";
 import type { Money } from "@/shared/domain/money";
 
 // Read models: what the screens list and sum, computed in SQL so a screen is one or two queries, well inside D1's 50
@@ -50,6 +52,20 @@ export type CustomerAccount = {
   readonly lastOrderedOn: Temporal.PlainDate | undefined;
 };
 
+// How a product sells, over live orders
+export type ProductUsage = {
+  readonly orderCount: number;
+  // The latest line's price, anyone's
+  readonly lastPrice: Money;
+};
+
+// A deleted order as "Đã xoá gần đây" lists it, with what restoring it needs
+export type DeletedOrderRow = OrderRow & {
+  readonly version: Version;
+  readonly deletedAt: Temporal.Instant;
+  readonly deletedBy: AccountId;
+};
+
 // A live order a message became, as the message shows it
 export type OrderMadeFrom = {
   readonly captureId: CaptureId;
@@ -76,7 +92,11 @@ export type OrderQueries = {
     productIds: ReadonlyArray<ProductId>,
     customerId: CustomerId | undefined,
   ): Promise<ReadonlyMap<ProductId, Money>>;
+  // Every product sold on a live order; products never sold are left out
+  productUsage(): Promise<ReadonlyMap<ProductId, ProductUsage>>;
   // Oldest first
   history(orderId: OrderId): Promise<ReadonlyArray<OrderChange>>;
   madeFrom(captureIds: ReadonlyArray<CaptureId>): Promise<ReadonlyArray<OrderMadeFrom>>;
+  // Deleted at or after `since`, latest first, at most `limit`
+  listDeleted(since: Temporal.Instant, limit: number): Promise<ReadonlyArray<DeletedOrderRow>>;
 };

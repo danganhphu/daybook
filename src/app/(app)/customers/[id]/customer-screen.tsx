@@ -1,14 +1,26 @@
 "use client";
 
-import { startTransition, useCallback, useMemo } from "react";
+import { startTransition, useCallback, useMemo, useState } from "react";
 
+import { MergeDialog } from "@/app/(app)/_merge/merge-dialog";
+import { OtherNames } from "@/app/(app)/_names/other-names";
 import { ReminderList } from "@/app/(app)/_reminders/reminder-list";
-import { hideCustomer, showCustomer } from "@/app/(app)/customers/actions";
+import {
+  addCustomerName,
+  customerMergeConfirm,
+  hideCustomer,
+  mergeCustomer,
+  removeCustomerName,
+  showCustomer,
+} from "@/app/(app)/customers/actions";
+import { findCustomers } from "@/app/(app)/orders/actions";
+import { customerLimits } from "@/features/customers/domain/customer";
 import type { CustomerScreenView } from "@/features/customers/web/commands";
 import { customerDetail } from "@/features/customers/web/customer-view";
 import { customersCopy } from "@/features/customers/web/customers-copy";
+import { mergingCopy, pickCustomerHint } from "@/features/merging/web/merging-copy";
 import { shortDay } from "@/features/orders/web/day-text";
-import type { OrderRowView } from "@/features/orders/web/order-view";
+import { describeCustomer, type OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { newOrderPath } from "@/features/orders/web/orders-path";
 import type { CustomerRemindersView } from "@/features/reminders/web/commands";
@@ -23,6 +35,7 @@ import {
   CallIcon,
   EditIcon,
   LocationOnIcon,
+  MergeIcon,
   ReceiptLongIcon,
   StickyNote2Icon,
   VisibilityIcon,
@@ -31,13 +44,14 @@ import {
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { Notice } from "@/shared/ui/notice/notice";
 import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { moneyText } from "@/shared/web/money-text";
-import { editCustomerPath, orderPath, routes } from "@/shared/web/routes";
+import { customerPath, editCustomerPath, orderPath, routes } from "@/shared/web/routes";
 
 import styles from "./customer-screen.module.scss";
 
@@ -47,6 +61,8 @@ export type CustomerScreenProps = {
   readonly orders: ReadonlyArray<OrderRowView & { readonly orderedOn: string }>;
   readonly reminders: CustomerRemindersView;
 };
+
+const suggestCustomers = (text: string) => findCustomers(text);
 
 function orderDetail(order: OrderRowView): string {
   return [order.products, order.delivered ? undefined : ordersCopy.undelivered]
@@ -74,18 +90,36 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
     });
   }, [toast, view.hidden, view.id, view.version]);
 
+  const [merging, setMerging] = useState(false);
+  const openMerge = useCallback(() => setMerging(true), []);
+  const closeMerge = useCallback(() => setMerging(false), []);
+  const confirmMerge = useCallback(
+    (intoId: string) => customerMergeConfirm(view.id, intoId),
+    [view.id],
+  );
+  const merge = useCallback(
+    (intoId: string) => mergeCustomer(view.id, view.version, intoId),
+    [view.id, view.version],
+  );
+  const addName = useCallback((name: string) => addCustomerName(view.id, name), [view.id]);
+
   const actions = useMemo<ReadonlyArray<MenuAction>>(
     () => [
       { label: customersCopy.edit, icon: EditIcon, href: editCustomerPath(view.id) },
       view.hidden
         ? { label: customersCopy.show, icon: VisibilityIcon, onSelect: toggleHidden }
         : { label: customersCopy.hide, icon: VisibilityOffIcon, onSelect: toggleHidden },
+      { label: mergingCopy.mergeCustomer, icon: MergeIcon, onSelect: openMerge },
     ],
-    [toggleHidden, view.hidden, view.id],
+    [openMerge, toggleHidden, view.hidden, view.id],
   );
+  // A merged customer has nothing left to change: its orders are with the one kept
   const menu = useMemo(
-    () => <ActionMenu label={actionLabels.options} actions={actions} />,
-    [actions],
+    () =>
+      view.mergedInto === undefined ? (
+        <ActionMenu label={actionLabels.options} actions={actions} />
+      ) : undefined,
+    [actions, view.mergedInto],
   );
   const stats = useMemo<ReadonlyArray<Stat>>(
     () => [
@@ -111,6 +145,12 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
         back={routes.customers}
         actions={menu}
       />
+
+      {view.mergedInto === undefined ? null : (
+        <Notice message={mergingCopy.customerIsMerged}>
+          <ButtonLink href={customerPath(view.mergedInto)}>{mergingCopy.seeKept}</ButtonLink>
+        </Notice>
+      )}
 
       <Stats label={view.name} items={stats} />
 
@@ -158,6 +198,15 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
         </List>
       )}
 
+      <OtherNames
+        names={view.otherNames}
+        footer={customersCopy.otherNamesFooter}
+        maxLength={customerLimits.name}
+        editable={!view.hidden}
+        add={addName}
+        remove={removeCustomerName}
+      />
+
       <ReminderList
         heading={remindersCopy.title}
         reminders={reminders.reminders}
@@ -186,6 +235,23 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
           ))}
         </List>
       )}
+
+      {merging ? (
+        <MergeDialog
+          title={mergingCopy.pickCustomer}
+          hint={pickCustomerHint(view.name)}
+          label={mergingCopy.keptCustomer}
+          emptyText={mergingCopy.noCustomer}
+          fromId={view.id}
+          suggest={suggestCustomers}
+          describe={describeCustomer}
+          confirm={confirmMerge}
+          merge={merge}
+          keptPath={customerPath}
+          done={mergingCopy.mergedCustomer}
+          onClose={closeMerge}
+        />
+      ) : null}
     </Screen>
   );
 }

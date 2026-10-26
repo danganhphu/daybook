@@ -1,6 +1,11 @@
+import { productsCopy } from "@/features/products/web/products-copy";
+import { actionLabels } from "@/shared/ui/action-labels";
+
 // What the order screens say, in one place
 export const ordersCopy = {
   title: "Đơn hàng",
+  // Followed by the day: "Đơn 24/10"
+  order: "Đơn",
   add: "Tạo đơn",
   edit: "Sửa đơn",
   remove: "Xoá đơn",
@@ -23,11 +28,11 @@ export const ordersCopy = {
   customer: "Khách",
   orderedOn: "Ngày đặt",
   note: "Ghi chú",
-  product: "Món hàng",
+  product: productsCopy.title,
   quantity: "Số lượng",
   unitPrice: "Đơn giá",
-  addLine: "Thêm món",
-  removeLine: "Bỏ món này",
+  addLine: "Thêm sản phẩm",
+  removeLine: "Bỏ sản phẩm này",
   total: "Tổng",
   save: "Lưu đơn",
   delivery: "Giao hàng",
@@ -39,7 +44,7 @@ export const ordersCopy = {
   // Followed by the day: "Ngày 24/10"
   onDay: "Ngày",
   isDeleted: "Đơn này đã bị xoá.",
-  restore: "Khôi phục",
+  restore: actionLabels.restore,
   removed: "Đã bỏ",
   // Followed by the customer's name
   seeCustomer: "Xem khách",
@@ -62,9 +67,9 @@ export const ordersCopy = {
   pickCustomer: "Chọn khách",
   customerRequired: "Chọn khách trong danh sách gợi ý",
   customerUnknown: "Không có khách này. Thêm ở trang Khách hàng.",
-  linesIncomplete: "Mỗi món cần tên, số lượng và giá",
-  productUnknown: "Món mới, sẽ được thêm khi lưu đơn.",
-  searchProduct: "Gõ tên hàng",
-  newProduct: "Món mới",
+  linesIncomplete: "Mỗi sản phẩm cần tên, số lượng và giá",
+  productUnknown: "Sản phẩm mới, sẽ được thêm khi lưu đơn.",
+  searchProduct: "Gõ tên sản phẩm",
+  newProduct: "Sản phẩm mới",
   lastPrice: "Giá gần nhất",
 } as const;

@@ -6,9 +6,11 @@ import {
 import {
   customerDetailsSchema,
   customerIdSchema,
+  customerNameSchema,
   type Customer,
   type CustomerDetails,
 } from "@/features/customers/domain/customer";
+import { customerAliasIdSchema } from "@/features/customers/domain/customer-alias";
 import {
   customerKindIdSchema,
   kindNameSchema,
@@ -19,6 +21,7 @@ import { versionSchema } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { searchTermSchema } from "@/shared/domain/search-text";
 import { fieldErrors, formValues, type FormState } from "@/shared/web/form-state";
+import type { OtherNameView } from "@/shared/web/other-name-view";
 
 import {
   customerDetail,
@@ -106,6 +109,9 @@ export type CustomerScreenView = CustomerView & {
   readonly owed: number;
   // YYYY-MM-DD
   readonly lastOrderedOn: string | undefined;
+  // The customer it was merged into: hidden for good, its orders are there now
+  readonly mergedInto: string | undefined;
+  readonly otherNames: ReadonlyArray<OtherNameView>;
 };
 
 export async function customerScreen(
@@ -117,10 +123,11 @@ export async function customerScreen(
     return undefined;
   }
 
-  const [customer, kinds, account] = await Promise.all([
+  const [customer, kinds, account, aliases] = await Promise.all([
     app.getCustomer(customerId.data),
     app.listCustomerKinds(),
     app.customerAccount(customerId.data),
+    app.customerAliases(customerId.data),
   ]);
   if (customer === undefined) {
     return undefined;
@@ -132,7 +139,43 @@ export async function customerScreen(
     total: account.total,
     owed: account.owed,
     lastOrderedOn: account.lastOrderedOn?.toString(),
+    mergedInto: customer.status === "archived" ? customer.mergedInto : undefined,
+    otherNames: aliases.map((alias) => ({ id: alias.id, name: alias.name })),
   };
+}
+
+export async function addCustomerAlias(
+  app: App,
+  by: AccountId,
+  customerId: unknown,
+  name: unknown,
+): Promise<Result<null, string>> {
+  const id = customerIdSchema.safeParse(customerId);
+  if (!id.success) {
+    return err(customerErrorMessages.customer_not_found);
+  }
+  const parsed = customerNameSchema.safeParse(name);
+  if (!parsed.success) {
+    return err(parsed.error.issues[0]?.message ?? customerErrorMessages.customer_not_found);
+  }
+
+  const added = await app.addCustomerAlias({ by, customerId: id.data, name: parsed.data });
+
+  return added.ok ? ok(null) : err(customerErrorMessages[added.error]);
+}
+
+export async function removeCustomerAlias(
+  app: App,
+  aliasId: unknown,
+): Promise<Result<null, string>> {
+  const id = customerAliasIdSchema.safeParse(aliasId);
+  if (!id.success) {
+    return err(customerErrorMessages.alias_not_found);
+  }
+
+  const removed = await app.removeCustomerAlias(id.data);
+
+  return removed.ok ? ok(null) : err(customerErrorMessages[removed.error]);
 }
 
 // The form for one customer, new or existing: its values, and the kinds it may pick - the active ones, and the

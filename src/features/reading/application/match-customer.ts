@@ -22,8 +22,9 @@ function sameWords(name: ReadonlyArray<string>, words: ReadonlyArray<string>): b
   return name.length === words.length && holdsEvery(name, words);
 }
 
-// The active customer a written name means, the way the order form's suggestions find one: every word of the name,
-// with or without accents. A name that is exactly one customer's is that customer even when others hold its words.
+// The active customer a written name means, the way the order form's suggestions find one: every word of the name
+// or of another name they are known by, with or without accents. A name that is exactly one customer's is that
+// customer even when others hold its words.
 export async function matchCustomer(
   customers: CustomerRepository,
   written: string | null,
@@ -34,10 +35,17 @@ export async function matchCustomer(
     return { found: "none" };
   }
 
-  const holding = (await customers.list({ search: term.data, status: "active" }, searchLimit))
-    .map((customer): [Customer, ReadonlyArray<string>] => [customer, nameWords(customer.name)])
-    .filter(([, name]) => holdsEvery(name, words));
-  const exact = holding.filter(([, name]) => sameWords(name, words));
+  const found = await customers.list({ search: term.data, status: "active" }, searchLimit);
+  const aliases = await customers.aliasesOf(found.map((customer) => customer.id));
+  const holding = found
+    .map((customer): [Customer, ReadonlyArray<ReadonlyArray<string>>] => [
+      customer,
+      [customer.name, ...(aliases.get(customer.id) ?? []).map((alias) => alias.name)].map(
+        nameWords,
+      ),
+    ])
+    .filter(([, names]) => names.some((name) => holdsEvery(name, words)));
+  const exact = holding.filter(([, names]) => names.some((name) => sameWords(name, words)));
 
   const closest = exact.length === 1 ? exact : holding;
   const [first] = closest;

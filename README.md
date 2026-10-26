@@ -3,8 +3,8 @@
 [![ci](https://github.com/danganhphu/daybook/actions/workflows/ci.yml/badge.svg)](https://github.com/danganhphu/daybook/actions/workflows/ci.yml)
 
 A notebook for a salesperson on the move: orders, customers and follow-ups, typed the way you would text a friend.
-A Telegram bot is the main way in; a web app, installable as a PWA, is the second. Both run on one Cloudflare Worker,
-on the free plan. The interface is in Vietnamese.
+A web app, installable as a PWA, does everything; a Telegram bot, still to come, will be an optional second way in.
+Both run on one Cloudflare Worker, on the free plan. The interface is in Vietnamese.
 
 What it looks like: [screenshots](docs/ui/screenshots.md).
 
@@ -15,9 +15,14 @@ What it looks like: [screenshots](docs/ui/screenshots.md).
   a reminder, a second after it is saved, with Undo. A name the customer list does not hold is asked about on the
   note. Read by a model on Workers AI's free allowance; the model only extracts the words, the code matches them.
 - **History.** Any past day, and a search across every note, with or without diacritics.
-- **Customers and orders.** Customers by kind; orders with their lines, delivery and payments; what each customer
-  owes; every change to an order logged.
-- **Reminders.** What to do and when, for a customer or not; what is due sits on Today. Done with one tap and Undo.
+- **Customers, products and orders.** Customers by kind; products with their latest price; orders with their lines,
+  delivery and payments; what each customer owes; every change to an order logged. A customer or a product can have
+  other names ("chị Lan" for a clinic), which the reading understands, and two that turn out to be one are merged,
+  after the screen says what will move.
+- **Reminders.** What to do and when, for a customer or not; what is due sits on Today. Done with one tap and Undo;
+  the finished ones are listed, each one tap from open again.
+- **Nothing lost to a delete.** What was deleted in the last 30 days - orders, notes, reminders - is listed, to
+  restore, after the Undo toast is gone.
 - **Reports.** A week, month, quarter, year or any range: sales, money in and what customers owe, against the period
   before; sales over time, by kind of customer, by product and by customer; customers gone quiet. Tapping a product
   or a customer narrows the whole report to it.

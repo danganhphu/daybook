@@ -1,4 +1,5 @@
 import type { Customer } from "@/features/customers/domain/customer";
+import type { CustomerAlias, CustomerAliasId } from "@/features/customers/domain/customer-alias";
 import type { CustomerKind } from "@/features/customers/domain/customer-kind";
 
 // Queue changes on the current unit of work; nothing is stored until it commits
@@ -10,4 +11,9 @@ export type CustomerKindWrites = {
 export type CustomerWrites = {
   add(customer: Customer): void;
   update(customer: Customer): void;
+};
+
+export type CustomerAliasWrites = {
+  add(aliases: ReadonlyArray<CustomerAlias>): void;
+  remove(ids: ReadonlyArray<CustomerAliasId>): void;
 };

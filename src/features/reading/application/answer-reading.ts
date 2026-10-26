@@ -42,6 +42,8 @@ function including(customers: CustomerRepository, added: ActiveCustomer): Custom
     get: async (id) => (id === added.id ? added : customers.get(id)),
     getMany: (ids) => customers.getMany(ids),
     list: (filter, limit) => customers.list(filter, limit),
+    aliasesOf: (ids) => customers.aliasesOf(ids),
+    getAlias: (id) => customers.getAlias(id),
   };
 }
 

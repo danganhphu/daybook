@@ -1,5 +1,4 @@
 import Form from "next/form";
-import Link from "next/link";
 
 import type { CustomersView } from "@/features/customers/web/commands";
 import { customersCopy } from "@/features/customers/web/customers-copy";
@@ -13,12 +12,11 @@ import { AddIcon, PersonIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { PageHeader } from "@/shared/ui/page-header/page-header";
+import { QuietLink } from "@/shared/ui/quiet-link/quiet-link";
 import { Screen } from "@/shared/ui/screen/screen";
 import { SearchField } from "@/shared/ui/search-field/search-field";
 import { moneyText } from "@/shared/web/money-text";
 import { customerPath, routes } from "@/shared/web/routes";
-
-import styles from "./customers.module.scss";
 
 const addLink = <IconLink icon={AddIcon} label={customersCopy.add} href={routes.newCustomer} />;
 
@@ -95,9 +93,7 @@ export function CustomersScreen({ view }: { readonly view: CustomersView }) {
       )}
 
       {view.showingHidden ? null : (
-        <Link href={customersPath({ hidden: "1" })} prefetch={false} className={styles.quietLink}>
-          {customersCopy.hidden}
-        </Link>
+        <QuietLink href={customersPath({ hidden: "1" })}>{customersCopy.hidden}</QuietLink>
       )}
     </Screen>
   );
