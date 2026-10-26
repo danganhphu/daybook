@@ -12,6 +12,8 @@ before such a task:
 - **`e2e-tests`** - what an end-to-end assertion has to wait for, and the browser traps already hit.
 - **`design-system`** - tokens only through the Sass functions, no `className` on components, mobile first.
 - **`cloudflare-and-vinext`** - `cf` rather than Wrangler, and where vinext differs from Next.js.
+- **`security`** - which of Cloudflare's attack-class files (`vendor/cloudflare/security-audit-skill`) to read for the
+  area being changed, and what counts as a finding.
 
 Three rules that cause most of the churn if missed:
 

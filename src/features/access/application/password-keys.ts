@@ -48,6 +48,18 @@ export async function decoySaltFor(
   return passwordSaltSchema.parse(encodeBase64Url(digest.slice(0, passwordSaltByteLength)));
 }
 
+// What the per-username rate limit counts under: the typed name, keyed, so a password typed into the username box
+// never sits in D1 (ASVS 16.2.5). 128 bits keep two names apart.
+export async function usernameLimitKey(
+  secrets: Secrets,
+  pepper: Pepper,
+  username: string,
+): Promise<string> {
+  const digest = await secrets.hmacSha256(pepper.key, utf8.encode(`rate-limit:${username}`));
+
+  return encodeBase64Url(digest.slice(0, 16));
+}
+
 export function newPasswordSalt(secrets: Secrets): PasswordSalt {
   return passwordSaltSchema.parse(encodeBase64Url(secrets.randomBytes(passwordSaltByteLength)));
 }

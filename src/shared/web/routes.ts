@@ -16,6 +16,10 @@ export const routes = {
   signOut: "/sign-out",
   settings: "/settings",
   componentGallery: "/dev/ui",
+  // Made by src/app's manifest.ts, icon.svg and apple-icon.png
+  manifest: "/manifest.webmanifest",
+  icon: "/icon.svg",
+  appleIcon: "/apple-icon.png",
 } as const;
 
 // The search box on the history screen sends its words under this name

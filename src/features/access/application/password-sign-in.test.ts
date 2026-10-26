@@ -101,6 +101,18 @@ describe("beginPasswordSignIn", () => {
     },
   );
 
+  it("given a password typed into the username box, when the prompt is asked for, then the limit counts it without keeping it", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+
+    expectOk(await testApp(time.clock).beginPasswordSignIn("một câu rất bí mật", origin()));
+
+    const keys = await rows<{ key: string }>("select key from rate_limit");
+    expect(keys.map(({ key }) => key)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/^password-user:[A-Za-z0-9_-]{22}$/)]),
+    );
+    expect(JSON.stringify(keys)).not.toContain("bí mật");
+  });
+
   it("given twenty tries from one address, when a twenty-first comes for any username, then it is refused", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
     const app = testApp(time.clock);
@@ -166,6 +178,20 @@ describe("finishPasswordSignIn", () => {
 
     expect(await rows("select consecutive_failures from password")).toEqual([
       { consecutive_failures: 0 },
+    ]);
+  });
+
+  it("given five wrong keys sent at once, when they all arrive, then each one counts", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    await aPersonWithAPassword(time);
+    const attempts = await Promise.all(
+      Array.from({ length: 5 }, () => signIn(time, "lan", aDerivedKey())),
+    );
+
+    await Promise.all(attempts.map((attempt) => attempt.finish()));
+
+    expect(await rows("select consecutive_failures from password")).toEqual([
+      { consecutive_failures: 5 },
     ]);
   });
 

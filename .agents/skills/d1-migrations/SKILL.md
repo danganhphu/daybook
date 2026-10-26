@@ -26,6 +26,10 @@ Tables live in each feature's `infrastructure/*.table.ts`. Migrations are genera
 - **A rebuild drops the hand edits.** When drizzle-kit rebuilds a table (a changed check, a new NOT NULL column), the
   new `CREATE TABLE` has no `STRICT` and the triggers are gone. Its snapshot never knew them. The schema tests catch it;
   re-add them.
+- **A rebuild of a table others point at runs their `ON DELETE` actions.** D1 keeps foreign keys on inside a
+  migration, so drizzle-kit's `PRAGMA foreign_keys=OFF` does nothing and its `DROP TABLE` sets every `ON DELETE SET
+  NULL` reference to null; `defer_foreign_keys` does not stop it. Hold the references aside and put them back after
+  the rename, as `20261026082733_passkey_es256_and_ed25519_only` does, and try it on seeded rows first.
 - A migration that is already applied anywhere real is never edited. Before the first deploy, regenerating a migration
   made on the current branch is fine.
 - `cf d1 migrations apply` needs `--persist-to .cloudflare/state`; without it, cf writes to a store every project

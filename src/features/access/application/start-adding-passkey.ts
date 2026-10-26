@@ -2,9 +2,7 @@ import type { AccountRepository } from "@/features/access/domain/account-reposit
 import * as Ceremonies from "@/features/access/domain/ceremony";
 import { challengeSchema } from "@/features/access/domain/ceremony";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
-import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
@@ -14,9 +12,9 @@ import { formatCeremonyCookie } from "./ceremony-cookie";
 import type { PasskeyVerifier } from "./passkey-verifier";
 import { hashSecretToken, newRandomValue, newSecretToken } from "./secret-tokens";
 import type { Secrets } from "./secrets";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type StartAddingPasskeyDeps = {
-  readonly clock: Clock;
+export type StartAddingPasskeyDeps = StepUpDeps & {
   readonly secrets: Secrets;
   readonly accounts: AccountRepository;
   readonly passkeys: PasskeyRepository;
@@ -24,7 +22,8 @@ export type StartAddingPasskeyDeps = {
   readonly startUnitOfWork: () => UnitOfWork<{ readonly ceremonies: CeremonyWrites }>;
 };
 
-// The prompt for another passkey on this account - a new phone, a laptop - after a recent sign-in
+// The prompt for another passkey on this account - a new phone, a laptop - after a recent sign-in. On an account that
+// has a passkey that sign-in is a passkey's: a password alone cannot add one (ADR 0009, amended 2026-10-26).
 export async function startAddingPasskey(
   deps: StartAddingPasskeyDeps,
   session: Session,
@@ -35,7 +34,7 @@ export async function startAddingPasskey(
   >
 > {
   const now = deps.clock();
-  if (!Sessions.isFresh(session, now)) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

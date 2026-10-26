@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { appName } from "@/app/identity";
 import type { Peppers } from "@/features/access/application/peppers";
+import { pepperFitsOrigin } from "@/features/access/infrastructure/development-pepper";
 import { pepperSchema, peppersFrom } from "@/features/access/infrastructure/pepper-keys";
 import { relyingPartyFor } from "@/features/access/infrastructure/simple-webauthn-verifier";
 import type { MessageReader } from "@/features/reading/application/message-reader";
@@ -17,20 +18,24 @@ import {
 
 import { createApp } from "./create-app";
 
-const bindingsSchema = z.object({
-  DB: z.custom<D1Database>(
-    (value) => typeof value === "object" && value !== null && "prepare" in value,
-    { error: "The D1 binding DB is missing" },
-  ),
-  APP_ORIGIN: z.url({ error: "The APP_ORIGIN secret is missing or not a URL" }),
-  PASSWORD_PEPPER: pepperSchema,
-  // Workers AI, bound everywhere but in the end-to-end build
-  AI: z
-    .custom<ModelRunner>((value) => typeof value === "object" && value !== null && "run" in value)
-    .optional(),
-  // The end-to-end build's stand-in for a model, as JSON: each message its tests send, and what it says
-  REPLAY_READINGS: z.string().optional(),
-});
+const bindingsSchema = z
+  .object({
+    DB: z.custom<D1Database>(
+      (value) => typeof value === "object" && value !== null && "prepare" in value,
+      { error: "The D1 binding DB is missing" },
+    ),
+    APP_ORIGIN: z.url({ error: "The APP_ORIGIN secret is missing or not a URL" }),
+    PASSWORD_PEPPER: pepperSchema,
+    // Workers AI, bound everywhere but in the end-to-end build
+    AI: z
+      .custom<ModelRunner>((value) => typeof value === "object" && value !== null && "run" in value)
+      .optional(),
+    // The end-to-end build's stand-in for a model, as JSON: each message its tests send, and what it says
+    REPLAY_READINGS: z.string().optional(),
+  })
+  .refine((parsed) => pepperFitsOrigin(parsed.PASSWORD_PEPPER, parsed.APP_ORIGIN), {
+    error: "PASSWORD_PEPPER is the development pepper, which only localhost may use",
+  });
 
 type Bindings = Pick<z.infer<typeof bindingsSchema>, "DB"> & {
   readonly appOrigin: URL;

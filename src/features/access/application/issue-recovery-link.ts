@@ -1,14 +1,15 @@
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
 import { issueSetupLink, type IssuedSetupLink, type IssueSetupLinkDeps } from "./issue-setup-link";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type IssueRecoveryLinkDeps = IssueSetupLinkDeps & { readonly accounts: AccountRepository };
+export type IssueRecoveryLinkDeps = IssueSetupLinkDeps &
+  StepUpDeps & { readonly accounts: AccountRepository };
 
 // A way back in for the other user, who lost their phone or their passkeys. Using it adds a passkey and signs out
 // every other device of theirs; their old passkeys stay for them to remove. Their own account needs no link: signed
@@ -20,7 +21,7 @@ export async function issueRecoveryLink(
   origin: RequestOrigin,
 ): Promise<Result<IssuedSetupLink, Extract<AccessError, "step_up_required" | "not_found">>> {
   // Before anything is looked up, so a stale session learns nothing about which accounts exist
-  if (!Sessions.isFresh(session, deps.clock())) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

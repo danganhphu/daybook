@@ -62,7 +62,7 @@ describe("Passkeys.isPasskeyAlgorithm", () => {
   it.each([
     [-7, true],
     [-8, true],
-    [-257, true],
+    [-257, false],
     [-48, false],
     [-35, false],
   ])("given COSE algorithm %i, when checked, then it is offered: %s", (algorithm, offered) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useCallback } from "react";
 
 import { saveBackupPassword } from "@/app/settings/save-backup-password";
 import { accessCopy } from "@/features/access/web/access-copy";
@@ -19,18 +19,20 @@ type Draft = { readonly text: string; readonly error: string | undefined };
 const empty: Draft = { text: "", error: undefined };
 
 // The last step of an invite, and the only one that can be skipped. The session is a minute old, so no step-up.
-async function save(_: Draft, form: FormData): Promise<Draft> {
-  const text = formText(form, accessFields.password);
-  const saved = await saveBackupPassword(text, attemptSetting);
-  if (saved.ok) {
-    enterApp();
-    return empty;
-  }
-
-  return { text, error: saved.error };
-}
-
 export function BackupPasswordOffer({ username }: { readonly username: string }) {
+  const save = useCallback(
+    async (_: Draft, form: FormData): Promise<Draft> => {
+      const text = formText(form, accessFields.password);
+      const saved = await saveBackupPassword(text, username, attemptSetting);
+      if (saved.ok) {
+        enterApp();
+        return empty;
+      }
+
+      return { text, error: saved.error };
+    },
+    [username],
+  );
   const [draft, submit, pending] = useActionState(save, empty);
 
   return (

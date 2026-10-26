@@ -171,11 +171,15 @@ a fake page cannot use it because a passkey is bound to the site.
 - **A password is the fallback**, at least 15 characters (NIST SP 800-63B-4). A Worker on the free plan cannot hash
   passwords to OWASP's standard (PBKDF2 capped at 100,000 iterations, 10 ms of CPU), so the browser runs Argon2id and
   the server keeps an HMAC of the result.
-- **A sign-in lasts 30 days** from the moment it happened, however often the app is used (NIST AAL1). Opening the app
-  goes straight in; security settings - passkeys, the password, other devices, invites - ask for Face ID or the
-  password again.
+- **A sign-in lasts 30 days** from the moment it happened, however often the app is used (NIST AAL1), and ends sooner
+  if the app goes unopened for 14 days (ASVS 7.3.1) - two weeks off cost one Face ID. Opening the app goes straight
+  in; security settings - passkeys, the password, other devices, invites - ask for Face ID again, or the password on
+  an account that has no passkey. A password alone opens the book but never its security settings, so someone who
+  phished it cannot add their own passkey.
 - **Invites and recovery links** work once, for ten minutes. Whoever loses every way in gets a recovery link from the
-  other user, in the app. The command line is for the first account and for when both are locked out.
+  other user, in the app; so does someone on a new phone whose passkey did not sync. Either user can sign out every
+  device of the other - a phone lost on the road. The command line is for the first account and for when both are
+  locked out.
 - The bot knows the two people by their Telegram user ids; there is no sign-in in the chat.
 
 Rejected: hosted sign-in services (Supabase pauses free projects after a week idle, Auth0 deletes idle free tenants

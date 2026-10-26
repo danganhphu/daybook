@@ -139,6 +139,17 @@ export async function endOtherDevices(
   return ended.ok ? ok(null) : err(problem(ended.error));
 }
 
+export async function endPersonDevices(
+  app: App,
+  session: Session,
+  accountId: unknown,
+  origin: RequestOrigin,
+): Promise<SettingsResult<null>> {
+  const ended = await app.endPersonSessions(session, accountId, origin);
+
+  return ended.ok ? ok(null) : err(problem(ended.error));
+}
+
 // A setup link as the page shows it: the whole URL, once, never stored on either side
 export type IssuedLinkView = { readonly url: string };
 

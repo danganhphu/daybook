@@ -25,7 +25,8 @@ function withHeaders(response: Response, policy: string, https: boolean): Respon
   return response;
 }
 
-// Runs before every page, server action and route handler; static files are served without it
+// Runs before everything the Worker answers: pages, server actions, route handlers, the manifest and icons, and a
+// missing file's 404. Static files are served before the Worker and carry public/_headers instead.
 export default function proxy(request: NextRequest) {
   const nonce = newNonce();
   const policy = contentSecurityPolicy(nonce);
@@ -50,8 +51,7 @@ export default function proxy(request: NextRequest) {
   return withHeaders(NextResponse.next({ request: { headers: forwarded } }), policy, https);
 }
 
+// All but vinext's static cache, which the Worker serves first by configuration (cloudflare.config.ts)
 export const config = {
-  matcher: [
-    "/((?!_next/|_vinext/|icons/|manifest\\.webmanifest|icon\\.svg|apple-icon\\.png|favicon\\.ico).*)",
-  ],
+  matcher: ["/((?!_vinext/static-cache/).*)"],
 };

@@ -37,12 +37,19 @@ describe("Sessions.open", () => {
 });
 
 describe("Sessions.isExpired", () => {
-  it("given a session, when one millisecond is left, then it has not expired", () => {
-    const session = aSession();
+  it("given a session used the day before its end, when one millisecond is left, then it has not expired", () => {
+    const session = Sessions.markSeen(aSession(), after(signedIn, { hours: 29 * 24 }));
 
     expect(Sessions.isExpired(session, session.expiresAt.subtract({ milliseconds: 1 }))).toBe(
       false,
     );
+  });
+
+  it("given a session left unused, when 14 days pass since it was last seen, then it has expired", () => {
+    const session = Sessions.markSeen(aSession(), after(signedIn, { hours: 24 }));
+
+    expect(Sessions.isExpired(session, after(signedIn, { hours: 15 * 24 - 1 }))).toBe(false);
+    expect(Sessions.isExpired(session, after(signedIn, { hours: 15 * 24 }))).toBe(true);
   });
 
   it("given a session, when its end is reached, then it has expired", () => {
@@ -72,6 +79,22 @@ describe("Sessions.isFresh", () => {
     const session = aSession();
 
     expect(Sessions.isFresh(session, after(signedIn, { minutes: 5 }))).toBe(false);
+  });
+});
+
+describe("Sessions.isSteppedUp", () => {
+  const passwordSession = () => ({ ...aSession(), method: "password" as const });
+
+  it.each([
+    ["a passkey sign-in, on an account with a passkey", aSession, true, true],
+    ["a password sign-in, on an account with no passkey", passwordSession, false, true],
+    ["a password sign-in, on an account with a passkey", passwordSession, true, false],
+  ])("given %s a minute ago, when asked, then it is stepped up: %s", (_, made, hasPasskey, up) => {
+    expect(Sessions.isSteppedUp(made(), after(signedIn, { minutes: 1 }), hasPasskey)).toBe(up);
+  });
+
+  it("given a passkey sign-in exactly 5 minutes ago, when asked, then it is no longer stepped up", () => {
+    expect(Sessions.isSteppedUp(aSession(), after(signedIn, { minutes: 5 }), true)).toBe(false);
   });
 });
 

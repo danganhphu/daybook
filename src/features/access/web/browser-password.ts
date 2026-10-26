@@ -4,6 +4,7 @@ import { derivedKeyByteLength, passwordLength } from "@/features/access/domain/a
 import type { Argon2Parameters } from "@/features/access/domain/password";
 import { decodeBase64Url, encodeBase64Url } from "@/shared/domain/base64url";
 import { err, ok, type Result } from "@/shared/domain/result";
+import { searchText } from "@/shared/domain/search-text";
 
 // The password's whole life on the device: normalised, checked, turned into a key. The password itself never
 // leaves the browser; the server sees only the key (ADR 0009, decision 2).
@@ -14,6 +15,7 @@ export const passwordMessages = {
   tooShort: `Mật khẩu cần ít nhất ${passwordLength.minimum} ký tự.`,
   tooLong: `Mật khẩu tối đa ${passwordLength.maximum} ký tự.`,
   breached: "Mật khẩu này đã bị lộ trong các vụ rò rỉ dữ liệu. Hãy chọn mật khẩu khác.",
+  guessable: "Mật khẩu dễ đoán quá, gần như chỉ có tên app hoặc tên đăng nhập.",
   uncheckable: "Không kiểm tra được mật khẩu. Hãy kiểm tra mạng rồi thử lại.",
 } as const;
 
@@ -35,6 +37,35 @@ export function checkPasswordLength(normalized: string): Result<string, string> 
   }
 
   return ok(normalized);
+}
+
+// The trade's own words, which a guesser who knows whose book this is tries first
+const tradeWords = ["nha khoa", "vat tu"] as const;
+
+// Shorter words are left in: taking out every "an" would gut ordinary sentences
+const shortestContextWord = 3;
+
+function squeezed(text: string): string {
+  return searchText(text).replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+// NIST 800-63B-4, 3.1.1.2: refuse context-specific words. A password that is little more than the app's name, the
+// trade or the person's username - "daybook2026daybook" - has under half the minimum length left once they are taken
+// out. A long sentence that mentions them keeps enough of its own, and digits count, so no composition rule creeps in.
+export function checkPasswordContext(
+  normalized: string,
+  context: ReadonlyArray<string>,
+): Result<string, string> {
+  let own = squeezed(normalized);
+  for (const word of [...tradeWords, ...context].map(squeezed)) {
+    if (word.length >= shortestContextWord) {
+      own = own.replaceAll(word, "");
+    }
+  }
+
+  return own.length < Math.ceil(passwordLength.minimum / 2)
+    ? err(passwordMessages.guessable)
+    : ok(normalized);
 }
 
 const utf8 = new TextEncoder();

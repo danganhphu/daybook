@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, ne } from "drizzle-orm";
+import { and, eq, isNull, lte, ne, sql } from "drizzle-orm";
 
 import type {
   AccessEventWrites,
@@ -9,8 +9,10 @@ import type {
   SessionWrites,
   SetupLinkWrites,
 } from "@/features/access/application/access-writes";
+import { passwordLockAfter } from "@/features/access/domain/access-policy";
 import type { Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
 import { toAccessEventRow } from "./access-event-mapping";
 import { accessEventTable } from "./access-event.table";
@@ -67,7 +69,7 @@ export function createPasskeyWrites(db: Database, batch: Batch): PasskeyWrites {
       );
     },
 
-    // Sessions it opened keep running; their passkey_id is set null by the foreign key
+    // A session still naming it has its passkey_id set null by the foreign key
     remove(id) {
       batch.enlist(db.delete(passkeyTable).where(eq(passkeyTable.id, id)));
     },
@@ -95,6 +97,20 @@ export function createPasswordWrites(db: Database, batch: Batch): PasswordWrites
             lockedAt: password.lockedAt?.epochMilliseconds ?? null,
           })
           .where(eq(passwordTable.accountId, password.accountId)),
+      );
+    },
+
+    // The right-hand side reads the row as it was, so both columns move from the same count
+    recordFailure(accountId, at) {
+      const failures = sql`${passwordTable.consecutiveFailures} + 1`;
+      batch.enlist(
+        db
+          .update(passwordTable)
+          .set({
+            consecutiveFailures: failures,
+            lockedAt: sql`coalesce(${passwordTable.lockedAt}, case when ${failures} >= ${sqlNumber(passwordLockAfter)} then ${at.epochMilliseconds} end)`,
+          })
+          .where(eq(passwordTable.accountId, accountId)),
       );
     },
   };
@@ -128,6 +144,14 @@ export function createSessionWrites(db: Database, batch: Batch): SessionWrites {
         db
           .delete(sessionTable)
           .where(and(eq(sessionTable.accountId, accountId), ne(sessionTable.id, keep))),
+      );
+    },
+
+    removeOpenedWith(passkeyId, keep) {
+      batch.enlist(
+        db
+          .delete(sessionTable)
+          .where(and(eq(sessionTable.passkeyId, passkeyId), ne(sessionTable.id, keep))),
       );
     },
   };

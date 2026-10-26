@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { displayNameSchema, usernameSchema } from "@/features/access/domain/account";
-import { origin, rows, seedSession } from "@/testing/support/access";
+import { origin, rows, seedAccount, seedSession } from "@/testing/support/access";
 import { testApp, testClock } from "@/testing/support/app";
 import { anAuthenticator, seedPasskeyAccount } from "@/testing/support/passkeys";
 import { seedPassword } from "@/testing/support/passwords";
@@ -75,17 +75,23 @@ describe("adding a passkey", () => {
 });
 
 describe("removing a passkey", () => {
-  it("given two passkeys, when one is removed, then the other stays and sessions from it keep running", async () => {
+  it("given two passkeys, when one is removed, then the other stays, the devices it signed in are signed out, and this one keeps going", async () => {
     const time = testClock("2026-10-22T01:00:00Z");
-    const { session, stored } = await seedPasskeyAccount(time);
+    const { account, session, stored } = await seedPasskeyAccount(time);
+    // Another phone signed in with the passkey being removed, and a laptop with the password
+    await seedSession(time.clock, account, { passkey: stored.id });
+    const { session: laptop } = await seedSession(time.clock, account);
     expectOk(await addAPasskey(time, session));
 
     expectOk(await testApp(time.clock).removePasskey(session, stored.id, origin()));
 
     expect(await rows("select id from passkey where id = ?", stored.id)).toEqual([]);
-    expect(await rows("select passkey_id from session where id = ?", session.id)).toEqual([
-      { passkey_id: null },
-    ]);
+    expect(await rows("select id, passkey_id from session order by id")).toEqual(
+      [
+        { id: session.id, passkey_id: null },
+        { id: laptop.id, passkey_id: null },
+      ].toSorted((a, b) => (a.id < b.id ? -1 : 1)),
+    );
     expect(await rows("select kind from access_event where kind = 'passkey_removed'")).toHaveLength(
       1,
     );
@@ -141,6 +147,29 @@ describe("removing a passkey", () => {
     later(time);
 
     expect(await testApp(time.clock).removePasskey(session, stored.id, origin())).toEqual(stepUp);
+  });
+});
+
+describe("step-up after a password sign-in", () => {
+  it("given an account with a passkey and a password sign-in a minute old, when a security setting is asked for, then a passkey is: a password alone adds no passkey", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const { account } = await seedPasskeyAccount(time);
+    await seedPassword(time, account);
+    const { session: phished } = await seedSession(time.clock, account);
+    const app = testApp(time.clock);
+
+    expect(await app.startAddingPasskey(phished)).toEqual(stepUp);
+    expect(await app.beginPasswordChange(phished)).toEqual(stepUp);
+    expect(await app.issueInvite(phished, origin())).toEqual(stepUp);
+  });
+
+  it("given an account with no passkey, when its fresh password sign-in asks for a passkey, then it may add its first", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const account = await seedAccount(time.clock);
+    await seedPassword(time, account);
+    const { session } = await seedSession(time.clock, account);
+
+    expect(await testApp(time.clock).startAddingPasskey(session)).toMatchObject({ ok: true });
   });
 });
 
@@ -226,6 +255,56 @@ describe("ending another device's session", () => {
       ok: false,
       error: "not_found",
     });
+  });
+});
+
+describe("signing out the other person's devices", () => {
+  it("given the other person's phone lost, when this user signs out every device of theirs, then all theirs end, this one stays, and it is logged for both", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+    const minh = await seedPasskeyAccount(time, "minh");
+    await seedSession(time.clock, minh.account);
+
+    expect(
+      await testApp(time.clock).endPersonSessions(lan.session, minh.account.id, origin()),
+    ).toEqual({ ok: true, value: 2 });
+
+    expect(await rows("select id from session")).toEqual([{ id: lan.session.id }]);
+    expect(
+      await rows(
+        "select account_id, actor_id, detail from access_event where kind = 'sessions_revoked'",
+      ),
+    ).toEqual([
+      {
+        account_id: minh.account.id,
+        actor_id: lan.account.id,
+        detail: JSON.stringify({ by: "other_user", ended: "2" }),
+      },
+    ]);
+    expect(await rows("select id from passkey where id = ?", minh.stored.id)).toHaveLength(1);
+  });
+
+  it("given this user's own account, when its devices are to be signed out this way, then nothing is found", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+
+    expect(
+      await testApp(time.clock).endPersonSessions(lan.session, lan.account.id, origin()),
+    ).toEqual({ ok: false, error: "not_found" });
+  });
+
+  it("given a session past the window, when the other person's devices are to be signed out, then step-up is asked", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+    const minh = await seedPasskeyAccount(time, "minh");
+    later(time);
+
+    expect(
+      await testApp(time.clock).endPersonSessions(lan.session, minh.account.id, origin()),
+    ).toEqual(stepUp);
+    expect(await rows("select id from session where account_id = ?", minh.account.id)).toHaveLength(
+      1,
+    );
   });
 });
 

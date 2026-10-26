@@ -1,5 +1,7 @@
+import { appName } from "@/app/identity";
 import { problemMessage } from "@/features/access/web/attempt-setting";
 import {
+  checkPasswordContext,
   checkPasswordLength,
   deriveKey,
   isBreached,
@@ -12,17 +14,22 @@ import { beginSettingPassword, finishSettingPassword } from "./actions";
 import type { StepUp } from "./use-step-up";
 
 // Sets or changes the fallback password, from the settings or right after an invite's setup. Checked here first, so
-// a short or leaked password never costs a step-up or a round trip; only the browser can check the password itself,
-// and the server sees only the key Argon2id derives from it. The refusal is the sentence to show, or nothing after a
-// cancelled step-up.
+// a short, guessable or leaked password never costs a step-up or a round trip; only the browser can check the
+// password itself, and the server sees only the key Argon2id derives from it. The refusal is the sentence to show, or
+// nothing after a cancelled step-up.
 export async function saveBackupPassword(
   text: string,
+  username: string,
   run: StepUp["run"],
 ): Promise<Result<null, string | undefined>> {
   const normalized = normalizePassword(text);
   const length = checkPasswordLength(normalized);
   if (!length.ok) {
     return length;
+  }
+  const own = checkPasswordContext(normalized, [appName, username]);
+  if (!own.ok) {
+    return own;
   }
   try {
     if (await isBreached(normalized)) {

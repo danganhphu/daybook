@@ -63,6 +63,7 @@ what will move before it does. The rules are in [domain.md](domain.md#merging).
 
 ## Sign-in
 
-Passkeys are the way in; a password, hashed with Argon2id in the browser, is the fallback. Sessions live 30 days in
-D1; security settings ask to confirm again after five minutes. The reasons are in
-[design.md](../product/design.md#sign-in), the rules in [domain.md](domain.md#access).
+Passkeys are the way in; a password, hashed with Argon2id in the browser, is the fallback. Sessions live 30 days,
+or 14 unused, in D1; security settings ask to confirm again after five minutes. The reasons are in
+[design.md](../product/design.md#sign-in), the rules in [domain.md](domain.md#access), what is kept and logged and
+where the app departs from ASVS in [security.md](security.md).

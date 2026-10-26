@@ -15,7 +15,8 @@ export async function POST() {
 
   return new Response(null, {
     status: 303,
-    // The browser drops this site's cookies too, whatever the server missed (W3C Clear Site Data)
-    headers: { location: routes.signIn, "clear-site-data": '"cookies"' },
+    // The browser drops this site's cookies, cached pages and storage too, whatever the server missed, so Back on a
+    // shared phone shows nothing (W3C Clear Site Data). Passkeys live in the phone's password manager, not here.
+    headers: { location: routes.signIn, "clear-site-data": '"cache", "cookies", "storage"' },
   });
 }

@@ -5,7 +5,11 @@ import { Temporal } from "temporal-polyfill/implementation";
 // NIST SP 800-63B-4 AAL1: reauthenticate at least every 30 days, counted from the sign-in, not from the last request
 export const sessionLifetime = Temporal.Duration.from({ hours: 30 * 24 });
 
-// last_seen_at is for the device list, so an hourly write is precise enough and spares D1
+// ASVS 7.3.1: a session left unused this long ends too, whatever is left of its 30 days. Two weeks off - Tet, say -
+// costs one Face ID.
+export const sessionIdleLimit = Temporal.Duration.from({ hours: 14 * 24 });
+
+// last_seen_at feeds the device list and the idle limit; an hourly write is precise enough for both and spares D1
 export const lastSeenPrecision = Temporal.Duration.from({ hours: 1 });
 
 // Security settings need a sign-in this recent

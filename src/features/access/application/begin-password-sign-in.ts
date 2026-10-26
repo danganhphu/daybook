@@ -16,7 +16,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, CeremonyWrites } from "./access-writes";
 import { formatCeremonyCookie } from "./ceremony-cookie";
-import { decoySaltFor } from "./password-keys";
+import { decoySaltFor, usernameLimitKey } from "./password-keys";
 import type { Peppers } from "./peppers";
 import { clientNetwork } from "./rate-limit-keys";
 import type { RateLimiter } from "./rate-limiter";
@@ -42,7 +42,7 @@ export type PasswordPrompt = {
   readonly ceremonyCookie: string;
 };
 
-// A long username is not a username; it only lengthens rate-limit keys
+// A long username is not a username; it is cut before it is keyed
 const usernameKeyLength = 64;
 
 // The first half of a password sign-in. A username that exists, one with no password and one nobody has all get a
@@ -61,7 +61,7 @@ export async function beginPasswordSignIn(
       ? []
       : [{ key: `password:${clientNetwork(ip)}`, ...passwordSignInAttempts.perClient }]),
     {
-      key: `password-user:${typed.slice(0, usernameKeyLength)}`,
+      key: `password-user:${await usernameLimitKey(deps.secrets, deps.peppers.current, typed.slice(0, usernameKeyLength))}`,
       ...passwordSignInAttempts.perAccount,
     },
   ];

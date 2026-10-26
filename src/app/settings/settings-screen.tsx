@@ -91,7 +91,11 @@ export function SettingsScreen({
         />
       </List>
 
-      <SignInMethods view={view} run={run} />
+      <SignInMethods
+        view={view}
+        hasOtherDevices={view.devices.some((device) => !device.current)}
+        run={run}
+      />
 
       <Devices devices={view.devices} run={run} />
 

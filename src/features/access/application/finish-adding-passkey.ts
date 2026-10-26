@@ -5,9 +5,7 @@ import type { CeremonyRepository } from "@/features/access/domain/ceremony-repos
 import * as Passkeys from "@/features/access/domain/passkey";
 import type { Passkey } from "@/features/access/domain/passkey";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
-import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
@@ -16,9 +14,9 @@ import type { AccessEventWrites, CeremonyWrites, PasskeyWrites } from "./access-
 import { findBoundCeremony } from "./bound-ceremony";
 import type { PasskeyVerifier } from "./passkey-verifier";
 import type { Secrets } from "./secrets";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type FinishAddingPasskeyDeps = {
-  readonly clock: Clock;
+export type FinishAddingPasskeyDeps = StepUpDeps & {
   readonly secrets: Secrets;
   readonly ceremonies: CeremonyRepository;
   readonly passkeys: PasskeyRepository;
@@ -43,7 +41,7 @@ export async function finishAddingPasskey(
   request: FinishAddingPasskeyRequest,
 ): Promise<Result<Passkey, Extract<AccessError, "step_up_required" | "passkey_not_accepted">>> {
   const now = deps.clock();
-  if (!Sessions.isFresh(session, now)) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

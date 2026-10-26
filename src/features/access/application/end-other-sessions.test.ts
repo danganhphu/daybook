@@ -60,4 +60,16 @@ describe("listSessions", () => {
       "Safari trên iPhone",
     ]);
   });
+
+  it("given a device not used for two weeks, when listed, then it is not shown: it can no longer sign in", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+    const lan = await seedAccount(time.clock);
+    await seedSession(time.clock, lan, { from: origin("203.0.113.7", "Safari trên iPhone") });
+    time.setTo("2026-11-04T02:00:00Z");
+    const laptop = await seedSession(time.clock, lan);
+
+    const listed = await testApp(time.clock).listSessions(lan.id);
+
+    expect(listed.map((session) => session.id)).toEqual([laptop.session.id]);
+  });
 });

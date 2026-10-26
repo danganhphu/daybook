@@ -106,6 +106,10 @@ function whatHappened(event: AccessEvent): string {
       return event.detail?.["by"] === "another_device"
         ? "Đăng xuất từ thiết bị khác"
         : eventTitles.session_ended;
+    case "sessions_revoked":
+      return event.detail?.["by"] === "other_user"
+        ? accessCopy.signOutEverywhere
+        : eventTitles.sessions_revoked;
     case "setup_link_issued":
       return isPurpose(purpose) ? `Tạo ${linkNames[purpose]}` : eventTitles.setup_link_issued;
     case "setup_link_redeemed":
@@ -129,6 +133,13 @@ function eventTitle(
       : undefined;
   const actor =
     event.actorId !== undefined && event.actorId !== viewer ? nameOf(event.actorId) : undefined;
+  // Ending someone's devices is done to what is theirs: "của Lan", and "của bạn" on Lan's own list
+  if (event.kind === "sessions_revoked" && event.detail?.["by"] === "other_user") {
+    if (actor !== undefined) {
+      return `${actor} ${midSentence(title)} của bạn`;
+    }
+    return subject === undefined ? title : `${title} của ${subject}`;
+  }
   const forWhom = subject === undefined ? title : `${title} cho ${subject}`;
 
   return actor === undefined ? forWhom : `${actor} ${midSentence(forWhom)}`;

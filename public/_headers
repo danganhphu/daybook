@@ -1,0 +1,12 @@
+# Static files are served before the Worker runs, so they never get the proxy's headers (src/proxy.ts). These match
+# securityHeaders() in src/features/access/web/request-policy.ts; static-headers.test.ts keeps the two in step.
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Cross-Origin-Resource-Policy: same-origin
+  Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; sandbox
+
+# Content-hashed, so kept for good. vinext writes this rule itself only when no _headers file exists.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

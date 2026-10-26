@@ -5,9 +5,7 @@ import type { CeremonyRepository } from "@/features/access/domain/ceremony-repos
 import * as Passwords from "@/features/access/domain/password";
 import { currentArgon2Parameters, derivedKeySchema } from "@/features/access/domain/password";
 import type { PasswordRepository } from "@/features/access/domain/password-repository";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
-import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
@@ -17,9 +15,9 @@ import { findBoundCeremony } from "./bound-ceremony";
 import { verifierFor } from "./password-keys";
 import type { Peppers } from "./peppers";
 import type { Secrets } from "./secrets";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type FinishPasswordChangeDeps = {
-  readonly clock: Clock;
+export type FinishPasswordChangeDeps = StepUpDeps & {
   readonly secrets: Secrets;
   readonly peppers: Peppers;
   readonly ceremonies: CeremonyRepository;
@@ -45,7 +43,7 @@ export async function finishPasswordChange(
   request: FinishPasswordChangeRequest,
 ): Promise<Result<null, Extract<AccessError, "step_up_required" | "password_not_saved">>> {
   const now = deps.clock();
-  if (!Sessions.isFresh(session, now)) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

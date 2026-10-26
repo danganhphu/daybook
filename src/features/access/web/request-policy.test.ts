@@ -59,6 +59,11 @@ describe("needsSignIn", () => {
     ["GET", "/sign-in", false, false],
     ["GET", "/setup", false, false],
     ["GET", "/somewhere/else", false, true],
+    // The installed app's manifest and icons, which the sign-in page needs before anyone has a session
+    ["GET", "/manifest.webmanifest", false, false],
+    ["GET", "/icon.svg", false, false],
+    // A build file the Worker did not find is a 404, not a sign-in page
+    ["GET", "/_next/static/chunks/gone.js", false, false],
     // A server action without a cookie is refused by the action itself, not redirected here
     ["POST", "/", false, false],
   ])(

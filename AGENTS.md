@@ -165,9 +165,10 @@ Two people share one book and sign in with passkeys, a password being the fallba
   `secretTokenMatches` (constant time). A setup token travels in a URL fragment and reaches the server in a POST body.
 - **Only a use case that has just authenticated someone opens a session**, through `enlistNewSession` on its own unit
   of work. No adapter calls it, and nothing exposes it on the `App`.
-- **Security settings check step-up in the use case** (`Sessions.isFresh`), not only in the screen. A step-up is a
-  passkey sign-in for the same account, or a password sign-in for an account with no passkey: a fresh session
-  replaces the old one. The page asks only when the server answers `step_up_required` (`useStepUp` in
+- **Security settings check step-up in the use case** (`isSteppedUp` in `step-up.ts`), not only in the screen. A
+  step-up is a passkey sign-in for the same account, or a password sign-in for an account with no passkey: a fresh
+  session replaces the old one. On an account with a passkey a password sign-in never counts, so a phished password
+  cannot add a passkey. The page asks only when the server answers `step_up_required` (`useStepUp` in
   `src/app/settings/`), then runs the action once more.
 - **The password never reaches the server.** The browser normalises it, checks its length and Pwned Passwords, and
   sends only an Argon2id key derived with a salt the server chose (`browser-password.ts`); the server keeps an HMAC
@@ -187,14 +188,16 @@ Two people share one book and sign in with passkeys, a password being the fallba
   A request with no ceremony of this browser behind it is refused without a log entry, so nobody can grow an
   append-only log by sending junk.
 - **Rate limits count a client**, an IPv4 address or an IPv6 /64, in D1 (`createRateLimiter`), exact rather than the
-  approximate per-location binding.
+  approximate per-location binding. A typed username is keyed with the pepper before it becomes a limit's key.
+- **Static files carry `public/_headers`**, which the Worker never sees; `static-headers.test.ts` holds it to the
+  proxy's headers. A fault leaves one line in Workers Logs through `src/instrumentation.ts`, never headers or a query.
 - **The command line is for two moments only**: the first account, and break-glass (`pnpm access:*`, below). It runs
   the app's own use cases and writes against a batch that records SQL, then sends it through `cf d1 query` with
   `--remote`, or straight into the dev database's SQLite file with `--local` (cf has no local query), in one
   transaction; `--dry-run` prints it. Everything else - invites, recovery, passwords, usernames - is in Settings.
 - **Configuration:** `APP_ORIGIN` (the relying party and the Origin check) and `PASSWORD_PEPPER` (32 random bytes,
   base64url) are text bindings in development and Worker secrets otherwise (`cloudflare.config.ts`). The real URL and
-  pepper never enter the repository.
+  pepper never enter the repository; the development pepper is refused anywhere but localhost.
 
 ## Database
 
@@ -265,6 +268,8 @@ End-to-end tests cover the flows a user would notice breaking; everything else i
 
 - Node 26 and pnpm. `.node-version` pins Node for version managers that read it; the pnpm version is pinned in
   `package.json`. Node no longer ships Corepack, so install pnpm itself once - see https://pnpm.io/installation.
+- Clone with `--recurse-submodules`, or run `git submodule update --init` in an existing clone: `vendor/` holds the
+  security reference the `security` skill reads.
 - `pnpm install`. `pnpm-workspace.yaml` holds the supply-chain settings: new releases wait a day, a drop in publish
   trust fails the install, and dependency build scripts run only for packages listed under `allowBuilds`. Review a
   package before adding it there. Versions are pinned exactly.
@@ -340,6 +345,7 @@ The bar is a principal engineer's, on current TypeScript. Compiling is not the s
 - **Sass guards tokens at build time:** `color(acent)` fails with the list of known roles.
 - **Oxfmt** formats code, config and SCSS, sorting imports. It is in beta. Markdown is left out on purpose: docs
   are wrapped by hand at about 120 columns, and Oxfmt pads tables far past that.
+- **`vendor/` is someone else's code**: Oxfmt, Oxlint and Vitest skip it.
 - **CSS Module types** (`*.module.scss.d.ts`) are written by the dev server and the build, and committed. After
   changing a module's class names, run `pnpm dev` or `pnpm build` once so the types follow. Do not use the
   `vite-css-modules` CLI: it never exits, because Vite's Sass compiler outlives the run.
@@ -350,7 +356,8 @@ Run lint and fix what it reports before calling frontend work done.
 
 | Source | What | Needs |
 |---|---|---|
-| `.agents/skills` | This repo's own procedures: `sign-in`, `d1-migrations`, `e2e-tests`, `design-system`, `cloudflare-and-vinext`. Read the matching one before such a task | nothing |
+| `.agents/skills` | This repo's own procedures: `sign-in`, `d1-migrations`, `e2e-tests`, `design-system`, `cloudflare-and-vinext`, `security`. Read the matching one before such a task | nothing |
+| `vendor/cloudflare/security-audit-skill` | Cloudflare's security-audit skill as a git submodule, pinned to a reviewed commit: the attack-class files the `security` skill points into. Read, never edited; Renovate moves the pin | `git submodule update --init` |
 | `cloudflare` plugin | Cloudflare's skills, plus the Cloudflare API MCP server (`mcp.cloudflare.com`): API calls and current docs | OAuth sign-in on first use |
 | `.mcp.json`: `chrome-devtools` | Driving the PWA in a real browser | nothing |
 | `drizzle-kit` agent skills | How to run `generate`, read its JSON output, resolve its hints. Linked by pnpm into `.claude/skills/pnpm-drizzle-kit-*` and `.agents/skills/pnpm-drizzle-kit-*` (both ignored), always matching the installed drizzle-kit | approved in `pnpm-workspace.yaml` under `permissions` |

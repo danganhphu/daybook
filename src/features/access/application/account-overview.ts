@@ -10,9 +10,13 @@ import * as Passwords from "@/features/access/domain/password";
 import type { PasswordRepository } from "@/features/access/domain/password-repository";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
+import type { Clock } from "@/shared/application/clock";
 import type { AccountId } from "@/shared/domain/account-id";
 
+import { listSessions } from "./list-sessions";
+
 export type AccountOverviewDeps = {
+  readonly clock: Clock;
   readonly accounts: AccountRepository;
   readonly passkeys: PasskeyRepository;
   readonly passwords: PasswordRepository;
@@ -94,7 +98,7 @@ export async function accountOverview(
     deps.accounts.get(accountId),
     deps.passkeys.listForAccount(accountId),
     deps.passwords.get(accountId),
-    deps.sessions.listForAccount(accountId),
+    listSessions(deps, accountId),
     deps.accessEvents.listForAccount(accountId, activityShown),
     listPeople(deps),
   ]);
