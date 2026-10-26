@@ -92,4 +92,25 @@ describe("Customers", () => {
       error: "customer_not_archived",
     });
   });
+
+  it("given two customers, when one is merged into the other, then it is hidden naming the kept one, for good, and the kept one's version moves", () => {
+    const kept = Customers.create(details({ name: "Nha khoa Lan Anh" }), maker, created);
+    const customer = Customers.create(details({ name: "chị Lan" }), maker, created);
+
+    const merged = expectOk(Customers.mergeInto(customer, kept, editor, later));
+
+    expect(merged).toMatchObject({ status: "archived", mergedInto: kept.id });
+    expect(Customers.restore(merged, maker, later)).toEqual({
+      ok: false,
+      error: "customer_merged",
+    });
+    expect(Customers.mergeInto(kept, kept, maker, later)).toEqual({
+      ok: false,
+      error: "merge_into_itself",
+    });
+    expect(Customers.absorbMerge(kept, editor, later).audit).toMatchObject({
+      version: 2,
+      updatedBy: editor,
+    });
+  });
 });

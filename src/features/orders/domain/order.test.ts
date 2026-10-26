@@ -166,6 +166,43 @@ describe("the rules an order keeps", () => {
   });
 });
 
+describe("what a merge does to an order", () => {
+  it("given an order, deleted or not, when its customer is merged away, then it moves to the kept one and nothing else changes", () => {
+    const kept = customerIdSchema.parse("019a0000-0000-7000-8000-0000000000c2");
+    const deleted = Orders.markDeleted(anOrder(), seller, at);
+
+    const moved = Orders.reassignCustomer(deleted, kept, partner, later);
+
+    expect(moved).toEqual({
+      ...deleted,
+      customerId: kept,
+      audit: { ...deleted.audit, updatedAt: later, updatedBy: partner, version: 3 },
+    });
+  });
+
+  it("given lines of two products, when one is merged into the other, then its lines name the kept one at their own quantity and price", () => {
+    const order = expectOk(
+      Orders.place(
+        details([
+          { productId: paper, quantity: 2, unitPrice: 425_000 },
+          { productId: pens, quantity: 1, unitPrice: 10_000 },
+        ]),
+        seller,
+        at,
+      ),
+    );
+
+    const moved = Orders.replaceProduct(order, paper, pens, partner, later);
+
+    expect(moved.lines).toEqual([
+      { productId: pens, quantity: 2, unitPrice: 425_000 },
+      { productId: pens, quantity: 1, unitPrice: 10_000 },
+    ]);
+    expect(Orders.total(moved)).toBe(Orders.total(order));
+    expect(moved.audit.version).toBe(2);
+  });
+});
+
 describe("the change log", () => {
   it("given a payment added, when recorded, then it says who, when, and the order before and after", () => {
     const order = anOrder();

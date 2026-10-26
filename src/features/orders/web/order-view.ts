@@ -1,4 +1,5 @@
 import type { Suggestion } from "@/shared/ui/suggest-field/suggest-field";
+import { moneyText } from "@/shared/web/money-text";
 
 // What the browser gets for orders: plain values that cross the server-client boundary. Days are YYYY-MM-DD,
 // money is whole đồng.
@@ -103,3 +104,12 @@ export type ProductSuggestion = {
   // The price to fill in: this customer's last, else anyone's
   readonly lastPrice: number | undefined;
 };
+
+// A product in a list of suggestions: the name, and the last price to go by
+export function describeProduct(product: ProductSuggestion): Suggestion {
+  return {
+    key: product.id,
+    label: product.name,
+    detail: product.lastPrice === undefined ? undefined : moneyText(product.lastPrice),
+  };
+}

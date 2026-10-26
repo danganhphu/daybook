@@ -2,7 +2,7 @@
 
 import { useCallback, type ChangeEvent } from "react";
 
-import type { ProductSuggestion } from "@/features/orders/web/order-view";
+import { describeProduct, type ProductSuggestion } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { CloseIcon } from "@/shared/ui/icon/icons";
@@ -30,15 +30,9 @@ export function lineAmount(line: LineState): number {
   return (wholeNumber(line.quantity) ?? 0) * (parseMoneyInput(line.price) ?? 0);
 }
 
-const describeProduct = (product: ProductSuggestion) => ({
-  key: product.id,
-  label: product.name,
-  detail: product.lastPrice === undefined ? undefined : moneyText(product.lastPrice),
-});
-
 export type OrderLineFieldsProps = {
   readonly line: LineState;
-  // 1-based, for the labels: "Món hàng 2"
+  // 1-based, for the labels: "Sản phẩm 2"
   readonly number: number;
   readonly removable: boolean;
   readonly focusOnMount: boolean;

@@ -22,6 +22,8 @@ const headlines: Record<OrderChangeKind, string> = {
   payment_removed: "Bỏ một lần thu",
   deleted: "Xoá đơn",
   restored: "Khôi phục đơn",
+  customer_merged: "Gộp khách",
+  product_merged: "Gộp sản phẩm",
 };
 
 export type ChangeText = {
@@ -86,6 +88,28 @@ function revisionDetails(before: OrderSnapshot, after: OrderSnapshot, names: Nam
   return details;
 }
 
+function linesPerProduct(lines: ReadonlyArray<Line>): Map<string, number> {
+  const counted = new Map<string, number>();
+  for (const line of lines) {
+    counted.set(line.productId, (counted.get(line.productId) ?? 0) + 1);
+  }
+
+  return counted;
+}
+
+// The product a merge took off the order, and the one its lines went to - which may have been on the order already,
+// so it is found by its count of lines growing, not by being new
+function productsMerged(before: OrderSnapshot, after: OrderSnapshot, names: Names): string[] {
+  const was = linesPerProduct(before.lines);
+  const now = linesPerProduct(after.lines);
+  const gone = [...was.keys()].filter((id) => !now.has(id));
+  const grew = [...now].filter(([id, lines]) => lines > (was.get(id) ?? 0)).map(([id]) => id);
+
+  return gone.flatMap((from) =>
+    grew.map((into) => `Sản phẩm: ${names.product(from)} → ${names.product(into)}`),
+  );
+}
+
 function paymentAdded(before: OrderSnapshot | undefined, after: OrderSnapshot): string[] {
   const known = new Set(before?.payments.map((payment) => payment.id));
 
@@ -127,6 +151,19 @@ export function changeText(
       return { headline, details: paymentAdded(before, after) };
     case "payment_removed":
       return { headline, details: paymentRemoved(before, after) };
+    case "customer_merged":
+      return {
+        headline,
+        details:
+          before === undefined
+            ? []
+            : [`Khách: ${names.customer(before.customerId)} → ${names.customer(after.customerId)}`],
+      };
+    case "product_merged":
+      return {
+        headline,
+        details: before === undefined ? [] : productsMerged(before, after, names),
+      };
     case "placed":
     case "undelivered":
     case "deleted":

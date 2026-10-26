@@ -5,6 +5,7 @@ import {
   count,
   desc,
   eq,
+  gte,
   inArray,
   isNotNull,
   isNull,
@@ -18,7 +19,11 @@ import { z } from "zod";
 import { captureIdSchema } from "@/features/capture/domain/capture";
 import { customerIdSchema } from "@/features/customers/domain/customer";
 import { customerTable } from "@/features/customers/infrastructure/customer.table";
-import type { OrderFilter, OrderQueries } from "@/features/orders/application/order-queries";
+import type {
+  OrderFilter,
+  OrderQueries,
+  OrderRow,
+} from "@/features/orders/application/order-queries";
 import { orderIdSchema } from "@/features/orders/domain/order";
 import {
   orderChangeIdSchema,
@@ -28,6 +33,7 @@ import {
 import { productIdSchema } from "@/features/products/domain/product";
 import { productTable } from "@/features/products/infrastructure/product.table";
 import { accountIdSchema } from "@/shared/domain/account-id";
+import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { moneySchema } from "@/shared/domain/money";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -76,39 +82,129 @@ const money = (value: number | null) => moneySchema.parse(value ?? 0);
 
 const changeKindSchema = z.enum(orderChangeKinds);
 
+// What a list row reads, live or deleted
+const rowFields = {
+  id: salesOrderTable.id,
+  customerId: salesOrderTable.customerId,
+  customerName: customerTable.name,
+  customerArea: customerTable.area,
+  orderedOn: salesOrderTable.orderedOn,
+  deliveredOn: salesOrderTable.deliveredOn,
+  productNames,
+  total: orderTotal,
+  paid: orderPaid,
+};
+
+type RowFields = {
+  readonly id: string;
+  readonly customerId: string;
+  readonly customerName: string;
+  readonly customerArea: string | null;
+  readonly orderedOn: string;
+  readonly deliveredOn: string | null;
+  readonly productNames: string | null;
+  readonly total: number;
+  readonly paid: number;
+};
+
+function toRow(row: RowFields): OrderRow {
+  return {
+    id: orderIdSchema.parse(row.id),
+    customerId: customerIdSchema.parse(row.customerId),
+    customerName: row.customerName,
+    customerArea: row.customerArea ?? undefined,
+    orderedOn: calendarDaySchema.parse(row.orderedOn),
+    deliveredOn: row.deliveredOn === null ? undefined : calendarDaySchema.parse(row.deliveredOn),
+    productNames: row.productNames === null ? [] : row.productNames.split(nameSeparator),
+    total: money(row.total),
+    paid: money(row.paid),
+  };
+}
+
 export function createOrderQueries(db: Database): OrderQueries {
   return {
     async list(filter, limit) {
       const rows = await db
-        .select({
-          id: salesOrderTable.id,
-          customerId: salesOrderTable.customerId,
-          customerName: customerTable.name,
-          customerArea: customerTable.area,
-          orderedOn: salesOrderTable.orderedOn,
-          deliveredOn: salesOrderTable.deliveredOn,
-          productNames,
-          total: orderTotal,
-          paid: orderPaid,
-        })
+        .select(rowFields)
         .from(salesOrderTable)
         .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
         .where(matching(filter))
         .orderBy(desc(salesOrderTable.orderedOn), desc(salesOrderTable.id))
         .limit(limit);
 
-      return rows.map((row) => ({
-        id: orderIdSchema.parse(row.id),
-        customerId: customerIdSchema.parse(row.customerId),
-        customerName: row.customerName,
-        customerArea: row.customerArea ?? undefined,
-        orderedOn: calendarDaySchema.parse(row.orderedOn),
-        deliveredOn:
-          row.deliveredOn === null ? undefined : calendarDaySchema.parse(row.deliveredOn),
-        productNames: row.productNames === null ? [] : row.productNames.split(nameSeparator),
-        total: money(row.total),
-        paid: money(row.paid),
-      }));
+      return rows.map(toRow);
+    },
+
+    async listDeleted(since, limit) {
+      const rows = await db
+        .select({
+          ...rowFields,
+          version: salesOrderTable.version,
+          deletedAt: salesOrderTable.deletedAt,
+          deletedBy: salesOrderTable.deletedBy,
+        })
+        .from(salesOrderTable)
+        .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
+        .where(
+          and(
+            isNotNull(salesOrderTable.deletedAt),
+            gte(salesOrderTable.deletedAt, since.epochMilliseconds),
+          ),
+        )
+        .orderBy(desc(salesOrderTable.deletedAt), desc(salesOrderTable.id))
+        .limit(limit);
+
+      return rows.flatMap((row) =>
+        row.deletedAt === null || row.deletedBy === null
+          ? []
+          : [
+              {
+                ...toRow(row),
+                version: versionSchema.parse(row.version),
+                deletedAt: Temporal.Instant.fromEpochMilliseconds(row.deletedAt),
+                deletedBy: accountIdSchema.parse(row.deletedBy),
+              },
+            ],
+      );
+    },
+
+    // Two reads in one round trip, over every live line: two people's book has a few hundred products at most
+    async productUsage() {
+      const latest = db
+        .select({
+          productId: orderLineTable.productId,
+          unitPrice: orderLineTable.unitPrice,
+          rank: sql<number>`row_number() over (partition by ${orderLineTable.productId} order by ${salesOrderTable.orderedOn} desc, ${salesOrderTable.createdAt} desc)`.as(
+            "rank",
+          ),
+        })
+        .from(orderLineTable)
+        .innerJoin(salesOrderTable, eq(salesOrderTable.id, orderLineTable.orderId))
+        .where(live)
+        .as("latest");
+      const [counts, prices] = await db.batch([
+        db
+          .select({
+            productId: orderLineTable.productId,
+            orderCount: sql<number>`count(distinct ${orderLineTable.orderId})`,
+          })
+          .from(orderLineTable)
+          .innerJoin(salesOrderTable, eq(salesOrderTable.id, orderLineTable.orderId))
+          .where(live)
+          .groupBy(orderLineTable.productId),
+        db
+          .select({ productId: latest.productId, unitPrice: latest.unitPrice })
+          .from(latest)
+          .where(eq(latest.rank, 1)),
+      ]);
+      const lastPrice = new Map(prices.map((row) => [row.productId, money(row.unitPrice)]));
+
+      return new Map(
+        counts.map((row) => [
+          productIdSchema.parse(row.productId),
+          { orderCount: row.orderCount, lastPrice: lastPrice.get(row.productId) ?? money(0) },
+        ]),
+      );
     },
 
     async totals(filter) {

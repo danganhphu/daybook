@@ -7,6 +7,9 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import * as Customers from "@/features/customers/web/commands";
 import type { CustomerFormState, CustomerResult } from "@/features/customers/web/commands";
+import * as Merging from "@/features/merging/web/commands";
+import type { MergeConfirmView } from "@/features/merging/web/commands";
+import type { Result } from "@/shared/domain/result";
 import { customerPath } from "@/shared/web/routes";
 
 // Anyone can call a server action, so each one checks the session first and the commands parse every argument
@@ -54,6 +57,49 @@ export async function showCustomer(id: string, version: number): Promise<Custome
   const app = daybook();
   const session = await requireSession(app);
   const result = await Customers.restoreCustomer(app, session.accountId, id, version);
+  refresh();
+
+  return result;
+}
+
+export async function addCustomerName(id: string, name: string): Promise<Result<null, string>> {
+  const app = daybook();
+  const session = await requireSession(app);
+  const result = await Customers.addCustomerAlias(app, session.accountId, id, name);
+  refresh();
+
+  return result;
+}
+
+export async function removeCustomerName(aliasId: string): Promise<Result<null, string>> {
+  const app = daybook();
+  await requireSession(app);
+  const result = await Customers.removeCustomerAlias(app, aliasId);
+  refresh();
+
+  return result;
+}
+
+// What merging into `intoId` will move, before anything does
+export async function customerMergeConfirm(
+  id: string,
+  intoId: string,
+): Promise<Result<MergeConfirmView, string>> {
+  const app = daybook();
+  await requireSession(app);
+
+  return Merging.customerMergeConfirm(app, id, intoId);
+}
+
+// The kept customer's id, for the page to go there
+export async function mergeCustomer(
+  id: string,
+  version: number,
+  intoId: string,
+): Promise<Result<string, string>> {
+  const app = daybook();
+  const session = await requireSession(app);
+  const result = await Merging.mergeCustomers(app, session.accountId, id, version, intoId);
   refresh();
 
   return result;

@@ -16,7 +16,10 @@ export async function restoreCustomer(
     ActiveCustomer,
     Extract<
       CustomerError,
-      "customer_not_found" | "customer_changed_elsewhere" | "customer_not_archived"
+      | "customer_not_found"
+      | "customer_changed_elsewhere"
+      | "customer_not_archived"
+      | "customer_merged"
     >
   >
 > {

@@ -31,6 +31,9 @@ export const noteTable = sqliteTable(
     index("note_live_by_created_at")
       .on(table.createdAt)
       .where(sql`${table.deletedAt} is null`),
+    index("note_deleted_by_deleted_at")
+      .on(table.deletedAt)
+      .where(sql`${table.deletedAt} is not null`),
     index("note_by_capture").on(table.captureId),
   ],
 );

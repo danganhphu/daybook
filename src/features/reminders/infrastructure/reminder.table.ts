@@ -40,6 +40,13 @@ export const reminderTable = sqliteTable(
     index("reminder_open_by_due_on")
       .on(table.dueOn)
       .where(sql`${table.doneAt} is null and ${table.deletedAt} is null`),
+    // The finished ones, newest first, paged by (done_at, id)
+    index("reminder_done_by_done_at")
+      .on(table.doneAt, table.id)
+      .where(sql`${table.doneAt} is not null and ${table.deletedAt} is null`),
+    index("reminder_deleted_by_deleted_at")
+      .on(table.deletedAt)
+      .where(sql`${table.deletedAt} is not null`),
     index("reminder_by_customer").on(table.customerId),
   ],
 );

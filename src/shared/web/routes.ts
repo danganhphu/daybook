@@ -8,6 +8,8 @@ export const routes = {
   newOrder: "/orders/new",
   customers: "/customers",
   newCustomer: "/customers/new",
+  products: "/products",
+  deleted: "/deleted",
   reports: "/reports",
   signIn: "/sign-in",
   setup: "/setup",
@@ -25,6 +27,10 @@ export function orderPath(id: string): string {
 
 export function editOrderPath(id: string): string {
   return `${orderPath(id)}/edit`;
+}
+
+export function productPath(id: string): string {
+  return `${routes.products}/${id}`;
 }
 
 export function customerPath(id: string): string {

@@ -17,6 +17,21 @@ export type ReminderGroup = {
   readonly reminders: ReadonlyArray<ReminderView>;
 };
 
+// A finished reminder, latest first, with what reopening it needs
+export type DoneReminderView = {
+  readonly id: string;
+  readonly version: number;
+  readonly text: string;
+  // "Xong 26/10 (Lan)", and the customer after it when there is one
+  readonly detail: string;
+};
+
+export type DoneRemindersView = {
+  readonly reminders: ReadonlyArray<DoneReminderView>;
+  // The next page, when there is one
+  readonly nextPath: string | undefined;
+};
+
 // What Hôm nay shows above the notes: the most overdue first, and how many more wait
 export type DueView = {
   readonly first: ReminderView;

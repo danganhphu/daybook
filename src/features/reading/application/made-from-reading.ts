@@ -50,10 +50,9 @@ export async function prepareOrderFrom(
   }
 
   const known = new Map(
-    (await deps.products.findActiveNamed(named.map(({ name }) => name))).map((product) => [
-      searchText(product.name),
-      product.id,
-    ]),
+    [...(await deps.products.findActiveNamed(named.map(({ name }) => name)))].map(
+      ([name, product]) => [name, product.id],
+    ),
   );
   const lastPrices = await deps.orderQueries.lastPrices([...new Set(known.values())], customerId);
 

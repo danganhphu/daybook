@@ -1,7 +1,6 @@
 @use "abstracts" as *;
 
-// A way to something rarely needed, such as the hidden customers: quiet, centred, still a fair target
-.quiet-link {
+.link {
   display: inline-flex;
   align-items: center;
   justify-self: center;

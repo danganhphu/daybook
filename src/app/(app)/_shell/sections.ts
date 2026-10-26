@@ -26,7 +26,12 @@ export const sections = {
     label: "Đơn hàng",
     href: routes.orders,
     icon: ReceiptLongIcon,
-    owns: (pathname) => pathname === routes.orders || pathname.startsWith(`${routes.orders}/`),
+    // Products are what orders are made of, and reached from them
+    owns: (pathname) =>
+      pathname === routes.orders ||
+      pathname.startsWith(`${routes.orders}/`) ||
+      pathname === routes.products ||
+      pathname.startsWith(`${routes.products}/`),
   },
   customers: {
     label: "Khách hàng",

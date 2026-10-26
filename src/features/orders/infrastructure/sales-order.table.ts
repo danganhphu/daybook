@@ -45,6 +45,9 @@ export const salesOrderTable = sqliteTable(
     index("sales_order_live_by_day")
       .on(table.orderedOn)
       .where(sql`${table.deletedAt} is null`),
+    index("sales_order_deleted_by_deleted_at")
+      .on(table.deletedAt)
+      .where(sql`${table.deletedAt} is not null`),
     index("sales_order_by_customer").on(table.customerId),
   ],
 );

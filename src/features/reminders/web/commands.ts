@@ -1,4 +1,4 @@
-import type { Temporal } from "temporal-polyfill/implementation";
+import { Temporal } from "temporal-polyfill/implementation";
 import { z } from "zod";
 
 import type { App } from "@/composition/create-app";
@@ -10,19 +10,25 @@ import {
 } from "@/features/reminders/application/reminder-errors";
 import {
   reminderIdSchema,
+  type LiveReminder,
   type Reminder,
   type ReminderDetails,
 } from "@/features/reminders/domain/reminder";
+import type { DoneCursor } from "@/features/reminders/domain/reminder-repository";
 import type { RecordChange } from "@/shared/application/record-change";
 import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { parseContent } from "@/shared/domain/content";
 import { err, ok, type Result } from "@/shared/domain/result";
+import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayLabel } from "@/shared/web/day-label";
+import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
+import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
 
-import type { DueView, ReminderGroup, ReminderView } from "./reminder-view";
-import { overdueBy, remindersCopy } from "./reminders-copy";
+import type { DoneRemindersView, DueView, ReminderGroup, ReminderView } from "./reminder-view";
+import { doneText, overdueBy, remindersCopy } from "./reminders-copy";
+import { doneRemindersPath } from "./reminders-path";
 
 // Far more than two people keep open at once; a screen never needs a second page
 const screenLimit = 200;
@@ -99,6 +105,91 @@ export async function remindersScreen(app: App): Promise<RemindersScreenView> {
     today: app.today().toString(),
     groups: [...byDay].map(([label, reminders]) => ({ label, reminders })),
   };
+}
+
+// A page of finished reminders: a few weeks of them
+export const doneRemindersPage = 50;
+
+// Where a page ends, as the next page's address carries it: "<done at, ms>_<id>"
+const cursorPattern = /^(\d{1,16})_([0-9a-f-]{36})$/;
+
+function cursorText(reminder: LiveReminder): string | undefined {
+  return reminder.completion === undefined
+    ? undefined
+    : `${reminder.completion.doneAt.epochMilliseconds}_${reminder.id}`;
+}
+
+function parseCursor(text: unknown): DoneCursor | undefined {
+  const match = typeof text === "string" ? cursorPattern.exec(text) : null;
+  const id = reminderIdSchema.safeParse(match?.[2]);
+  if (match?.[1] === undefined || !id.success) {
+    return undefined;
+  }
+
+  return { doneAt: Temporal.Instant.fromEpochMilliseconds(Number(match[1])), id: id.data };
+}
+
+export async function doneReminders(
+  app: App,
+  params: { readonly after?: unknown },
+): Promise<DoneRemindersView> {
+  const found = await app.listDoneReminders(parseCursor(params.after), doneRemindersPage + 1);
+  const shown = found.slice(0, doneRemindersPage);
+  const customerIds = [...new Set(shown.flatMap((reminder) => reminder.customerId ?? []))];
+  const [people, customers] = await Promise.all([
+    app.displayNames(),
+    app.getCustomers(customerIds),
+  ]);
+  const customerNames = new Map(customers.map((customer) => [customer.id, customer.name]));
+  const last = shown.at(-1);
+  const next =
+    found.length > doneRemindersPage && last !== undefined ? cursorText(last) : undefined;
+
+  return {
+    reminders: shown.flatMap((reminder) => {
+      if (reminder.completion === undefined) {
+        return [];
+      }
+      const day = vietnamDate(reminder.completion.doneAt);
+      const done = doneText(
+        `${day.day}/${day.month}`,
+        people.get(reminder.completion.doneBy) ?? "?",
+      );
+      const customer =
+        reminder.customerId === undefined ? undefined : customerNames.get(reminder.customerId);
+
+      return [
+        {
+          id: reminder.id,
+          version: reminder.audit.version,
+          text: reminder.text,
+          detail: customer === undefined ? done : `${done}, ${customer}`,
+        },
+      ];
+    }),
+    nextPath: next === undefined ? undefined : doneRemindersPath(next),
+  };
+}
+
+// Reminders deleted lately, for "Đã xoá gần đây"; `people` names who deleted each
+export async function deletedReminders(
+  app: App,
+  people: ReadonlyMap<AccountId, string>,
+): Promise<ReadonlyArray<DeletedRowView>> {
+  const reminders = await app.listDeletedReminders(
+    recentlyDeletedSince(app.now()),
+    recentlyDeleted.limit,
+  );
+
+  return reminders.map((reminder) => ({
+    id: reminder.id,
+    version: reminder.audit.version,
+    title: reminder.text,
+    detail: deletedText(
+      reminder.deletion.deletedAt,
+      people.get(reminder.deletion.deletedBy) ?? "?",
+    ),
+  }));
 }
 
 export type CustomerRemindersView = {

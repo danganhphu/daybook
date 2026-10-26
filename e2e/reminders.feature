@@ -42,3 +42,15 @@ Feature: Việc cần nhắc
     When tôi nhắc việc từ ghi chú "nha khoa Minh Châu hẹn gọi lại thứ 5" cho ngày mai
     And tôi mở trang Việc cần nhắc
     Then có việc "nha khoa Minh Châu hẹn gọi lại thứ 5" trong nhóm "Ngày mai"
+
+  Scenario: Xem việc đã xong rồi mở lại
+    Given có việc cần nhắc "Gửi catalogue cho Sao Mai" cho hôm nay
+    When tôi đánh dấu xong việc "Gửi catalogue cho Sao Mai"
+    Then tôi thấy thông báo "Đã xong"
+    When tôi xem việc đã xong
+    Then có việc đã xong "Gửi catalogue cho Sao Mai"
+    And trang không có lỗi trợ năng
+    When tôi mở lại việc "Gửi catalogue cho Sao Mai"
+    Then tôi thấy thông báo "Đã mở lại"
+    When tôi mở trang Việc cần nhắc
+    Then có việc "Gửi catalogue cho Sao Mai" trong nhóm "Hôm nay"

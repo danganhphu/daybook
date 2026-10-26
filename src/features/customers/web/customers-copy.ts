@@ -22,6 +22,7 @@ export const customersCopy = {
   empty: "Chưa có khách nào",
   emptyHint: "Thêm khách đầu tiên để bắt đầu ghi đơn.",
   notFound: "Không tìm thấy khách nào",
+  otherNamesFooter: "Tin nhắn gọi bằng tên nào ở đây cũng là khách này.",
   fields: {
     name: "Tên khách",
     kind: "Loại khách",

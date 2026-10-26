@@ -11,9 +11,11 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import { searchTermSchema } from "@/shared/domain/search-text";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayHeading, dayLabel } from "@/shared/web/day-label";
+import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
+import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
 import { dayPath } from "@/shared/web/routes";
 
-import { toNoteView, type NoteResult, type NoteView } from "./note-view";
+import { preview, toNoteView, type NoteResult, type NoteView } from "./note-view";
 
 // What the web adapter does for each request, minus the framework: parse what the browser sent, call the app, and
 // answer with a view or the sentence the user should read. Server actions wrap these; tests call them directly.
@@ -122,6 +124,21 @@ export type SearchView = {
   // More matched than are shown
   readonly more: boolean;
 };
+
+// Notes deleted lately, for "Đã xoá gần đây"; `people` names who deleted each
+export async function deletedNotes(
+  app: App,
+  people: ReadonlyMap<AccountId, string>,
+): Promise<ReadonlyArray<DeletedRowView>> {
+  const notes = await app.listDeletedNotes(recentlyDeletedSince(app.now()), recentlyDeleted.limit);
+
+  return notes.map((note) => ({
+    id: note.id,
+    version: note.audit.version,
+    title: preview(note.content),
+    detail: deletedText(note.deletion.deletedAt, people.get(note.deletion.deletedBy) ?? "?"),
+  }));
+}
 
 export async function searchNotes(app: App, query: unknown): Promise<SearchView> {
   const typed = typeof query === "string" ? query : "";

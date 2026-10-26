@@ -3,8 +3,8 @@ import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
 import { captureIdSchema } from "@/features/capture/domain/capture";
-import { customerIdSchema } from "@/features/customers/domain/customer";
-import { productIdSchema } from "@/features/products/domain/product";
+import { customerIdSchema, type CustomerId } from "@/features/customers/domain/customer";
+import { productIdSchema, type ProductId } from "@/features/products/domain/product";
 import type { AccountId } from "@/shared/domain/account-id";
 import * as Audits from "@/shared/domain/audit";
 import type { Audit, Deletion } from "@/shared/domain/audit";
@@ -54,8 +54,8 @@ export const orderDetailsSchema = z.object({
   orderedOn: z.instanceof(Temporal.PlainDate),
   lines: z
     .array(orderLineSchema)
-    .min(1, { error: "Đơn cần ít nhất một món" })
-    .max(orderLimits.lines, { error: `Một đơn tối đa ${orderLimits.lines} món` })
+    .min(1, { error: "Đơn cần ít nhất một sản phẩm" })
+    .max(orderLimits.lines, { error: `Một đơn tối đa ${orderLimits.lines} sản phẩm` })
     .readonly(),
   note: orderNoteSchema,
   captureId: captureIdSchema.optional(),
@@ -282,6 +282,34 @@ export function removePayment(
     ),
     audit: Audits.change(order.audit, by, at),
   });
+}
+
+// A merge moves every order of the customer it hides, deleted ones too, so restoring one later finds the customer
+// kept. Nothing else about the order changes.
+export function reassignCustomer<T extends Order>(
+  order: T,
+  customerId: CustomerId,
+  by: AccountId,
+  at: Temporal.Instant,
+): T {
+  return { ...order, customerId, audit: Audits.change(order.audit, by, at) };
+}
+
+// A product merge moves the lines that sold the merged product to the one kept, at their own quantity and price
+export function replaceProduct<T extends Order>(
+  order: T,
+  from: ProductId,
+  into: ProductId,
+  by: AccountId,
+  at: Temporal.Instant,
+): T {
+  return {
+    ...order,
+    lines: order.lines.map((line) =>
+      line.productId === from ? { ...line, productId: into } : line,
+    ),
+    audit: Audits.change(order.audit, by, at),
+  };
 }
 
 // Soft, with Undo; deleting twice is harmless

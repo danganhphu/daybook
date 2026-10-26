@@ -31,14 +31,16 @@ import {
 } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
+import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { Notice } from "@/shared/ui/notice/notice";
 import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { moneyText } from "@/shared/web/money-text";
-import { customerPath, editOrderPath, routes } from "@/shared/web/routes";
+import { customerPath, editOrderPath, productPath, routes } from "@/shared/web/routes";
 
 import { PaymentDialog } from "./payment-dialog";
 
@@ -164,28 +166,27 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
       />
 
       {view.deleted ? (
-        <div className={styles.deleted}>
-          <p>{ordersCopy.isDeleted}</p>
+        <Notice message={ordersCopy.isDeleted} tone="danger">
           <Button onClick={restore}>
             <UndoIcon aria-hidden />
             {ordersCopy.restore}
           </Button>
-        </div>
+        </Notice>
       ) : null}
 
       <Stats label={ordersCopy.total} items={stats} />
 
       <List heading={ordersCopy.product}>
         {view.lines.map((line) => (
-          <ListRow
+          <ListLink
             key={line.position}
+            href={productPath(line.productId)}
             title={line.productName}
             detail={`${line.quantity} × ${moneyText(line.unitPrice)}`}
+            value={moneyText(line.quantity * line.unitPrice)}
             icon={Inventory2Icon}
             iconTone={iconTones.item}
-          >
-            <span className={styles.amount}>{moneyText(line.quantity * line.unitPrice)}</span>
-          </ListRow>
+          />
         ))}
       </List>
 

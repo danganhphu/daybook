@@ -28,7 +28,9 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 
 | Customer kind | loại khách | The owner's own grouping of customers, typed into Settings. The code names none of them |
 | Customer | khách | Someone orders are for: a name, and optionally a kind, an area, a phone, an address, a note. Hidden, never deleted |
-| Product | món hàng | Something sold, made the first time an order names it. "Thuốc tê" and "thuoc te" are one product |
+| Product | sản phẩm | Something sold, made the first time an order names it, or added on the products screen. "Thuốc tê" and "thuoc te" are one product. Never "món", which reads as food |
+| Other name | tên khác | Another name a customer or a product is known by: "chị Lan" for Nha khoa Lan Anh. Matched as the name is |
+| Merge | gộp | Two customers, or two products, that are one: everything of one moves to the other, which keeps its names as other names. Recorded; no Undo |
 | Order | đơn | A customer's order on a day: its lines, its delivery day, its payments. Its total is the sum of its lines |
 | Payment | lần thu | Money taken for an order, on a day, by cash or transfer. Never edited: removed with who and when |
 | Owed | còn nợ | An order's total less its live payments, never below zero; a customer owes the sum over their live orders |
@@ -102,6 +104,38 @@ who they were for.
 - A customer is given only a shown kind, unless it already had the one now hidden.
 - `search_name` is the name and area as a search matches them; the list sorts by it, so "Ánh" sits beside "Anh".
 
+## Products
+
+`src/features/products/`. A product is hidden (`archived_at`), never deleted: old orders still show what they sold.
+
+- **One name, one product.** A name - a product's own or one of its other names - means one shown product, ignoring
+  case and diacritics. Adding or renaming onto a name that already means another shown product is refused
+  (`product_name_taken`); so is another name a shown product answers to, or any product's other name
+  (`alias_taken`), hidden ones' included, whose search names the database keeps unique.
+- **An order line names a product by any of its names** (`findActiveNamed`), the form's and a reading's alike; only a
+  name that means nothing makes a new product.
+- **A hidden product** leaves the suggestions and stays on old orders; shown again only if its name is still free.
+- **Other names** belong to the customer or product; nothing points at one, so removing it deletes the row. A
+  customer's other names are unique within that customer only: two customers may share a name.
+
+## Merging
+
+`src/features/merging/`. Two customers, or two products, that turned out to be one.
+
+- **Everything moves to the one kept, in one batch.** A customer merge moves every order and reminder of the merged
+  one, deleted and done ones too, so restoring one later finds the kept customer; a product merge rewrites every line
+  that sold the merged product, at its own quantity and price. Each order moves through its own domain function
+  (`reassignCustomer`, `replaceProduct`), with its version and a `customer_merged` or `product_merged` log entry.
+- **The merged one is hidden for good**, naming the one kept (`merged_into_id`); it cannot be shown again, nor merged
+  again. A hidden one can be merged, which is how a duplicate hidden earlier joins the real one.
+- **Its names follow**: its name and its other names become the kept one's other names, unless the kept one already
+  answers to them, so a message that calls it "chị Lan" is matched next time.
+- **Both records are checked first.** The batch starts by writing the merged record and the kept one, each with its
+  version, so a change to either from another screen aborts the whole merge (`*_changed_elsewhere`); an order changed
+  meanwhile aborts it too, by its own version.
+- **No Undo, so the screen asks first**, saying how many orders and reminders will move. The merge is recorded
+  (`customer_merge`, `product_merge`: which two, who, when, the ids moved), append-only.
+
 ## Orders
 
 `src/features/orders/`. An order is one aggregate: its lines and its payments change with it, under the order's
@@ -120,8 +154,9 @@ version, so "paid never exceeds the total" is kept in one place and two people c
   the lines every time and never stored.
 - **Business days are Vietnam calendar days**, `YYYY-MM-DD`: ordered, delivered, paid. A delivery is never before the
   order.
-- **Products come from the order form.** A line names a known product by id or a new one by name; a name matching a
-  shown product, ignoring case and diacritics, is that product. New ones are written in the order's batch.
+- **Products come from the order form**, or the products screen. A line names a known product by id or a new one by
+  name; a name matching a shown product's name or one of its other names, ignoring case and diacritics, is that
+  product. New ones are written in the order's batch.
 - **A product's last price is read, not stored**: the latest live line, this customer's first.
 - **Every change is logged** (`order_change`, ADR 0011 decision 10): `placed`, `revised`, `delivered`, `undelivered`,
   `payment_added`, `payment_removed`, `deleted`, `restored`, with the order before and after as JSON. `OrderWrites`
@@ -154,9 +189,10 @@ current words.
 - **The model extracts, the code decides.** The model (`MessageReader`) returns a `Reading`, checked by the same Zod
   schema it was asked to follow. The code matches the customer and the products, turns "500k", "1tr2" and "2 củ" into
   money (`money-words.ts`), and checks the day.
-- **A customer is matched by the words of their name**, without the titles written before it - "chị", "anh", "nk",
-  "nha khoa" (`customer-words.ts`) - with or without accents. A name that is exactly one active customer's is them;
-  otherwise one customer holding every word is them; none or several, and an order waits for a person.
+- **A customer is matched by the words of their name or of another name they are known by**, without the titles
+  written before it - "chị", "anh", "nk", "nha khoa" (`customer-words.ts`) - with or without accents. A name that is
+  exactly one active customer's is them; otherwise one customer holding every word is them; none or several, and an
+  order waits for a person. Products are matched by any of their names the same way.
 - **An amount is a line's total** unless the message says it is for one unit, or the product's last price is nearer
   the amount than the amount split per unit (`line-price.ts`). A line without an amount takes its last price, or 0
   until someone fills it in. A line without a quantity is one.
@@ -270,8 +306,15 @@ through `createApp` in `src/composition/create-app.ts`.
 | `addCustomerKind`, `renameCustomerKind` | A kind, last in the list; a new name | `kind_name_taken`, `kind_not_found`, `kind_changed_elsewhere` |
 | `archiveCustomerKind`, `restoreCustomerKind` | Hides a kind from the form; shows it again | `kind_archived`, `kind_not_archived`, `kind_name_taken` |
 | `addCustomer`, `reviseCustomer` | A customer, with a shown kind | `kind_not_found`, `kind_archived`, `customer_changed_elsewhere` |
-| `archiveCustomer`, `restoreCustomer` | Hides a customer from the lists; shows them again | `customer_archived`, `customer_not_archived` |
-| `listCustomers` | By name, filtered by words, kind and shown or hidden; 200 at most | - |
+| `archiveCustomer`, `restoreCustomer` | Hides a customer from the lists; shows them again, unless merged | `customer_archived`, `customer_not_archived`, `customer_merged` |
+| `listCustomers` | By name, filtered by words (of the name or of another name), kind and shown or hidden; 200 at most | - |
+| `addCustomerAlias`, `removeCustomerAlias` | Another name for a shown customer; removes one | `customer_not_found`, `customer_archived`, `alias_taken`, `alias_not_found` |
+| `listProducts`, `productUsage` | By name, filtered by words and shown or hidden, 200 at most; each product's live orders and latest price | - |
+| `addProduct`, `renameProduct` | A product before any order names it; a new name | `product_name_taken`, `product_not_found`, `product_changed_elsewhere` |
+| `archiveProduct`, `restoreProduct` | Hides a product from the suggestions; shows it again if its name is free and it was not merged | `product_archived`, `product_not_archived`, `product_merged`, `product_name_taken` |
+| `addProductAlias`, `removeProductAlias` | Another name for a shown product; removes one | `product_not_found`, `product_archived`, `alias_taken`, `alias_not_found` |
+| `mergeCustomers`, `mergeProducts` | Everything of one moved to the other, the one hidden for good, its names kept, recorded; one batch | `merge_into_itself`, `*_not_found`, `*_changed_elsewhere`, `*_merged`, `*_kept_unavailable` |
+| `customerMergePreview`, `productMergePreview` | How many live orders and reminders a merge would move | - |
 | `placeOrder`, `reviseOrder` | An order, making the products it names first | `customer_unavailable`, `product_not_found`, the order's own refusals |
 | `deliverOrder`, `undeliverOrder`, `addPayment`, `removePayment` | One change, logged | `order_not_found`, `order_changed_elsewhere`, the order's own refusals |
 | `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere` |
@@ -279,6 +322,8 @@ through `createApp` in `src/composition/create-app.ts`.
 | `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
 | `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
 | `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted` |
+| `listDoneReminders` | Finished ones, latest first, a page after a cursor of (done at, id) rather than an offset, so a reminder reopened between pages shifts nothing | - |
+| `listDeletedNotes`, `listDeletedOrders`, `listDeletedReminders` | Deleted since a moment (the screen asks for 30 days), latest first, 50 at most | - |
 | `readNote` | Reads a note's message and makes the order or reminder it describes, or asks, or keeps the failure | `note_unavailable`, `reader_unavailable`, `already_read` |
 | `answerReading` | Settles an unsure reading with a customer, a new customer, or as a note | `note_unavailable`, `not_asked`, `customer_unavailable`, `customer_unnamed` |
 | `readingStates` | What each of a day's notes shows about its message, in four queries | - |
@@ -359,12 +404,15 @@ The book's tables, all `STRICT`, every one but the lines and the log with the au
 | Table | Holds | Rules the database keeps |
 |---|---|---|
 | `customer_kind` | name, search name, position | name 1-40; shown names unique by search name |
-| `customer` | name, search name, kind, area, phone, address, note | lengths; optional details null, never "" |
-| `product` | name, search name | shown names unique by search name |
+| `customer` | name, search name, kind, area, phone, address, note, merged into | lengths; optional details null, never ""; triggers `customer_merged_only_hidden_on_insert` and `_on_update`: merged into another only while hidden, never itself |
+| `customer_alias` | customer, name, search name, who and when | no audit: removed outright; unique (customer, search name) |
+| `product` | name, search name, merged into | shown names unique by search name; triggers `product_merged_only_hidden_on_insert` and `_on_update` |
+| `product_alias` | product, name, search name, who and when | no audit: removed outright; search name unique across all |
+| `customer_merge`, `product_merge` | from, into, the ids moved as JSON, who and when | not itself; valid JSON; append-only triggers `*_merge_no_update`, `*_merge_no_delete` |
 | `sales_order` | customer, ordered on, delivered on, note, capture | days are `YYYY-MM-DD`; delivered on or after ordered |
 | `order_line` | order, position, product, quantity, unit price | quantity 1-100,000; price 0 to a trillion; no audit, replaced whole on a revision |
 | `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`, `payment_no_delete` |
-| `order_change` | order, kind, who and when, before and after as JSON | known kinds; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
+| `order_change` | order, kind, who and when, before and after as JSON | known kinds, `customer_merged` and `product_merged` among them; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
 | `reminder` | text, due on, customer, capture, done at and by | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither |
 | `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_no_delete`, and `interpretation_once_settled`, which refuses a row after an `order`, `reminder` or `note` one of the same capture with `stale_version` |
 

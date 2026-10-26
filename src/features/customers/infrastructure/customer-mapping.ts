@@ -1,9 +1,17 @@
+import { Temporal } from "temporal-polyfill/implementation";
+
 import {
   customerIdSchema,
   customerLimits,
+  customerNameSchema,
   type Customer,
 } from "@/features/customers/domain/customer";
+import {
+  customerAliasIdSchema,
+  type CustomerAlias,
+} from "@/features/customers/domain/customer-alias";
 import { customerKindIdSchema } from "@/features/customers/domain/customer-kind";
+import { accountIdSchema } from "@/shared/domain/account-id";
 import { searchText } from "@/shared/domain/search-text";
 import { optionalTextSchema, requiredTextSchema } from "@/shared/domain/short-text";
 import {
@@ -13,6 +21,7 @@ import {
   toAuditRow,
 } from "@/shared/infrastructure/d1/audit-mapping";
 
+import type { customerAliasTable } from "./customer-alias.table";
 import type { customerTable } from "./customer.table";
 
 type CustomerRow = typeof customerTable.$inferSelect;
@@ -35,7 +44,13 @@ export function toCustomer(row: CustomerRow): Customer {
 
   return archival === undefined
     ? { ...fields, status: "active" }
-    : { ...fields, status: "archived", archival };
+    : {
+        ...fields,
+        status: "archived",
+        archival,
+        mergedInto:
+          row.mergedIntoId === null ? undefined : customerIdSchema.parse(row.mergedIntoId),
+      };
 }
 
 export function toCustomerRow(customer: Customer): CustomerRow {
@@ -48,8 +63,32 @@ export function toCustomerRow(customer: Customer): CustomerRow {
     phone: customer.phone ?? null,
     address: customer.address ?? null,
     note: customer.note ?? null,
+    mergedIntoId: customer.status === "archived" ? (customer.mergedInto ?? null) : null,
     ...toAuditRow(customer.audit),
     ...toArchivalRow(customer.status === "archived" ? customer.archival : undefined),
+  };
+}
+
+type AliasRow = typeof customerAliasTable.$inferSelect;
+
+export function toCustomerAlias(row: AliasRow): CustomerAlias {
+  return {
+    id: customerAliasIdSchema.parse(row.id),
+    customerId: customerIdSchema.parse(row.customerId),
+    name: customerNameSchema.parse(row.name),
+    createdAt: Temporal.Instant.fromEpochMilliseconds(row.createdAt),
+    createdBy: accountIdSchema.parse(row.createdBy),
+  };
+}
+
+export function toCustomerAliasRow(alias: CustomerAlias): AliasRow {
+  return {
+    id: alias.id,
+    customerId: alias.customerId,
+    name: alias.name,
+    searchName: searchText(alias.name),
+    createdAt: alias.createdAt.epochMilliseconds,
+    createdBy: alias.createdBy,
   };
 }
 

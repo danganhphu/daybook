@@ -2,6 +2,8 @@ import type { OrdersView } from "@/features/orders/web/commands";
 import type { OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { ordersPath } from "@/features/orders/web/orders-path";
+import { productsCopy } from "@/features/products/web/products-copy";
+import { ButtonLink } from "@/shared/ui/button/button-link";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { IconLink } from "@/shared/ui/button/icon-link";
 import { ChipLinks, type ChipLink } from "@/shared/ui/chip-links/chip-links";
@@ -11,6 +13,7 @@ import {
   AddIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Inventory2Icon,
   ReceiptLongIcon,
 } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
@@ -33,7 +36,16 @@ function rowDetail(row: OrderRowView): string {
     .join(", ");
 }
 
-const addLink = <IconLink icon={AddIcon} label={ordersCopy.add} href={routes.newOrder} />;
+// The products the orders are made of, named in words rather than a bare icon, then a new order
+const headerActions = (
+  <>
+    <ButtonLink href={routes.products} variant="quiet">
+      <Inventory2Icon aria-hidden />
+      {productsCopy.title}
+    </ButtonLink>
+    <IconLink icon={AddIcon} label={ordersCopy.add} href={routes.newOrder} />
+  </>
+);
 
 function heroStat(view: OrdersView): Stat {
   return { label: ordersCopy.revenue, value: moneyText(view.totals.total) };
@@ -90,7 +102,7 @@ function kindChips(view: OrdersView): ReadonlyArray<ChipLink> {
 export function OrdersScreen({ view }: { readonly view: OrdersView }) {
   return (
     <Screen wash>
-      <PageHeader title={ordersCopy.title} actions={addLink} />
+      <PageHeader title={ordersCopy.title} actions={headerActions} />
 
       <nav className={styles.months} aria-label={view.title}>
         <IconLink

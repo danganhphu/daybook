@@ -107,6 +107,16 @@ export function reopen(
   return ok({ ...reminder, completion: undefined, audit: Audits.change(reminder.audit, by, at) });
 }
 
+// A merge moves every reminder of the customer it hides, done and deleted ones too; nothing else changes
+export function reassignCustomer<T extends Reminder>(
+  reminder: T,
+  customerId: CustomerId,
+  by: AccountId,
+  at: Temporal.Instant,
+): T {
+  return { ...reminder, customerId, audit: Audits.change(reminder.audit, by, at) };
+}
+
 // Deleting twice changes nothing: what was asked for already holds
 export function markDeleted(
   reminder: Reminder,

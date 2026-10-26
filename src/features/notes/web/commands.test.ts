@@ -6,7 +6,15 @@ import { noteErrorMessages } from "@/features/notes/application/note-errors";
 import { recordNote, testApp, testClock, theAuthor, thePartner } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 
-import { dayNotes, deleteNote, editNote, restoreNote, searchNotes, todaysNotes } from "./commands";
+import {
+  dayNotes,
+  deletedNotes,
+  deleteNote,
+  editNote,
+  restoreNote,
+  searchNotes,
+  todaysNotes,
+} from "./commands";
 import { toNoteView } from "./note-view";
 
 async function recorded(app: App, text: string) {
@@ -250,5 +258,30 @@ describe("deleteNote and restoreNote", () => {
 
     expect(await deleteNote(app, author, "x", 1)).toEqual(gone);
     expect(await restoreNote(app, author, "x", 1)).toEqual(gone);
+  });
+});
+
+describe("deletedNotes", () => {
+  it("given notes deleted now and a month ago, when the recently deleted list is read, then only the recent one is there, latest first, and restoring it brings it back", async () => {
+    const time = testClock("2026-09-20T03:00:00Z");
+    const app = testApp(time.clock);
+    const author = await theAuthor();
+    const old = await recorded(app, "xoá lâu rồi");
+    expectOk(await deleteNote(app, author, old.id, old.version));
+    time.setTo("2026-10-23T03:00:00Z");
+    const first = await recorded(app, "xoá trước");
+    const second = await recorded(app, "xoá sau");
+    expectOk(await deleteNote(app, author, first.id, first.version));
+    time.setTo("2026-10-23T04:00:00Z");
+    expectOk(await deleteNote(app, author, second.id, second.version));
+
+    const rows = await deletedNotes(app, await app.displayNames());
+
+    expect(rows.map((row) => [row.title, row.detail])).toEqual([
+      ["xoá sau", "Xoá 23/10 (Người ghi)"],
+      ["xoá trước", "Xoá 23/10 (Người ghi)"],
+    ]);
+    expectOk(await restoreNote(app, author, first.id, rows[1]?.version));
+    expect(await deletedNotes(app, await app.displayNames())).toHaveLength(1);
   });
 });

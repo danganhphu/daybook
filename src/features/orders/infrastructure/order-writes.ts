@@ -17,6 +17,9 @@ const linesPerInsert = Math.floor(
   d1MaxBoundParameters / Object.keys(getTableColumns(orderLineTable)).length,
 );
 
+// The only changes that rewrite an order's lines; every other one leaves them as they are
+const changesToLines: ReadonlySet<OrderChange["kind"]> = new Set(["revised", "product_merged"]);
+
 export function createOrderWrites(db: Database, batch: Batch): OrderWrites {
   function enlistChange(change: OrderChange) {
     batch.enlist(
@@ -69,7 +72,7 @@ export function createOrderWrites(db: Database, batch: Batch): OrderWrites {
     },
 
     // The order row first, so a stale version aborts the batch before anything else is written. The lines are
-    // replaced whole only when the change is a revision; nothing else touches them.
+    // replaced whole only when the change rewrites them.
     update(order, change) {
       const {
         id: _id,
@@ -78,7 +81,7 @@ export function createOrderWrites(db: Database, batch: Batch): OrderWrites {
         ...changes
       } = toOrderRow(order);
       batch.enlist(db.update(salesOrderTable).set(changes).where(eq(salesOrderTable.id, order.id)));
-      if (change.kind === "revised") {
+      if (changesToLines.has(change.kind)) {
         batch.enlist(db.delete(orderLineTable).where(eq(orderLineTable.orderId, order.id)));
         enlistLines(order);
       }

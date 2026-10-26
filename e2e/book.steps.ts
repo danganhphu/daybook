@@ -2,6 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import type { DataTable } from "playwright-bdd";
 
 import { Then, When } from "./fixtures";
+import { fillLinesAndSave } from "./order-form";
 
 // Customers and orders, found by role and by the words on screen
 
@@ -77,37 +78,13 @@ Then("tôi đang xem khách {string}", async ({ page }, name: string) => {
   await expect(page).toHaveURL(/\/customers\/[0-9a-f-]{36}$/);
 });
 
-// Fills the order form's lines from a table of món, số lượng, đơn giá, then saves and waits for the order's page
-async function fillLinesAndSave(page: Page, table: DataTable) {
-  // The product field is built once the page has hydrated; it is disabled until then
-  await expect(page.getByRole("combobox", { name: "Món hàng 1" })).toBeEnabled();
-
-  const rows = table.hashes();
-  for (const [index, row] of rows.entries()) {
-    if (index > 0) {
-      await page.getByRole("button", { name: "Thêm món" }).click();
-    }
-    await page.getByRole("combobox", { name: `Món hàng ${index + 1}` }).fill(row["món"] ?? "");
-    await page
-      .getByRole("textbox", { name: "Số lượng" })
-      .nth(index)
-      .fill(row["số lượng"] ?? "");
-    await page
-      .getByRole("textbox", { name: "Đơn giá (đ)" })
-      .nth(index)
-      .fill(row["đơn giá"] ?? "");
-  }
-  await page.getByRole("button", { name: "Lưu đơn" }).click();
-  await expect(page).toHaveURL(/\/orders\/[0-9a-f-]{36}$/);
-}
-
 When(
   "tôi tạo đơn cho khách {string} gồm:",
   async ({ page }, customer: string, table: DataTable) => {
     await page.goto("/customers");
     await customerRow(page, customer).first().click();
     await page.getByRole("link", { name: "Tạo đơn" }).click();
-    await fillLinesAndSave(page, table);
+    await fillLinesAndSave(page, table.hashes());
   },
 );
 
@@ -119,7 +96,7 @@ When(
     await expect(field).toBeEnabled();
     await field.fill(typed);
     await page.getByRole("option", { name: new RegExp(customer) }).click();
-    await fillLinesAndSave(page, table);
+    await fillLinesAndSave(page, table.hashes());
   },
 );
 
