@@ -1,17 +1,15 @@
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
-import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
 import type { SessionStores } from "./enlist-new-session";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type EndOtherSessionsDeps = {
-  readonly clock: Clock;
+export type EndOtherSessionsDeps = StepUpDeps & {
   readonly sessions: SessionRepository;
   readonly startUnitOfWork: () => UnitOfWork<SessionStores>;
 };
@@ -23,7 +21,7 @@ export async function endOtherSessions(
   origin: RequestOrigin,
 ): Promise<Result<number, Extract<AccessError, "step_up_required">>> {
   const now = deps.clock();
-  if (!Sessions.isFresh(session, now)) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

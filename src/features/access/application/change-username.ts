@@ -3,17 +3,15 @@ import type { RequestOrigin } from "@/features/access/domain/access-event";
 import * as Accounts from "@/features/access/domain/account";
 import type { Account, Username } from "@/features/access/domain/account";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
-import * as Sessions from "@/features/access/domain/session";
 import type { Session } from "@/features/access/domain/session";
-import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, AccountWrites } from "./access-writes";
+import { isSteppedUp, type StepUpDeps } from "./step-up";
 
-export type ChangeUsernameDeps = {
-  readonly clock: Clock;
+export type ChangeUsernameDeps = StepUpDeps & {
   readonly accounts: AccountRepository;
   readonly startUnitOfWork: () => UnitOfWork<{
     readonly accounts: AccountWrites;
@@ -30,7 +28,7 @@ export async function changeUsername(
   origin: RequestOrigin,
 ): Promise<Result<Account, Extract<AccessError, "step_up_required" | "username_taken">>> {
   const now = deps.clock();
-  if (!Sessions.isFresh(session, now)) {
+  if (!(await isSteppedUp(deps, session))) {
     return err("step_up_required");
   }
 

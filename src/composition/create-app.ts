@@ -7,6 +7,7 @@ import { beginPasswordSignIn } from "@/features/access/application/begin-passwor
 import { changeDisplayName } from "@/features/access/application/change-display-name";
 import { changeUsername } from "@/features/access/application/change-username";
 import { endOtherSessions } from "@/features/access/application/end-other-sessions";
+import { endPersonSessions } from "@/features/access/application/end-person-sessions";
 import { endSession } from "@/features/access/application/end-session";
 import {
   finishAddingPasskey,
@@ -367,7 +368,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       signOut({ clock, startUnitOfWork }, session, origin),
     endOtherSessions: (session: Session, origin: RequestOrigin) =>
       endOtherSessions(access, session, origin),
-    listSessions: (accountId: AccountId) => listSessions({ sessions }, accountId),
+    listSessions: (accountId: AccountId) => listSessions({ clock, sessions }, accountId),
     accountOverview: (accountId: AccountId) => accountOverview(access, accountId),
     changeDisplayName: (session: Session, displayName: DisplayName, origin: RequestOrigin) =>
       changeDisplayName(access, session, displayName, origin),
@@ -380,6 +381,8 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       removePasskey(access, session, passkeyId, origin),
     endSession: (session: Session, otherId: unknown, origin: RequestOrigin) =>
       endSession(access, session, otherId, origin),
+    endPersonSessions: (session: Session, accountId: unknown, origin: RequestOrigin) =>
+      endPersonSessions(access, session, accountId, origin),
     issueInvite: (session: Session, origin: RequestOrigin) => issueInvite(access, session, origin),
     issueRecoveryLink: (session: Session, accountId: unknown, origin: RequestOrigin) =>
       issueRecoveryLink(access, session, accountId, origin),

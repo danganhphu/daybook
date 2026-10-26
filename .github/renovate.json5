@@ -14,6 +14,10 @@
   assignees: ["danganhphu"],
   labels: ["dependencies"],
 
+  // vendor/ submodules: a pull request moves the pin to upstream's newest commit, so its diff is read before merging.
+  // Opt-in, in beta.
+  "git-submodules": { enabled: true },
+
   // Dependabot only raises alerts here; Renovate opens the fixes, without waiting for Monday
   vulnerabilityAlerts: {
     labels: ["dependencies", "security"],

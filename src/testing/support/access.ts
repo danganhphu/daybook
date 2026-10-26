@@ -6,6 +6,7 @@ import { issueSetupLink } from "@/features/access/application/issue-setup-link";
 import { newAccount } from "@/features/access/application/new-account";
 import { ipAddressSchema, type RequestOrigin } from "@/features/access/domain/access-event";
 import { displayNameSchema, usernameSchema, type Account } from "@/features/access/domain/account";
+import type { PasskeyId } from "@/features/access/domain/passkey";
 import { deviceLabelSchema, type SessionId } from "@/features/access/domain/session";
 import type { SetupLinkGrant } from "@/features/access/domain/setup-link";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
@@ -30,11 +31,16 @@ export async function seedAccount(clock: Clock, username = "lan", name = "Lan"):
   return account;
 }
 
-// A session as a sign-in would open it, through the same code the sign-in use cases call
+// A session as a sign-in would open it, through the same code the sign-in use cases call: a password's, or the
+// passkey's that is named
 export async function seedSession(
   clock: Clock,
   account: Account,
-  options: { readonly replacing?: SessionId; readonly from?: RequestOrigin } = {},
+  options: {
+    readonly replacing?: SessionId;
+    readonly from?: RequestOrigin;
+    readonly passkey?: PasskeyId;
+  } = {},
 ) {
   const work = createUnitOfWork(createDatabase(env.DB));
   const opened = await enlistNewSession(
@@ -42,8 +48,8 @@ export async function seedSession(
     webCryptoSecrets,
     {
       accountId: account.id,
-      method: "password",
-      passkeyId: undefined,
+      method: options.passkey === undefined ? "password" : "passkey",
+      passkeyId: options.passkey,
       origin: options.from ?? origin(),
       replacing: options.replacing,
     },

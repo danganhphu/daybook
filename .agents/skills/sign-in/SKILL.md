@@ -24,7 +24,7 @@ Every secret a browser holds - a session's secret, a setup token, a ceremony bin
 - Only a use case that has **just authenticated someone** opens a session: `enlistNewSession(work, ...)` on that use
   case's own unit of work, so the sign-in commits whole or not at all. Pass `replacing` with the browser's old session.
   Never expose it on the `App`.
-- A session ends 30 days after its sign-in; using it does not extend that.
+- A session ends 30 days after its sign-in, or 14 days after it was last seen; using it never extends the 30 days.
 - Every page and server action authenticates first. The proxy only redirects early; the check that counts is next to
   the data.
 
@@ -37,8 +37,10 @@ Every secret a browser holds - a session's secret, a setup token, a ceremony bin
 - The library refuses a counter that did not grow; the adapter passes it 0 and `Passkeys.recordUse` notes the stall
   instead. Do not "fix" that.
 - A refusal is `passkey_not_accepted` for every reason; the reason goes to `access_event.detail`, never to the page.
-- Tests use the software authenticator in `src/testing/support/authenticator.ts`: real keys (ES256, Ed25519, RS256)
-  and a `Tampering` option for every field a test wants wrong. Each refusal is tested for its reason.
+- ES256 and Ed25519 only (`passkeyAlgorithms`, and the table's check); RS256 is refused, as ASVS 5.0 Appendix C asks.
+- Tests use the software authenticator in `src/testing/support/authenticator.ts`: real keys (ES256, Ed25519, and
+  RS256 to prove the refusal) and a `Tampering` option for every field a test wants wrong. Each refusal is tested for
+  its reason.
 
 ## The password
 
@@ -51,11 +53,16 @@ Every secret a browser holds - a session's secret, a setup token, a ceremony bin
 ## Security settings
 
 Anything that changes an authenticator, the username or another device, or creates an invite or recovery link, checks
-`Sessions.isFresh` **in the use case** and returns `step_up_required`. The screen asking first is a courtesy, not the
-control. The step-up itself is `startPasskeySignIn` with `stepUp`, then `finishPasskeySignIn`, or a password sign-in for
-an account with no passkey: a fresh session for the same account replaces the old one. On the page, wrap the action
-in `useStepUp().run`; it asks only after the server refuses, then retries once. Record the outcome in `access_event`,
-with `actorId` set when one user acts on the other's account.
+`isSteppedUp` (`application/step-up.ts`) **in the use case** and returns `step_up_required`. Never `Sessions.isFresh`
+alone: on an account with a passkey only a passkey sign-in counts, so a phished password cannot add a passkey. The
+screen asking first is a courtesy, not the control. The step-up itself is `startPasskeySignIn` with `stepUp`, then
+`finishPasskeySignIn`, or a password sign-in for an account with no passkey: a fresh session for the same account
+replaces the old one. On the page, wrap the action in `useStepUp().run`; it asks only after the server refuses, then
+retries once. Record the outcome in `access_event`, with `actorId` set when one user acts on the other's account.
+
+Removing a passkey ends the other sessions it opened (`removeOpenedWith`, before the passkey row goes: its removal
+nulls the column). Either user can end every session of the other (`endPersonSessions`); passkeys stay with their
+owner.
 
 ## Invites and recovery
 
@@ -68,7 +75,10 @@ with `actorId` set when one user acts on the other's account.
 ## Rate limits
 
 Count with the D1 `RateLimiter`, keyed by `clientNetwork(ip)`: an IPv4 address, or an IPv6 /64 - a device can hop
-across its /64. Check before any expensive or revealing work, and record `rate_limited`.
+across its /64. Anything typed goes into a key only through `usernameLimitKey` (HMAC under the pepper): a password
+typed into the username box must not sit in D1. Check before any expensive or revealing work, and record
+`rate_limited`. A counter that must not lose a hit is moved by the database (`recordFailure`), never read, changed
+and written back.
 
 ## Errors
 

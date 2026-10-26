@@ -24,10 +24,12 @@
 
 - [Overview](architecture/overview.md) - one Worker, feature slices, the path of a request
 - [Domain](architecture/domain.md) - the data model, its vocabulary and its rules
+- [Security](architecture/security.md) - the cryptography, the data and how long it is kept, the logs, and the
+  deliberate departures from OWASP ASVS
 
 ## Elsewhere
 
 - [AGENTS.md](../AGENTS.md) - conventions for people and coding agents alike: layout, errors, tests, style
 - [SECURITY.md](../SECURITY.md) - reporting a vulnerability
 - `.agents/skills/` - step-by-step procedures for the parts that are easy to get wrong (sign-in, migrations,
-  end-to-end tests, the design system, Cloudflare and vinext)
+  end-to-end tests, the design system, Cloudflare and vinext, security while coding)

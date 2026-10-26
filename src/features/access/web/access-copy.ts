@@ -7,6 +7,7 @@ export const accessCopy = {
   signIn: "Đăng nhập",
   signOut: "Đăng xuất",
   signOutOthers: "Đăng xuất các thiết bị khác",
+  signOutEverywhere: "Đăng xuất mọi thiết bị",
   settings: "Cài đặt",
   displayName: "Tên",
   username: "Tên đăng nhập",

@@ -14,7 +14,8 @@ export const developmentOrigin = "http://localhost:5173";
 // `vite build --mode e2e`: the build the end-to-end tests serve, which calls no model
 export const endToEndMode = "e2e";
 
-const developmentPepper = "ZGF5Ym9vay1kZXZlbG9wbWVudC1wZXBwZXItbm90LWE";
+// Its own copy: the Worker cannot load a file the config imports. development-pepper.test.ts holds the two together.
+export const developmentPepper = "ZGF5Ym9vay1kZXZlbG9wbWVudC1wZXBwZXItbm90LWE";
 
 export default defineConfig({
   worker: defineWorker(({ mode }) => ({
@@ -23,6 +24,9 @@ export default defineConfig({
     compatibilityDate,
     compatibilityFlags,
     assets: { notFoundHandling: "none", runWorkerFirst: ["/_vinext/static-cache/*"] },
+    // Workers Logs (free: 3 days, 200,000 lines a day): src/instrumentation.ts's faults, and each request's URL
+    // without its query, where search words travel (ASVS 14.2.1, 16.2.3)
+    observability: { enabled: true, redactQueryString: true },
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: "daybook", id: databaseId }),

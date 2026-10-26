@@ -75,6 +75,26 @@ describe("authenticate", () => {
     expect(await rows("select id from session")).toEqual([]);
   });
 
+  it("given a session left unused for 14 days, when presented, then it is unauthenticated and the row is gone", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+    const { cookie } = await seedSession(time.clock, await seedAccount(time.clock));
+    time.setTo("2026-11-04T01:00:00Z");
+
+    expect(await testApp(time.clock).authenticate(cookie)).toEqual(unauthenticated);
+    expect(await rows("select id from session")).toEqual([]);
+  });
+
+  it("given a session used 13 days later, when presented 13 days after that, then it still works", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+    const { cookie } = await seedSession(time.clock, await seedAccount(time.clock));
+    const app = testApp(time.clock);
+    time.setTo("2026-11-03T01:00:00Z");
+    expectOk(await app.authenticate(cookie));
+    time.setTo("2026-11-16T01:00:00Z");
+
+    expect(await app.authenticate(cookie)).toMatchObject({ ok: true });
+  });
+
   it("given a session used 59 minutes after sign-in, when presented, then last-seen is not rewritten", async () => {
     const time = testClock("2026-10-21T01:00:00Z");
     const { cookie } = await seedSession(time.clock, await seedAccount(time.clock));

@@ -30,6 +30,8 @@ export type PasswordWrites = {
   save(password: Password): void;
   // The failure count and the lock move; the verifier does not
   recordAttempt(password: Password): void;
+  // One more wrong guess, counted by the database so guesses sent together all count; the hundredth locks it
+  recordFailure(accountId: AccountId, at: Temporal.Instant): void;
 };
 
 export type SessionWrites = {
@@ -38,6 +40,8 @@ export type SessionWrites = {
   remove(id: SessionId): void;
   removeAll(accountId: AccountId): void;
   removeAllExcept(accountId: AccountId, keep: SessionId): void;
+  // Before the passkey itself goes: its removal sets the column null
+  removeOpenedWith(passkeyId: PasskeyId, keep: SessionId): void;
 };
 
 export type SetupLinkWrites = {

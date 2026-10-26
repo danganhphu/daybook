@@ -26,10 +26,12 @@ export type PasswordRowProps = {
   readonly password: PasswordView;
   readonly username: string;
   readonly run: StepUp["run"];
+  // A changed password, as against a first one: the other devices may still be signed in with the old one
+  readonly onChanged: (title: string) => void;
 };
 
 // The fallback password: set when there is none, changed when there is, and set anew when it is locked
-export function PasswordRow({ password, username, run }: PasswordRowProps) {
+export function PasswordRow({ password, username, run, onChanged }: PasswordRowProps) {
   const { editing, open, close, opener, cancelOnEscape } = useInlineEdit();
   const isSet = password.kind === "set";
 
@@ -39,6 +41,7 @@ export function PasswordRow({ password, username, run }: PasswordRowProps) {
         username={username}
         isSet={isSet}
         run={run}
+        onChanged={onChanged}
         onClose={close}
         onKeyDown={cancelOnEscape}
       />
@@ -60,22 +63,34 @@ type PasswordEditorProps = {
   readonly username: string;
   readonly isSet: boolean;
   readonly run: StepUp["run"];
+  readonly onChanged: (title: string) => void;
   readonly onClose: () => void;
   readonly onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 };
 
-function PasswordEditor({ username, isSet, run, onClose, onKeyDown }: PasswordEditorProps) {
+function PasswordEditor({
+  username,
+  isSet,
+  run,
+  onChanged,
+  onClose,
+  onKeyDown,
+}: PasswordEditorProps) {
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
   const [draft, submit, pending] = useActionState(
     async (_: Draft, form: FormData): Promise<Draft> => {
       const text = formText(form, accessFields.password);
-      const saved = await saveBackupPassword(text, run);
+      const saved = await saveBackupPassword(text, username, run);
       if (!saved.ok) {
         return { text, error: saved.error };
       }
 
-      toast.show({ title: `${isSet ? "Đã đổi" : "Đã đặt"} ${backupPasswordTerm}` });
+      if (isSet) {
+        onChanged(`Đã đổi ${backupPasswordTerm}`);
+      } else {
+        toast.show({ title: `Đã đặt ${backupPasswordTerm}` });
+      }
       onClose();
       return { text: "", error: undefined };
     },

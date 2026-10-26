@@ -223,16 +223,21 @@ describe("access_event table", () => {
 });
 
 describe("passkey table", () => {
-  it("given an algorithm the registration never offers, when inserted, then the check refuses it", async () => {
-    await insertAccount(accountId, "lan");
+  // -257 is RS256, offered until ASVS 5.0's appendix ruled it out
+  it.each([[-999], [-257]])(
+    "given algorithm %i, which the registration never offers, when inserted, then the check refuses it",
+    async (algorithm) => {
+      await insertAccount(accountId, "lan");
 
-    await expect(
-      run(
-        "insert into passkey values ('p1', ?, 'cred', 'key', -999, 0, '[]', 'aaguid', 0, 0, 'n', 1, null)",
-        accountId,
-      ),
-    ).rejects.toThrow(/passkey_algorithm_offered/);
-  });
+      await expect(
+        run(
+          "insert into passkey values ('p1', ?, 'cred', 'key', ?, 0, '[]', 'aaguid', 0, 0, 'n', 1, null)",
+          accountId,
+          algorithm,
+        ),
+      ).rejects.toThrow(/passkey_algorithm_offered/);
+    },
+  );
 });
 
 function insertPassword(memoryKib: number, iterations: number, salt = "S".repeat(22)) {

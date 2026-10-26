@@ -17,7 +17,7 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Search text | | A note's words as a search matches them: no diacritics, `đ` as `d`, lower case, single spaces |
 | Account | tài khoản | One of the two people using the book. A lower-case username for the fallback password, a display name, a random WebAuthn user handle |
 | Passkey | Face ID, vân tay | The way in: a WebAuthn credential bound to this app's host |
-| Session | thiết bị đã đăng nhập | One signed-in browser. Lives 30 days from the sign-in that opened it |
+| Session | thiết bị đã đăng nhập | One signed-in browser. Lives 30 days from the sign-in that opened it, or until 14 days unused |
 | Setup link | link cài đặt | A one-time, ten-minute link: the first setup (from the command line), an invite, or a recovery for someone who lost every way in |
 | Ceremony | | A sign-in step a browser is part-way through, tied to that browser |
 | Step-up | xác nhận lại | A sign-in in the last five minutes, which security settings ask for |
@@ -251,14 +251,16 @@ design.md, "Sign-in". The rules the code keeps:
 - **A session exists only because someone authenticated.** `enlistNewSession` is called by the use cases that
   authenticate, never by an adapter, and it queues the session on their unit of work: a sign-in commits whole or not at
   all. Every sign-in gets a new session id; the browser's previous session ends in the same commit.
-- **A session ends 30 days after its sign-in**, however often it is used. `lastSeenAt` moves at most hourly and only
-  feeds the device list.
+- **A session ends 30 days after its sign-in**, however often it is used, **or after 14 days unused**, whichever
+  comes first. `lastSeenAt` moves at most hourly and feeds the device list and the idle limit; a session that ran out
+  is no longer listed.
 - **A setup link works once and for ten minutes.** Used, expired and unknown links get the same answer, so a link
   reveals nothing. The database refuses a second redemption too, in case two arrive at once.
 - **What a link carries depends on its purpose**: an invite names no account until it is redeemed; a first-setup link
   has no author, since only the command line issues one.
 - **A passkey is discoverable and user-verified**, signed for this app's origin and RP ID, with no attestation asked
-  for. The person never types a username to use one: the passkey says whose it is.
+  for, with ES256 or Ed25519 (RS256 is refused: ASVS 5.0 disallows RSASSA-PKCS1-v1_5). The person never types a
+  username to use one: the passkey says whose it is.
 - **A passkey prompt is answered once.** Each prompt carries a 32-byte challenge; the first answer spends it before
   it is checked, and a second answer finds nothing. A setup asks for a new prompt each time, until the setup expires;
   a sign-in prompt lasts five minutes. Prompts left unanswered are swept when the next one starts.
@@ -274,13 +276,20 @@ design.md, "Sign-in". The rules the code keeps:
   128), checks Pwned Passwords by k-anonymity with padding, and derives a key with Argon2id (19 MiB, 2 passes, 1 lane,
   a salt the server chose). The server keeps `HMAC-SHA256(pepper, key)` with the pepper's version and compares in
   constant time. An unknown username gets a decoy salt derived from the pepper, so the answers look the same. 100
-  failures in a row lock the password; passkeys keep working. Sign-in is limited per client (20 in 10 minutes) and
-  per username (10 in 15 minutes).
+  failures in a row lock the password, counted in one statement so guesses sent together all count; passkeys keep
+  working. Sign-in is limited per client (20 in 10 minutes) and per username (10 in 15 minutes), the username keyed
+  with the pepper so what was typed is not kept. A new password that is little more than the app's name, the trade or
+  the username is refused in the browser.
 - **Security settings need a recent sign-in** (step-up, five minutes): adding or removing a passkey, setting the
   password, changing the username, ending sessions, invites and recovery links. Confirming is a passkey sign-in scoped
   to the account, or the password for an account with no passkey; either opens a fresh session in place of the old.
-  The server decides; the page only asks when told.
+  On an account with a passkey, a password sign-in opens the book but never counts as a step-up. The server decides;
+  the page only asks when told.
 - **The last way in stays.** A passkey can be removed only while another passkey or an unlocked password remains.
+  Removing one signs out the other devices it signed in; after a removal or a password change, the page offers to
+  sign out every other device.
+- **Either user can sign out every device of the other**, after step-up - a phone lost on the road. The other's
+  passkeys stay; they remove the lost one themselves, after a recovery link if need be.
 - **Each account sees its own activity**: what happened to it, and what it did to the other account. A recovery link
   shows on both lists, each from its own side.
 - **The signature counter is a signal, not a lock.** One that did not move forward is noted on the session's
@@ -339,7 +348,8 @@ through `createApp` in `src/composition/create-app.ts`.
 | `signOut` | Ends this session | - |
 | `endSession` | Ends one other session of the account | `step_up_required`, `not_found` |
 | `endOtherSessions` | Ends every other session of the account | `step_up_required` |
-| `listSessions` | The account's sessions, most recently used first | - |
+| `endPersonSessions` | Ends every session of the other account, its passkeys left alone | `step_up_required`, `not_found` |
+| `listSessions` | The account's sessions still running, most recently used first | - |
 | `accountOverview` | Everything Settings shows: account, passkeys, password status, sessions, activity, people | - |
 | `changeDisplayName` | Renames the account | - |
 | `changeUsername` | Changes the username | `step_up_required`, `username_taken` |
@@ -347,7 +357,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `finishPasswordChange` | Stores the verifier of the new password, unlocked | `step_up_required`, `password_not_saved` |
 | `startAddingPasskey` | A creation prompt for another passkey, excluding those the account has | `step_up_required` |
 | `finishAddingPasskey` | Stores it | `step_up_required`, `passkey_not_accepted` |
-| `removePasskey` | Removes one, never the last way in | `step_up_required`, `not_found`, `last_way_in` |
+| `removePasskey` | Removes one, never the last way in, and ends the other sessions it opened | `step_up_required`, `not_found`, `last_way_in` |
 | `issueSetupLink` | A setup link and its token, shown once; the command line's first setup and break-glass | - |
 | `issueInvite` | An invite from a signed-in user | `step_up_required` |
 | `issueRecoveryLink` | A recovery link for the other account | `step_up_required`, `not_found` |
@@ -423,7 +433,7 @@ into the statement by `src/shared/infrastructure/d1/sql-literals.ts`, so the two
 | Table | Holds | Rules the database keeps |
 |---|---|---|
 | `account` | username, display name, WebAuthn user handle | username unique, lower-case `a-z0-9._-`, 3-32 long |
-| `passkey` | a credential's id, public key, algorithm, counter, transports, backup flags, name, last use | credential id unique; algorithm ES256, Ed25519 or RS256 |
+| `passkey` | a credential's id, public key, algorithm, counter, transports, backup flags, name, last use | credential id unique; algorithm ES256 or Ed25519 |
 | `session` | the verifier, how it signed in, when it started, ends and was last seen, the device label | a password session names no passkey; it ends after it starts |
 | `setup_link` | purpose, account, author, token hash, expiry, redemption | an unredeemed invite names no account; a first-setup link has no author; trigger `setup_link_redeemed_once` |
 | `password` | one fallback password per account: salt, Argon2id cost, verifier, pepper version, failures, lock, change time | the cost never below OWASP's minimum; salt and verifier of their exact lengths |

@@ -4,7 +4,12 @@ import { z } from "zod";
 
 import type { AccountId } from "@/shared/domain/account-id";
 
-import { lastSeenPrecision, sessionLifetime, stepUpWindow } from "./access-policy";
+import {
+  lastSeenPrecision,
+  sessionIdleLimit,
+  sessionLifetime,
+  stepUpWindow,
+} from "./access-policy";
 import type { PasskeyId } from "./passkey";
 import type { SecretHash } from "./secret";
 
@@ -60,13 +65,27 @@ export function open(details: NewSession, now: Temporal.Instant): Session {
   };
 }
 
+// Over: 30 days after its sign-in, or 14 days after it was last seen, whichever comes first
 export function isExpired(session: Session, now: Temporal.Instant): boolean {
-  return Temporal.Instant.compare(now, session.expiresAt) >= 0;
+  return (
+    Temporal.Instant.compare(now, session.expiresAt) >= 0 ||
+    Temporal.Instant.compare(now, session.lastSeenAt.add(sessionIdleLimit)) >= 0
+  );
 }
 
 // Security settings ask for a recent authentication, not just a valid session
 export function isFresh(session: Session, now: Temporal.Instant): boolean {
   return Temporal.Instant.compare(now, session.authenticatedAt.add(stepUpWindow)) < 0;
+}
+
+// Recent, and with the strongest way in the account has: on an account with a passkey, a password opens the book but
+// never its security settings, so a phished password cannot add another passkey (ADR 0009, amended 2026-10-26)
+export function isSteppedUp(
+  session: Session,
+  now: Temporal.Instant,
+  accountHasPasskey: boolean,
+): boolean {
+  return isFresh(session, now) && (session.method === "passkey" || !accountHasPasskey);
 }
 
 export function isSeenLongAgo(session: Session, now: Temporal.Instant): boolean {

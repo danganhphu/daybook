@@ -22,6 +22,7 @@ every change belongs in `AGENTS.md`.
 | `e2e-tests` | adding a scenario, or when an end-to-end run fails |
 | `design-system` | adding or restyling a component or a screen |
 | `cloudflare-and-vinext` | a `cf` command, a binding, a server action or the build behaves unexpectedly |
+| `security` | planning or reviewing a change that crosses a trust boundary; points into `vendor/cloudflare/security-audit-skill` |
 
 pnpm also links drizzle-kit's own skills in here as `pnpm-drizzle-kit-*`. They match the installed drizzle-kit and are
 ignored by git.

@@ -8,14 +8,20 @@ export const contentSecurityPolicyHeader = "content-security-policy";
 
 const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
 
-// Pages a signed-out browser may open. Everything else sends it to sign in first. The component gallery holds no data
-// and answers 404 in production.
+// Pages a signed-out browser may open, and the manifest and icons the sign-in page names. Everything else sends it to
+// sign in first. The component gallery holds no data and answers 404 in production.
 const publicPaths = new Set<string>([
   routes.signIn,
   routes.setup,
   routes.signOut,
   routes.componentGallery,
+  routes.manifest,
+  routes.icon,
+  routes.appleIcon,
 ]);
+
+// What the build and vinext serve, which holds none of the book: never sent to sign in, so a missing file answers 404
+const publicPrefixes = ["/_next/", "/_vinext/", "/icons/"] as const;
 
 type HeaderReader = { get(name: string): string | null };
 
@@ -38,7 +44,12 @@ export function isCrossSiteWrite(method: string, headers: HeaderReader, appOrigi
 // Only a shortcut: a missing cookie means no session, so there is no point rendering the page first. A cookie that
 // is present proves nothing; the page and every server action still check it.
 export function needsSignIn(method: string, pathname: string, hasSessionCookie: boolean): boolean {
-  return method.toUpperCase() === "GET" && !hasSessionCookie && !publicPaths.has(pathname);
+  return (
+    method.toUpperCase() === "GET" &&
+    !hasSessionCookie &&
+    !publicPaths.has(pathname) &&
+    !publicPrefixes.some((prefix) => pathname.startsWith(prefix))
+  );
 }
 
 // Scripts and styles run only with this request's nonce; vinext puts it on everything it emits. strict-dynamic lets

@@ -88,7 +88,7 @@ describe("creation options", () => {
       excludeCredentials: [{ id: "AAAA", type: "public-key", transports: ["internal"] }],
       timeout: 300_000,
     });
-    expect(options.pubKeyCredParams.map(({ alg }) => alg)).toEqual([-7, -8, -257]);
+    expect(options.pubKeyCredParams.map(({ alg }) => alg)).toEqual([-7, -8]);
   });
 });
 
@@ -110,7 +110,6 @@ describe("verifyRegistration", () => {
   it.each([
     ["ES256", -7],
     ["Ed25519", -8],
-    ["RS256", -257],
   ] as const)(
     "given a %s passkey, when its registration is verified, then the key and what the authenticator said about it come back",
     async (algorithm, cose) => {
@@ -129,6 +128,15 @@ describe("verifyRegistration", () => {
       });
     },
   );
+
+  it("given an RS256 passkey, when its registration is verified, then it is refused for its algorithm", async () => {
+    const { challenge, response } = await aRegistration({ algorithm: "RS256" });
+
+    expect(await verifier.verifyRegistration(response, challenge)).toEqual({
+      ok: false,
+      error: "algorithm",
+    });
+  });
 
   it.each<[string, Tampering, string]>([
     ["another origin", { origin: "https://daybook.example.workers.dev.evil.example" }, "origin"],
@@ -184,7 +192,7 @@ describe("readAssertion", () => {
 });
 
 describe("verifyAssertion", () => {
-  it.each([["ES256"], ["Ed25519"], ["RS256"]] as const)(
+  it.each([["ES256"], ["Ed25519"]] as const)(
     "given a %s passkey's answer, when verified, then the counter and backup state come back",
     async (algorithm) => {
       const { stored, challenge, response } = await anAssertion({ counter: 7 }, algorithm);

@@ -121,6 +121,15 @@ export async function endOtherDevices(): Promise<SettingsResult<null>> {
   return refreshOnSuccess(await Settings.endOtherDevices(app, session, await requestOrigin()));
 }
 
+export async function endPersonDevices(accountId: unknown): Promise<SettingsResult<null>> {
+  const app = daybook();
+  const session = await requireSession(app);
+
+  return refreshOnSuccess(
+    await Settings.endPersonDevices(app, session, accountId, await requestOrigin()),
+  );
+}
+
 // The link comes back once, for the page to show; only its hash is kept
 export async function createInvite(): Promise<SettingsResult<Settings.IssuedLinkView>> {
   const app = daybook();

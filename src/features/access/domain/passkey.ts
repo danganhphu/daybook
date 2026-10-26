@@ -20,8 +20,9 @@ export const credentialIdSchema = z
 
 export type CredentialId = z.infer<typeof credentialIdSchema>;
 
-// ES256, Ed25519 and RS256, the order registration offers them in. Anything else is never stored.
-export const passkeyAlgorithms = [-7, -8, -257] as const;
+// ES256 and Ed25519, the order registration offers them in. Anything else is never stored - RS256 included: ASVS 5.0
+// Appendix C disallows RSASSA-PKCS1-v1_5 (ADR 0009, amended 2026-10-26).
+export const passkeyAlgorithms = [-7, -8] as const;
 
 export type PasskeyAlgorithm = (typeof passkeyAlgorithms)[number];
 

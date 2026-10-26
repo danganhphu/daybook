@@ -15,10 +15,14 @@ From a fresh clone to a running app with a first account, on Windows, macOS or L
 ## Install
 
 ```sh
-git clone https://github.com/danganhphu/daybook.git
+git clone --recurse-submodules https://github.com/danganhphu/daybook.git
 cd daybook
 pnpm install
 ```
+
+`--recurse-submodules` fetches `vendor/cloudflare/security-audit-skill`, the security checklist coding agents read
+(`.agents/skills/security`). In a clone made without it, run `git submodule update --init`. The app builds and runs
+without it.
 
 `pnpm install` follows the supply-chain rules in `pnpm-workspace.yaml`: versions are pinned exactly, a release
 younger than a day is not installed, a drop in a package's publish trust fails the install, and only packages listed

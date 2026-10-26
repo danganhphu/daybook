@@ -20,7 +20,8 @@ request (`src/composition/daybook.ts`): a missing or malformed value fails loudl
 - **`PASSWORD_PEPPER`** is mixed into every fallback-password verifier (HMAC-SHA256), so a copy of the database alone
   cannot be used to test guesses. Make one with
   `node -e "console.log(crypto.randomBytes(32).toString('base64url'))"`. Never commit it, never reuse the development
-  one.
+  one: the Worker refuses the development pepper unless `APP_ORIGIN` is localhost
+  (`src/features/access/infrastructure/development-pepper.ts`).
 - Changing the pepper invalidates every fallback password (passkeys keep working). Rotation, keeping the old pepper
   for existing verifiers, is designed but not built.
 - **`AI`** reads notes (ADR 0012). Workers AI has no local stand-in, so `pnpm dev` calls the real one, and each note
@@ -38,7 +39,15 @@ request (`src/composition/daybook.ts`): a missing or malformed value fails loudl
 | --- | --- | --- |
 | Compatibility date | `cloudflare.config.ts` | the newest date the local workerd supports; raise it when the Cloudflare packages update |
 | Compatibility flags | `cloudflare.config.ts` | `nodejs_compat` |
+| Workers Logs | `cloudflare.config.ts`, `observability` | on, query strings redacted (search words travel there); free plan keeps 3 days, 200,000 lines a day |
 | Dev server port | `vite.config.ts` | 5173, from `developmentOrigin`; strict |
+
+What reaches Workers Logs: each request's method, URL without its query, and status; one JSON line per fault from
+`src/instrumentation.ts`; and vinext's own line for a failed server action, which can carry a failed query's
+parameters (see [security](../architecture/security.md#logs)).
+
+Static files are served before the Worker runs, so they carry `public/_headers` instead of the proxy's headers. Keep
+the two in step; `src/features/access/web/static-headers.test.ts` fails when they drift.
 
 `vitest.config.ts` imports the compatibility date and flags, so tests run on the same runtime behaviour as the app.
 

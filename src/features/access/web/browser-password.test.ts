@@ -1,9 +1,11 @@
 import { argon2id } from "@noble/hashes/argon2.js";
 import { describe, expect, it } from "vitest";
 
+import { argon2Parameters } from "@/features/access/domain/access-policy";
 import { encodeBase64Url } from "@/shared/domain/base64url";
 
 import {
+  checkPasswordContext,
   checkPasswordLength,
   deriveKey,
   isBreached,
@@ -32,6 +34,14 @@ describe("Argon2id", () => {
     });
 
     expect(hex(tag)).toBe("0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659");
+  });
+
+  // The RFC's vector runs at a toy cost, and @noble/hashes' audit leaves argon2 out: this pins the real cost to a
+  // second, independent implementation - the value is Node's crypto.argon2Sync with the same inputs
+  it("given the cost new passwords get, when a key is derived, then it is the one Node's own Argon2id gives", async () => {
+    expect(
+      await deriveKey(normalizePassword("mật khẩu của tôi rất dài"), salt, argon2Parameters),
+    ).toBe("kXYiJR3-UorDjFBx7YRRGStKSanvB2pdt0plscuT1sE");
   });
 });
 
@@ -82,6 +92,32 @@ describe("checkPasswordLength", () => {
     expect(checkPasswordLength("🐱".repeat(14))).toEqual({
       ok: false,
       error: passwordMessages.tooShort,
+    });
+  });
+});
+
+describe("checkPasswordContext", () => {
+  const context = ["daybook", "minh"];
+
+  it.each([
+    ["the app's name twice and a year", "daybook2026daybook"],
+    ["the username and digits", "Minh.Minh.2026!!"],
+    ["the trade, with or without accents", "Nha Khoa vật tư 2026"],
+  ])("given %s, when checked, then it is refused as guessable", (_, password) => {
+    expect(checkPasswordContext(password, context)).toEqual({
+      ok: false,
+      error: passwordMessages.guessable,
+    });
+  });
+
+  it.each([
+    ["a sentence that mentions the app", "sổ daybook của tôi rất dài"],
+    ["fifteen digits, since no composition rule applies", "472910385617204"],
+    ["a word that only contains a short name", "chuyện anh kể hôm qua"],
+  ])("given %s, when checked, then it passes", (_, password) => {
+    expect(checkPasswordContext(password, [...context, "an"])).toEqual({
+      ok: true,
+      value: password,
     });
   });
 });

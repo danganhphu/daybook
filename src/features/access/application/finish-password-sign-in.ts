@@ -106,10 +106,12 @@ export async function finishPasswordSignIn(
     return refuse("locked");
   }
   if (!matches) {
+    // The count is the database's; this read only decides whether the lock is logged, so two guesses at once that
+    // cross the line together log it twice, or not at all - the lock itself holds either way
     const failed = Passwords.recordFailure(password, now);
 
     return refuse("wrong_password", (work) => {
-      work.passwords.recordAttempt(failed);
+      work.passwords.recordFailure(password.accountId, now);
       if (Passwords.isLocked(failed)) {
         work.accessEvents.add(
           AccessEvents.record(

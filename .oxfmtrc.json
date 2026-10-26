@@ -1,5 +1,5 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "sortImports": true,
-  "ignorePatterns": ["**/*.md", "**/*.module.scss.d.ts"]
+  "ignorePatterns": ["**/*.md", "**/*.module.scss.d.ts", "vendor/**"]
 }

@@ -20,16 +20,19 @@ import { AddPasskeyDialog } from "./add-passkey-dialog";
 import { PasswordRow } from "./password-row";
 import { useOutcomeToast } from "./use-outcome-toast";
 import type { StepUp } from "./use-step-up";
+import { useWayInChanged } from "./use-way-in-changed";
 
 export type SignInMethodsProps = {
   readonly view: AccountView;
+  readonly hasOtherDevices: boolean;
   readonly run: StepUp["run"];
 };
 
 // Every way into this account: its passkeys, one per device or password manager, and the fallback password
-export function SignInMethods({ view, run }: SignInMethodsProps) {
+export function SignInMethods({ view, hasOtherDevices, run }: SignInMethodsProps) {
   const supported = useWebAuthnSupport();
   const tell = useOutcomeToast();
+  const announce = useWayInChanged(hasOtherDevices, run);
   const [adding, setAdding] = useState<PublicKeyCredentialCreationOptionsJSON>();
   // Kept after the dialog closes, so its title does not change while it fades out
   const [target, setTarget] = useState<PasskeyRow>();
@@ -61,9 +64,13 @@ export function SignInMethods({ view, run }: SignInMethodsProps) {
     }
     startWorking(async () => {
       const removed = await run(() => removePasskey(target.id));
-      tell(removed.ok ? `Đã xoá ${target.title}` : problemMessage(removed.error));
+      if (removed.ok) {
+        announce(`Đã xoá ${target.title}`);
+        return;
+      }
+      tell(problemMessage(removed.error));
     });
-  }, [target, run, tell]);
+  }, [target, run, tell, announce]);
 
   return (
     <>
@@ -79,7 +86,12 @@ export function SignInMethods({ view, run }: SignInMethodsProps) {
             onClick={startAdding}
           />
         ) : null}
-        <PasswordRow password={view.password} username={view.username} run={run} />
+        <PasswordRow
+          password={view.password}
+          username={view.username}
+          run={run}
+          onChanged={announce}
+        />
       </List>
       <AddPasskeyDialog options={adding} run={run} onClose={stopAdding} />
       <ConfirmDialog
