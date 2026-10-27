@@ -72,8 +72,9 @@ Feature: Cài đặt
     When tôi xác nhận bằng Face ID
     Then mật khẩu dự phòng đã được lưu
 
-  # WebKit in Playwright has no passkeys, and Minh's only way in is the setup link
-  @chromium-only
+  # WebKit in Playwright has no passkeys, and Minh's only way in is the setup link; Android alone, as every scenario
+  # that opens one (sign-in.feature)
+  @chromium-only @phone-only
   Scenario: Đặt mật khẩu dự phòng rồi đăng nhập bằng nó
     Given máy này có Face ID
     And mật khẩu nào cũng chưa từng bị lộ

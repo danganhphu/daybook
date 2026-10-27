@@ -8,6 +8,7 @@ Feature: Chuyển màn
   Scenario: Màn tới chậm thì có thanh chạy ở mép trên, tới rồi thì tắt
     Given màn "/customers" đang tới chậm
     When tôi mở trang Hôm nay
+    And trang Hôm nay đã sẵn sàng
     And tôi bấm tab "Khách hàng"
     Then có thanh chờ chạy ở mép trên
     And tôi thấy tiêu đề "Khách hàng"
