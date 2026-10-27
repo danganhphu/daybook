@@ -9,6 +9,7 @@
   padding: space(3) space(4);
   color: color(text-muted);
   background: color(surface);
+  border: 1px solid color(border);
   border-radius: radius(surface);
 
   &[data-tone="danger"] {

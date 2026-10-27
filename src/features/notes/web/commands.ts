@@ -8,7 +8,7 @@ import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { parseContent } from "@/shared/domain/content";
 import { err, ok, type Result } from "@/shared/domain/result";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayHeading, dayLabel } from "@/shared/web/day-label";
 import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";

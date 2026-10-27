@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef } from "react";
 
 import { addCustomer, reviseCustomer } from "@/app/(app)/customers/actions";
-import { customerLimits } from "@/features/customers/domain/customer";
+import { customerLimits } from "@/features/customers/domain/customer-limits";
 import type { CustomerFormState } from "@/features/customers/web/commands";
 import type { CustomerView, KindView } from "@/features/customers/web/customer-view";
 import { customersCopy } from "@/features/customers/web/customers-copy";

@@ -45,6 +45,13 @@ export function editCustomerPath(id: string): string {
   return `${customerPath(id)}/edit`;
 }
 
+// The tab the settings were opened from, where their back arrow returns
+export const settingsFromParameter = "from";
+
+export function settingsPath(from: string): string {
+  return `${routes.settings}?${new URLSearchParams({ [settingsFromParameter]: from })}`;
+}
+
 // Today has one address, the home screen, so a day page never shows what the home screen shows. Days are YYYY-MM-DD
 // text, so the browser can build a path from the date picker without loading Temporal.
 export function dayPath(day: string, today: string): string {

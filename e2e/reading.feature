@@ -7,6 +7,11 @@ Feature: Đọc tin
     Given tôi đã đăng nhập
     And hôm nay chưa có ghi chú nào
 
+  Scenario: Ghi chú lưu xong là sửa, xoá được ngay, không chờ đọc xong
+    Given đọc tin đang chậm
+    When tôi gõ "ghi chú thử lúc đọc tin chậm" và gửi
+    Then ghi chú "ghi chú thử lúc đọc tin chậm" sửa, xoá được trong lúc còn đang đọc
+
   Scenario: Tin bán hàng thành đơn, rồi hoàn tác
     When tôi gõ "bán 2 hộp thuốc tê cho đại lý Sao Mai 500k" và gửi
     Then ghi chú "bán 2 hộp thuốc tê cho đại lý Sao Mai 500k" ghi "Sao Mai: thuốc tê x2, 500.000đ"
@@ -15,6 +20,8 @@ Feature: Đọc tin
     When tôi bấm "Hoàn tác"
     Then ghi chú "bán 2 hộp thuốc tê cho đại lý Sao Mai 500k" không còn ghi gì thêm
 
+  # WebKit reports "ResizeObserver loop completed with undelivered notifications" here (known-gaps)
+  @iphone-later
   Scenario: Mở đơn vừa ghi từ ghi chú
     When tôi gõ "bán 2 hộp thuốc tê cho đại lý Sao Mai 500k" và gửi
     And tôi mở đơn vừa ghi từ ghi chú "bán 2 hộp thuốc tê cho đại lý Sao Mai 500k"

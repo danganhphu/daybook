@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 
 import { signInWithPassword } from "@/app/sign-in/sign-in-with-password";
 import { accessCopy } from "@/features/access/web/access-copy";
@@ -18,24 +18,35 @@ export type PasswordConfirmProps = {
   readonly onConfirmed: () => void;
 };
 
-// Confirming with the password, for an account that has no passkey: a sign-in as itself, which replaces the session
-// with a fresh one. Rate limited and locked exactly as signing in is.
+// A sign-in as itself, rate limited as signing in is. Plain state, not a form action, as in passkey-confirm.tsx.
 export function PasswordConfirm({ username, onConfirmed }: PasswordConfirmProps) {
-  const [status, action, pending] = useActionState(
-    async (_: string | undefined, form: FormData): Promise<string | undefined> => {
-      const signedIn = await signInWithPassword(username, formText(form, accessFields.password));
+  const [status, setStatus] = useState<string>();
+  const [pending, setPending] = useState(false);
+
+  const check = useCallback(
+    async (password: string) => {
+      setPending(true);
+      const signedIn = await signInWithPassword(username, password);
       if (signedIn.ok) {
         onConfirmed();
-        return undefined;
+        return;
       }
-
-      return signedIn.error;
+      setStatus(signedIn.error);
+      setPending(false);
     },
-    undefined,
+    [username, onConfirmed],
+  );
+
+  const submit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void check(formText(new FormData(event.currentTarget), accessFields.password));
+    },
+    [check],
   );
 
   return (
-    <form className={styles.form} action={action}>
+    <form className={styles.form} onSubmit={submit}>
       {/* For the password manager: it fills the password it saved for this username */}
       <input
         hidden

@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useCallback, useMemo, useState } from "react";
 
-import { kindNameMaxLength } from "@/features/customers/domain/customer-kind";
+import { kindNameMaxLength } from "@/features/customers/domain/customer-limits";
 import type { KindResult } from "@/features/customers/web/commands";
 import type { KindView } from "@/features/customers/web/customer-view";
 import { customersCopy } from "@/features/customers/web/customers-copy";

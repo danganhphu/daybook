@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { NavigationProgress } from "@/shared/ui/navigation-progress/navigation-progress";
 import { Toaster } from "@/shared/ui/toast/toaster";
 
 import { appDescription, appName, canvasColor } from "./identity";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="vi" className={inter.variable}>
       <body>
+        <NavigationProgress />
         <Toaster>{children}</Toaster>
       </body>
     </html>

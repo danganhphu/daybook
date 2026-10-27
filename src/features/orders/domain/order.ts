@@ -8,7 +8,8 @@ import { productIdSchema, type ProductId } from "@/features/products/domain/prod
 import type { AccountId } from "@/shared/domain/account-id";
 import * as Audits from "@/shared/domain/audit";
 import type { Audit, Deletion } from "@/shared/domain/audit";
-import { moneyMax, moneySchema, remaining, sum, type Money } from "@/shared/domain/money";
+import { moneyMax, remaining, sum, type Money } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { optionalTextSchema } from "@/shared/domain/short-text";
 

@@ -40,11 +40,21 @@ request (`src/composition/daybook.ts`): a missing or malformed value fails loudl
 | Compatibility date | `cloudflare.config.ts` | the newest date the local workerd supports; raise it when the Cloudflare packages update |
 | Compatibility flags | `cloudflare.config.ts` | `nodejs_compat` |
 | Workers Logs | `cloudflare.config.ts`, `observability` | on, query strings redacted (search words travel there); free plan keeps 3 days, 200,000 lines a day |
+| Where it is served | `cloudflare.config.ts`, `workersDev`, `previewUrls` | `daybook.<subdomain>.workers.dev` only, the passkeys' RP ID; no preview URL per version, which would be another host on the same database |
+| Where it runs | `cloudflare.config.ts`, `placement` | beside the D1 primary (Osaka, `aws:ap-northeast-3`), not at the edge that took the request; see below |
 | Dev server port | `vite.config.ts` | 5173, from `developmentOrigin`; strict |
 
 What reaches Workers Logs: each request's method, URL without its query, and status; one JSON line per fault from
 `src/instrumentation.ts`; and vinext's own line for a failed server action, which can carry a failed query's
 parameters (see [security](../architecture/security.md#logs)).
+
+**Why the placement.** A D1 database has one primary, and without read replication every query goes to it. Ours was
+created in the Asia-Pacific region and landed in Osaka. A request from Vietnam reaches Cloudflare in Singapore; run
+there, the Worker paid about 100 ms per query for a statement that takes 0.14 ms, and a screen makes two to four of
+them in a row. Placed beside the database, the request crosses to Osaka once and each query is a few milliseconds.
+D1 takes only a region as a hint, not a city, so the database cannot simply be put in Singapore. Check where the
+primary is with `pnpm exec cf d1 query <database-id> --sql "select 1"` (`served_by_colo` in the answer), and move the
+placement if it ever changes.
 
 Static files are served before the Worker runs, so they carry `public/_headers` instead of the proxy's headers. Keep
 the two in step; `src/features/access/web/static-headers.test.ts` fails when they drift.

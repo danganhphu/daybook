@@ -41,8 +41,9 @@ development pepper is in this repository and the Worker refuses it anywhere but 
   `'strict-dynamic'` lets those scripts load the chunks they import; no `'unsafe-inline'`, no `'unsafe-eval'`, so no
   `style` attribute anywhere. `object-src 'none'`, `base-uri 'none'`, `form-action 'self'`, `frame-ancestors 'none'`;
   `connect-src` adds only Pwned Passwords. Static files get `default-src 'none'; sandbox` from `public/_headers`.
-- **Zod runs jitless in the browser** (`src/instrumentation-client.ts`): its compiled parsers need `new Function`,
-  which the CSP blocks, and the probe alone shows as a CSP issue on every page.
+- **Zod runs jitless in the browser** (`src/features/access/web/browser-options.ts`, the only module that parses with
+  it there, on sign-in and passkey screens): its compiled parsers need `new Function`, which the CSP blocks, and the
+  probe alone shows as a CSP issue.
 - **Not for search engines**: every page says `noindex, nofollow`, and `robots.txt` disallows everything.
 - No source maps are shipped, and nothing on the client names a secret, a binding or a table - checked in the build
   output.

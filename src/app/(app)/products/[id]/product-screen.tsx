@@ -19,7 +19,7 @@ import { mergingCopy, pickProductHint } from "@/features/merging/web/merging-cop
 import type { DatedOrderRowView } from "@/features/orders/web/commands";
 import { shortDay } from "@/features/orders/web/day-text";
 import { describeProduct } from "@/features/orders/web/order-view";
-import { productNameMaxLength } from "@/features/products/domain/product";
+import { productNameMaxLength } from "@/features/products/domain/product-limits";
 import type { ProductScreenView } from "@/features/products/web/product-view";
 import { productsCopy } from "@/features/products/web/products-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
@@ -37,7 +37,6 @@ import {
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { Notice } from "@/shared/ui/notice/notice";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
@@ -119,9 +118,7 @@ export function ProductScreen({ view, orders }: ProductScreenProps) {
   );
 
   return (
-    <Screen>
-      <PageHeader title={view.name} back={routes.products} actions={menu} />
-
+    <Screen title={view.name} back={routes.products} actions={menu}>
       {view.mergedInto === undefined ? null : (
         <Notice message={mergingCopy.productIsMerged}>
           <ButtonLink href={productPath(view.mergedInto)}>{mergingCopy.seeKept}</ButtonLink>

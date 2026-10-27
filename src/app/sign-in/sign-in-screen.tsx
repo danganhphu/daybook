@@ -9,6 +9,7 @@ import { AccessPanel } from "@/features/access/web/access-panel";
 import { forBrowserRequest } from "@/features/access/web/browser-options";
 import { enterApp } from "@/features/access/web/enter-app";
 import { promptErrorMessage } from "@/features/access/web/prompt-errors";
+import { usePromptRefresh } from "@/features/access/web/use-prompt-refresh";
 import { useWebAuthnSupport } from "@/features/access/web/use-webauthn-support";
 import { Button } from "@/shared/ui/button/button";
 import { attempt } from "@/shared/web/attempt";
@@ -72,12 +73,14 @@ export function SignInScreen() {
   const toPasskey = useCallback(() => setMode("passkey"), []);
   const [screen, dispatch, pending] = useActionState(act, waiting);
   const hydrated = useHydrated();
+  const prepare = useCallback(() => startTransition(() => dispatch("prepare")), [dispatch]);
 
   useEffect(() => {
     if (supported) {
-      startTransition(() => dispatch("prepare"));
+      prepare();
     }
-  }, [supported, dispatch]);
+  }, [supported, prepare]);
+  usePromptRefresh(screen.options, prepare);
 
   const signIn = useCallback(() => {
     startTransition(() => dispatch("sign-in"));

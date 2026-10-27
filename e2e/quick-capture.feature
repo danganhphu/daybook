@@ -80,6 +80,14 @@ Feature: Ghi nhanh
     Then tôi thấy lỗi "Chưa gửi được. Kiểm tra mạng rồi thử lại."
     And ô nhập vẫn còn "Đơn nha khoa Hoà Bình: 3 hộp kim nha khoa"
 
+  Scenario: Hết phiên lúc gửi thì đăng nhập lại chữ vẫn còn
+    Given hôm nay chưa có ghi chú nào
+    And phiên đăng nhập vừa hết
+    When tôi gõ "Nha khoa An Bình hẹn thứ sáu giao 2 hộp găng" và gửi
+    Then tôi đang ở trang đăng nhập
+    When tôi đăng nhập lại rồi về trang Hôm nay
+    Then ô nhập vẫn còn "Nha khoa An Bình hẹn thứ sáu giao 2 hộp găng"
+
   @desktop-only
   Scenario: Trên máy tính, Enter là gửi
     Given hôm nay chưa có ghi chú nào

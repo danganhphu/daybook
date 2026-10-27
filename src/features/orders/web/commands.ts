@@ -26,9 +26,9 @@ import {
 import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import { err, ok, type Result } from "@/shared/domain/result";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayLabel } from "@/shared/web/day-label";
 import { moneyText } from "@/shared/web/money-text";

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import { NameDialog } from "@/app/(app)/_names/name-dialog";
-import { productNameMaxLength } from "@/features/products/domain/product";
+import { productNameMaxLength } from "@/features/products/domain/product-limits";
 import { productsCopy } from "@/features/products/web/products-copy";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { AddIcon } from "@/shared/ui/icon/icons";

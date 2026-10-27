@@ -47,3 +47,15 @@ export const sections = {
     owns: (pathname) => pathname === routes.reports,
   },
 } as const satisfies Record<string, Section>;
+
+const tabs: ReadonlyArray<Section> = Object.values(sections);
+
+// The tab a path belongs to; Today for anything else
+export function tabFor(pathname: string): string {
+  return tabs.find((tab) => tab.owns(pathname))?.href ?? routes.today;
+}
+
+// A tab's own path, or Today: never a path from outside the app's tabs
+export function knownTab(path: string | undefined): string {
+  return tabs.find((tab) => tab.href === path)?.href ?? routes.today;
+}

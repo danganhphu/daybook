@@ -6,7 +6,6 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { customerForm } from "@/features/customers/web/commands";
 import { customersCopy } from "@/features/customers/web/customers-copy";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { customerPath } from "@/shared/web/routes";
 
@@ -27,8 +26,7 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
   }
 
   return (
-    <Screen>
-      <PageHeader title={customersCopy.edit} back={customerPath(form.customer.id)} />
+    <Screen title={customersCopy.edit} back={customerPath(form.customer.id)}>
       <CustomerForm customer={form.customer} kinds={form.kinds} />
     </Screen>
   );

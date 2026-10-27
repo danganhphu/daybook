@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { secretByteLength } from "@/features/access/domain/access-policy";
-import { displayNameMaxLength, usernameLength } from "@/features/access/domain/account";
+import { displayNameMaxLength, usernameLength } from "@/features/access/domain/account-limits";
 import { base64UrlLength } from "@/shared/domain/base64url";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 

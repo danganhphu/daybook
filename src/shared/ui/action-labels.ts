@@ -3,6 +3,7 @@
 export const actionLabels = {
   save: "Lưu",
   saving: "Đang lưu...",
+  retry: "Thử lại",
   cancel: "Huỷ",
   confirm: "Xác nhận",
   add: "Thêm",

@@ -6,7 +6,13 @@ import { z } from "zod";
 
 import { sessionCookieName } from "@/features/access/web/cookie-names";
 
-import { fixturesFile, setupLinksUsedFile, staleSessionsUsedFile } from "./paths";
+import type { SeededPasskey } from "./face-id";
+import {
+  fixturesFile,
+  hoaStaleSessionsUsedFile,
+  setupLinksUsedFile,
+  staleSessionsUsedFile,
+} from "./paths";
 import { todayPage, type TodayPage } from "./today-page";
 
 const seededSchema = z.object({
@@ -14,6 +20,12 @@ const seededSchema = z.object({
   staleSessionCookies: z.array(z.string()).min(1),
   lanPassword: z.string(),
   setupTokens: z.array(z.string()).min(1),
+  hoaStaleSessionCookies: z.array(z.string()).min(1),
+  hoaPasskey: z.object({
+    credentialId: z.string(),
+    privateKey: z.string(),
+    userHandle: z.string(),
+  }),
 });
 
 export type Access = {
@@ -24,7 +36,14 @@ export type Access = {
   readonly lanPassword: string;
   // A setup link nobody has opened yet, for Minh
   nextSetupToken(): string;
+  // Hoa's, long ago: she has a passkey, so she confirms with it
+  signInAsHoaLongAgo(): Promise<void>;
+  readonly hoaPasskey: SeededPasskey;
 };
+
+// WebKit fails a prefetch the page has navigated away from with this message, and vinext leaves that rejection
+// unhandled. Nothing the person sees; every other uncaught error still fails the scenario.
+const abandonedPrefetch = /\?_rsc=\S+ due to access control checks\.$/;
 
 // The next of a seeded list nobody has used yet. The count lives in a file, so it holds across scenarios, projects
 // and retries in one run.
@@ -58,7 +77,11 @@ export const test = base.extend<{
         problems.push(message.text());
       }
     });
-    page.on("pageerror", (error) => problems.push(error.message));
+    page.on("pageerror", (error) => {
+      if (!abandonedPrefetch.test(error.message)) {
+        problems.push(error.message);
+      }
+    });
 
     await use(page);
 
@@ -91,6 +114,15 @@ export const test = base.extend<{
         setSession(spendNext(seeded.staleSessionCookies, staleSessionsUsedFile, "stale sessions")),
       lanPassword: seeded.lanPassword,
       nextSetupToken: () => spendNext(seeded.setupTokens, setupLinksUsedFile, "setup links"),
+      signInAsHoaLongAgo: () =>
+        setSession(
+          spendNext(
+            seeded.hoaStaleSessionCookies,
+            hoaStaleSessionsUsedFile,
+            "Hoa's stale sessions",
+          ),
+        ),
+      hoaPasskey: seeded.hoaPasskey,
     });
   },
 });

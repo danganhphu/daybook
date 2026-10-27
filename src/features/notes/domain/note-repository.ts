@@ -1,6 +1,6 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
-import type { SearchTerm } from "@/shared/domain/search-text";
+import type { SearchTerm } from "@/shared/domain/search-term";
 import type { DayBounds } from "@/shared/domain/vietnam-day";
 
 import type { DeletedNote, LiveNote, Note, NoteId } from "./note";

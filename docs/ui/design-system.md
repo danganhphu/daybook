@@ -1,10 +1,10 @@
 # UI guidelines
 
 daybook should look like a product from a team with a real design system - calm, quiet, obviously deliberate - and
-never like a generated app. It is a phone app first, so it should feel like one, not like office software: large
-type, generous corners, a light grey page, one bright green, coloured icons. Numbers come from Apple's Human Interface
-Guidelines, Material 3 and WCAG; interaction rules from Microsoft Fluent 2 and AWS Cloudscape. Where they disagree,
-the choice and the reason are stated.
+never like a generated app. It is a phone app first, so it should feel like one, not like office software: a white
+page, clear black type at a modest size, rounded corners, one blue, coloured icons, and room between things. Numbers
+come from Material 3, Apple's Human Interface Guidelines and WCAG; interaction rules from Microsoft Fluent 2 and AWS
+Cloudscape. Where they disagree, the choice and the reason are stated.
 
 ## Principles
 
@@ -17,18 +17,22 @@ when the space changes: a desktop table becomes a list of rows, a long legend be
 **Disclose progressively.** Summary first, detail on tap. A row shows the one or two values that matter; the rest
 waits behind it.
 
-**Color carries meaning.** Surfaces are neutral. The green accent marks the primary action, the current tab, links
-and focus; red means danger. An icon takes the tone of what it is about - money green, people blue, debt orange - the
-same on every screen (see Icon tones), and a word or a shape always says it too, so colour is never the only cue. Two
-touches go beyond flat colour: the wash, a faint green at the top of a tab's own screen fading into the grey, and the
-tab bar, frosted, floating over the foot of the page. No glow, no shadows on cards.
+**Color carries meaning.** Surfaces are white and neutral. The blue accent marks the primary action, the current tab,
+links and focus, and charts; red means danger. A small icon takes the tone of what it is about - money green, people blue, debt orange
+- the same on every screen (see Icon tones), and a word or a shape always says it too, so colour is never the only
+cue. No gradient, no glass, no glow, no shadows on cards.
+
+**Fast is a look too.** A tap answers within 100ms (Google's RAIL model): the tab lights at once. The screen in view
+stays until the next one is ready, a few hundred milliseconds now, rather than flashing a placeholder; nothing signals
+a wait under a second (Nielsen Norman Group).
 
 **Motion only when it explains something.** An overlay entering, a toast appearing, an error pointing at a field.
 Never decoration, never on frequent interactions, and none at all under reduced motion.
 
-**Never lose the user's words, and never make them confirm the obvious.** Save first, fix later. Common destructive
-actions
-are one tap plus an Undo in the result toast; a confirmation dialog is only for something irreversible.
+**Never lose the user's words, and never make them confirm the obvious.** Save first, fix later. A note that could
+not be sent goes back into the box; one whose send ended at sign-in, because the session had run out, is kept by the
+tab and back in the box after signing in. Common destructive actions are one tap plus an Undo in the result toast; a
+confirmation dialog is only for something irreversible.
 
 ## Interaction rules
 
@@ -45,7 +49,21 @@ are one tap plus an Undo in the result toast; a confirmation dialog is only for 
   (`8.450.000đ`).
 - **Empty states:** a heading that says what is empty, one line on why only if it helps, and the action that fills
   it.
-- **Response time:** under a second shows nothing; longer shows progress in place, not a full-screen spinner.
+- **Response time:** a tap changes something on screen within 100ms. Going to another tab lights it at once, and any
+  navigation keeps the screen in view until the next is ready, as React advises for routers. Past a second a thin bar
+  runs along the top (`NavigationProgress`: Material 3's indeterminate linear progress, 4px; Nielsen Norman Group: no
+  indicator under a second, and a quick flash makes people feel they cannot keep up). Every link is an `AppLink`,
+  which reports its navigation through `useLinkStatus`; lint refuses `next/link` elsewhere. There is no `loading.tsx`:
+  tried on 2026-10-27, its placeholder flashed on every tap ("bấm bất kì action nào cũng load trang loading lên", the
+  owner). A screen seen in the last 30 seconds comes from the browser's copy. A change shows as made and is saved
+  behind it (`useOptimistic`). Progress shows in place, never as a full-screen spinner.
+- **A screen that could not be made** says so in one line with "Thử lại" (`src/app/_errors/error-screen.tsx`, used by
+  both `error.tsx` files); inside the tabs the tab bar stays, so she can go elsewhere.
+- **Nothing waits inside a transition** for a person or for something slow. React holds back every transition's
+  updates until all pending ones have ended, so a dialog awaited inside one never draws its own state, and a
+  seconds-long call inside one holds up every other update on the page. A dialog that answers a waiting action keeps
+  plain state (`src/app/settings/passkey-confirm.tsx`); reading a note with the model is a plain call
+  (`src/app/(app)/_day/day-screen.tsx`).
 
 ## Tokens
 
@@ -57,29 +75,27 @@ unknown name fails the build.
 
 | Role | Value | Used for | Contrast |
 |---|---|---|---|
-| `canvas` | `#f1f1f1` | Page background: a neutral grey, so white cards stand out without borders | |
-| `surface` | `#ffffff` | Cards, sheets, inputs | decorative on canvas |
-| `surface-float` | `#ffffff` at 88% | The tab bar, which the page shows through blurred | over black text, even unblurred: muted 4.88:1, accent text 4.73:1 |
-| `surface-subtle` | `#e3e3e3` | Hover and pressed states, disabled controls, the track behind filter chips | text 15.88:1, muted 4.98:1, accent text 4.82:1, danger 4.75:1 on it |
-| `control-fill` | `#f6f6f6` | A secondary button, a round icon tile: a step off white and off the canvas | text 18.86:1, danger 5.65:1 on it |
-| `border` | `#e6e6e6` | Separators that carry no meaning | decorative |
-| `border-strong` | `#8a8a8a` | Input outlines and other control boundaries | 3.06:1 or more |
-| `text` | `#050505` | Body text | 15.88:1 or more |
-| `text-muted` | `#5f5f5f` | Secondary text, timestamps, tabs not shown | 4.98:1 or more |
-| `accent` | `#00a915` | The fill under white: the primary button, the send button | white on it 3.14:1, large bold text only |
-| `accent-hover` | `#009512` | The primary button hovered or pressed | white on it 3.96:1 |
-| `accent-text` | `#007129` | Green words on a light background: links, the current tab, an action row; the focus ring | 4.82:1 or more |
-| `accent-wash` | `#f3fdf2` | The top of a tab's own screen, fading into the canvas | text 19.55:1, muted 6.12:1, accent text 5.93:1 |
-| `on-accent` | `#ffffff` | Text on the accent | 3.14:1 |
+| `canvas` | `#ffffff` | Page background: white, so black text reads at its clearest | |
+| `surface` | `#ffffff` | Cards, sheets, inputs; a card is told from the page by its `border` hairline | |
+| `surface-float` | `#ffffff` | The tab bar and the message box, over the page; opaque | |
+| `surface-subtle` | `#f0f2f5` | A note's bubble, hover and pressed states, disabled controls, the chip track, a screen's outline while it loads, the search box | text 18.17:1, muted 5.05:1, accent text 5.00:1 on it |
+| `control-fill` | `#e4e6eb` | A secondary button | text 16.32:1, muted 4.54:1 on it |
+| `border` | `#e4e6eb` | Hairlines and the edge of a card | decorative |
+| `border-strong` | `#8a8d91` | Input outlines and other control boundaries | 3.33:1 on white |
+| `text` | `#050505` | Body text | 16.32:1 or more |
+| `text-muted` | `#65676b` | Secondary text, timestamps, tabs not shown | 4.54:1 or more |
+| `accent` | `#0866ff` | The fill under white: the primary button, the send button | white on it 4.82:1 |
+| `accent-hover` | `#0756d6` | The primary button hovered or pressed | white on it 6.34:1 |
+| `accent-text` | `#0064d1` | Blue words: links, the current tab, an action row; the focus ring and a focused field's edge | 5.00:1 or more |
+| `accent-wash` | `#ebf3ff` | Behind a choice that is made: a filter chip, a pressed toggle | accent text 5.02:1 on it |
+| `on-accent` | `#ffffff` | Text on the accent | 4.82:1 |
 | `danger` | `#c2181d` | Destructive actions, errors | 4.75:1 or more |
 | `scrim` | `text` at 40% | Dims the page behind a dialog | not read on |
 | `icon-*` | see Icon tones | An icon's colour by what it is about | 3:1 or more on white |
 
-**Two greens.** A bright green fill under white text cannot reach 4.5:1: at that ratio the button is a dark forest
-green. So the fill and green words are separate roles. `accent` is as bright as white text allows at 3:1, and every
-label on it is large text in WCAG's sense: `label-strong`, 19px bold (14pt bold is the threshold). `accent-text` is
-the green for words on white, the canvas or a hover grey. A filled button's edge is 2.78:1 against the canvas, which
-WCAG 1.4.11 allows because its label already says what it is; the focus ring, which has no label, uses `accent-text`.
+**One blue, two shades.** `accent` is bright enough to be the app's colour and still holds white text at 4.82:1, so a
+button's label can be any size. Blue words use the deeper `accent-text`, which keeps 4.5:1 on the greys too (on
+`#f0f2f5`, `accent` itself is 4.30:1).
 
 ### Icon tones
 
@@ -108,22 +124,25 @@ There is no dark theme yet. Because components only ask for roles, a dark theme 
 
 ### Type
 
-Inter with the Vietnamese subset (Geist, a common default, has no Vietnamese glyphs). Weights 400 and 600, and 700
-for a filled button's label only.
+Inter with the Vietnamese subset (Geist, a common default, has no Vietnamese glyphs), one variable file for every
+weight.
 
-| Style | Size / line height | Use |
-|---|---|---|
-| `caption` | 13 / 18 | The smallest anything gets: tab labels, small print |
-| `caption-strong` | 13 / 18, 600 | The current tab's label |
-| `body-sm` | 15 / 20 | Secondary lines, a row's second line |
-| `body` | 17 / 24 | Default. Above 16px, so iOS never zooms into an input |
-| `label` | 17 / 24, 600 | Field labels, row titles, buttons |
-| `label-strong` | 19 / 24, 700 | A filled button's label: large text, so white on the bright green is enough |
-| `title` | 22 / 28, 600 | A page's title within a tab |
-| `display` | 30 / 38, 600 | A tab's own screen title |
-| `hero` | 36 / 44, 600 | A screen's one big number, in `icon-green` |
+| Style | Material 3 style | Size / line height, weight | Use |
+|---|---|---|---|
+| `caption` | body-small | 12 / 16, 400 | The smallest anything gets: small print, a time |
+| `caption-strong` | label-medium | 12 / 16, 500 | Tab labels |
+| `body-sm` | body-medium | 14 / 20, 400 | Secondary lines, a row's second line |
+| `body` | body-large | 16 / 24, 400 | Default, and every input: under 16px iOS zooms into the field |
+| `label` | label-large | 14 / 20, 500 | A field's label, a group's name |
+| `label-strong` | label-large | 14 / 20, 500 | A button's words |
+| `title` | title-large | 22 / 28, 400 | A page's title in the bar, a dialog's |
+| `display` | headline-small | 24 / 32, 400 | A tab's own screen title, under the bar |
+| `hero` | headline-medium | 28 / 36, 400 | A screen's one big number, in `text` |
 
-17px is Apple's body size; the first version's 16px read as a form, not a phone app.
+Material 3's type scale exactly, from material-web's `md-sys-typescale` tokens: headings are regular weight, labels
+medium, nothing bold. The version before (2026-10-23) used Apple's 17px body with 17px bold labels and bold titles up to
+36px; on the owner's phone labels such as "Đơn giá" and titles such as "Đơn hàng" read too big, and a title wrapped.
+Every size is in `rem`, and no screen may scroll sideways with text at twice its size (WCAG 1.4.4, `e2e/layout.feature`).
 
 ### Icons
 
@@ -132,7 +151,7 @@ current tab and the icon leading a row, as Material marks what is chosen. `scrip
 lists the icons the app uses, and `pnpm symbols` writes each as a component into `src/shared/ui/icon/icons.tsx`: one
 `<path>`, no icon library at run time, no style attribute for the CSP to refuse. The output is committed. To add one,
 put its name from https://fonts.google.com/icons in the list, run the command and import `<Name>Icon`. Its size comes
-from the CSS around it: `size(icon)` 20px in buttons, `size(icon-row)` 24px in rows, `size(icon-tab)` 28px in the tab
+from the CSS around it: `size(icon)` 20px in buttons, `size(icon-row)` 24px in rows, `size(icon-tab)` 24px in the tab
 bar.
 
 Why this set (2026-10-23): Lucide, the most active, has no filled forms by design. Phosphor has six weights, but its
@@ -145,29 +164,34 @@ React output needs svgr, last released in August 2023.
 
 ### Space, size, shape
 
-- **Spacing** is a 4px grid: steps 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (4px to 64px). Page gutter `space(4)`.
-- **Touch targets** are at least 44px (HIG, Fluent); primary actions 48px; list rows 60px; at least 8px between
-  neighbours.
-- **Radius:** 14px on fields, 24px on cards, menus and toasts, and on the message field (half its 48px height, so one
-  line is a pill). Buttons, chips and icon buttons are pills or circles. A chart's bar is round only at its data end,
-  4px (`radius(mark)`).
-- **Elevation:** cards at rest are flat white on the grey canvas, with no border and no shadow. What floats over the
-  page - the message field, the tab bar - takes a soft, wide shadow (`--shadow-float`). Anything that overlaps -
-  popover, sheet, dialog, toast - takes the overlay shadow (Cloudscape's rule).
-- **Tab bar:** a pill floating at the bottom centre over the foot of the page, 64px tall, 88px per tab, 28px icons;
-  four tabs, which give up some width on a phone narrower than 392px rather than push the pill off the screen.
-  The page runs under it, fading into the canvas behind the bar (`--tab-bar-fade`) and showing through the pill
-  blurred (`surface-float`); under reduced transparency the pill is plain white. Only the pill is blurred, a small
-  area, and the fade is a plain gradient, so scrolling stays cheap. The page keeps the bar's height as room at its end
-  and as scroll padding, so the last row and a focused field always come clear of it (WCAG 2.4.11); on Hôm nay the
-  message field sits above that room. The bar and its room go while the keyboard is up. From `md` it stands down the
-  left side. The current tab is green with a filled icon and a bolder label; the others are grey and outlined.
-- **The wash:** `--wash`, the faint green at the top of a tab's own screen, gone 320px down. Only there; a page
-  within a tab is plain canvas, so the wash also says "you are at the top".
+- **Spacing** is a 4px grid: steps 1, 2, 3, 4, 5, 6, 8, 10, 12, 16 (4px to 64px). Page gutter `space(4)`; 32px
+  between a screen's groups, 24px between a form's fields, 8px between a label and its box, 20px inside a card. Small
+  controls, generous room: a long screen scrolls, it is never squeezed to fit one.
+- **Sizes** are Material 3's, from material-web's component tokens: buttons and icon buttons 40px, list items 56px,
+  chips 32px, the top app bar 64px, the floating action button 56px. The navigation bar is Material 3 Expressive's,
+  64px with a 56 x 32 pill behind the current icon (material-components-android, `BottomNavigation.md`). One
+  deliberate step away: fields are 40px, not Material's 56px, because the owner found the boxes too big. The action a
+  screen exists for is 44px. All clear WCAG 2.5.8's 24px target with room between neighbours.
+- **Radius:** 10px on fields, 16px on cards, menus and toasts, 22px on the message box (half its height, so one line
+  is a pill), 16px on the floating action button (Material's `corner-large`). Buttons, chips and icon buttons are
+  pills or circles. A chart's bar is round only at its data end, 4px (`radius(mark)`).
+- **Elevation:** cards at rest are flat, edged by a `border` hairline on the white page, with no shadow. A note is a
+  grey bubble, as a message is in a chat. Anything that overlaps - popover, sheet, dialog, toast - takes the overlay
+  shadow (Cloudscape's rule).
+- **Focus:** a field being typed in turns its own edge blue and doubles it on the inside (`field-focus`); there is no
+  second ring around it. Everything else shows a 2px `accent-text` ring outside it on keyboard focus only
+  (`focus-ring`).
+- **Tab bar:** a white bar along the foot of the screen, a hairline above it, 64px tall, the four places sharing its
+  width, 24px icons. The page ends above it, so nothing passes under it and nothing has to keep room for it. It goes
+  while the keyboard is up. From `md` it stands down the left side. The current tab is blue, its icon filled on a
+  light blue pill; the others are grey and outlined. Labels keep one weight, as Material 3 Expressive has them.
 - **How the look got here:** the first version took Fluent 2's 8px corners, one bordered list with divider rows and
   a boxed input; on the phone it read as office software ("hơi ERP, company, system, enterprise", the owner,
-  2026-10-20). The second took its shapes from Material 3, in blue. The third, this one (2026-10-23), is lighter and
-  rounder, in green.
+  2026-10-20). The second took its shapes from Material 3, in blue. The third (2026-10-23) was lighter and rounder, in
+  green, on a grey page, with a green wash at the top of each tab and a frosted tab bar. The fourth, this one
+  (2026-10-27), came from the owner using it on his phone: "font quá to, components quá to", things "dính sát vào
+  nhau", "nền không cần xám", no gradient. So: a white page, blue, Material's sizes, more room between groups, and no
+  wash or glass.
 - **Content width** stops at 640px; text never runs wider than about 60 characters.
 - **Overlays:** menus are at least 200px wide; toasts take the full width on a phone and 360px from `md`.
 - **Sign-in and setup** put their one action at the bottom of a phone screen, at most 400px wide (`size(panel)`).
@@ -185,8 +209,9 @@ which a screen reader cannot read; ECharts (368 KB) and ApexCharts (270 KB) are 
   ranking is rows with a bar under each (`ListBar`). A breakdown into one part is not shown at all. Two figures on
   different bases (money in during a period, debt at its end) are never stacked into one bar.
 - **Marks.** Columns at most 24px wide and never the whole slot, so the card shows between them; round only at the
-  data end; hairline gridlines in `border`. Money is `icon-green`, the meaning it has everywhere (3.14:1 on white,
-  above the 3:1 marks need). The picked column turns `accent-text` and its slot is shaded.
+  data end; hairline gridlines in `border`. Marks are `accent` (4.82:1 on white, above the 3:1 marks need), as are a
+  ranking's bars; the owner wanted no green on the big surfaces (2026-10-27). The picked column turns `accent-text` and
+  its slot is shaded.
 - **Axis.** It tops out at 1, 2, 4, 5 or 10 times a power of ten, so the halfway line is round too; numbers are short
   (`500k`, `2,5tr`, `1,2 tỷ`); at most about seven columns carry a label.
 - **Reading values.** Text is in text colours, never the series colour. A readout above the plot names one column -
@@ -194,7 +219,7 @@ which a screen reader cannot read; ECharts (368 KB) and ApexCharts (270 KB) are 
   picks the column under it; the keyboard and screen readers move through the columns with a native
   `<input type="range">`, whose value text is the column's label and value, and whose focus ring is drawn on the plot.
   Every value is also in a table under the chart, behind "Xem dạng bảng".
-- **Change.** Against the period before, as a percentage with its sign and an arrow, green up and red down; from ten
+- **Change.** Against the period before, as a percentage with its sign and an arrow, blue up and red down; from ten
   times up, "Gấp 48 lần" instead of "+4653%"; nothing when the period before had nothing.
 
 ### Motion
@@ -228,26 +253,27 @@ change.
 
 | Component | For | Rules it holds |
 |---|---|---|
-| `Button` | An action with a text label | A pill. `variant` primary (filled bright green, its label `label-strong`), secondary (default, light grey) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 44px, lg 48px for the main action |
+| `Button` | An action with a text label | A pill, its words `label-strong`. `variant` primary (filled blue), secondary (default, light grey) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 40px, lg 44px for the main action |
 | `IconButton` | An action shown as an icon alone | A circle; quiet and muted unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
 | `IconLink` | Going to another page, shown as an icon alone | Looks exactly like a quiet `IconButton` but is a real link over `next/link`, so a screen reader says "link" and it opens in a new tab. A Base UI button rendered as a link would be announced as a button |
-| `SearchField` | The box at the top of a search screen | A pill with a magnifier; `type="search"`, so the browser adds a clear button and the phone keyboard's Enter says search. `label` is the accessible name. Wrapped by the screen in `<search>` and a `next/form` GET form, so a search is a URL that back and reload keep |
+| `SearchField` | The box at the top of a search screen | A grey pill with a magnifier, its input one character wide of its own (`size="1"`) so it never holds the page wider than the screen; `type="search"`, so the browser adds a clear button and the phone keyboard's Enter says search. `label` is the accessible name. Wrapped by the screen in `<search>` and a `next/form` GET form, so a search is a URL that back and reload keep |
 | `DayPicker` | Jumping to a date | An icon button that opens the phone's own date picker through `showPicker()`. The input stays rendered under the button, unseen, since `showPicker()` refuses an input that is not rendered and the popover anchors to it |
 | `ButtonLink` | Going somewhere, shown as a button with words: "Tạo đơn", "Gọi" | A `Button`'s look over `next/link`, read as a link; a `tel:` link dials. No prefetch unless asked |
 | `SelectField` | One choice from a short list | The browser's own `<select>`, labelled like `TextField`: a phone opens its own picker. `emptyLabel` adds a first "none" choice |
-| `SuggestField` | Free text with suggestions from the server: a customer, a product | Base UI's Autocomplete, async; a newer answer replaces an older one. The popup opens only with something in it, since an open popup hides the rest of the form from a screen reader; "nothing matches" is said under the field. Built after hydration: its hidden input carries a style attribute the CSP refuses in server HTML |
+| `SuggestField` | Free text with suggestions from the server: a customer, a product | Base UI's Autocomplete, async. The server is asked once the typing pauses for 250ms, not at every key (it was two or three requests a field), and outside any transition; a newer answer replaces an older one. The popup opens only with something in it, since an open popup hides the rest of the form from a screen reader; "nothing matches" is said under the field. Built after hydration: its hidden input carries a style attribute the CSP refuses in server HTML |
 | `ChipLinks` | One filter at a time: a status, a kind | A grey pill track with the current chip white on it; scrolls sideways when it does not fit. Links, so the filter is in the URL and works before scripts load |
 | `ListLink` | A row that opens a page of its own | The whole row is the link, with a chevron, an optional `icon` and `iconTone` leading it, an optional value at the end (`valueTone="danger"` for what is owed). No prefetch |
-| `PageHeader` | The top of a screen | Back on the left, the title and a subtitle, actions at the end. Without `back` it is a tab's own screen and the title is large (`display`) |
-| `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, in the accent. A stat's `change` says how it moved against an earlier one, with a sign and an arrow as well as the colour |
+| `PageHeader` | The top of a screen, drawn by `Screen` from its `title`, `subtitle`, `back` and `actions` | Material's small top app bar, 64px, that sticks while the page scrolls under it, back on the left and actions at the end; a hairline under it once the page has scrolled. Without `back` it is a tab's own screen: the title is large (`display`) under the bar, and moves into the bar (a fade, nothing else) once it has scrolled under it |
+| `FabLink` | What a list screen adds: an order, a customer | Material's floating action button: 56px, blue, 16px corners, over the foot of the screen above the tab bar, its accessible name in `label`. One per screen; the column keeps room for it so the last row comes clear |
+| `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, larger, in the text colour. A stat's `change` says how it moved against an earlier one, with a sign and an arrow as well as the colour |
 | `ColumnChart` | A figure over time | Columns as `data-share` steps, a readout above, a native slider for the keyboard and screen readers, a table view under it. See Charts |
 | `ListBar` | A row of a ranking | A `List` row with the figure written and a bar under it against the largest row; a link when the row narrows the screen to itself |
-| `FilterChips` | The filters in force | Green chips beside what they filter, each a link that drops it; named "Bỏ lọc ..." with the chip's own words in it |
-| `Screen` | The column a list or detail screen sits in | Content width, gutters, room at the bottom, one gap. Its single column is `minmax(0, 1fr)`, so a wide field can never push the page sideways. `wash` only on a tab's own screen |
+| `FilterChips` | The filters in force | Blue chips beside what they filter, each a link that drops it; named "Bỏ lọc ..." with the chip's own words in it |
+| `Screen` | A list or detail screen: its header, then the column its groups sit in | The header outside the column, so its bar sticks for the whole page; then content width, gutters, room at the bottom (more when a `FabLink` is on the screen), 32px between groups. Its single column is `minmax(0, 1fr)`, so a wide field can never push the page sideways |
 | `TextArea` | Free text | Opens at one line and grows with the text up to 8, then scrolls (`field-sizing: content`; older browsers keep 3 rows). Invalid through `aria-invalid`, the message in a paragraph below, linked with `aria-describedby`. `appearance="bare"` drops its own edge and focus ring to sit inside a field that draws them, such as the message field (which uses `:focus-within`) |
 | `TextField` | One line of text, or a password | A label above, an optional `description` hint and an `error` below, both read out with the field. A password field has a show/hide button instead of a second "confirm" field (NIST 800-63B-4) |
 | `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color. An action with `href` is a real link (`Menu.LinkItem` over `next/link`) |
-| `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One white card per group, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does, past a leading icon. `ListRow` shows a value large and what it is beneath, with what can be done to it as children, and takes an `icon` and `iconTone` as `ListLink` does. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
+| `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One card per group, edged by a hairline, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does, past a leading icon. `ListRow` shows a value large and what it is beneath, with what can be done to it as children, and takes an `icon` and `iconTone` as `ListLink` does. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
 | `Dialog`, `ConfirmDialog` | A question that must be answered before going on | A sheet at the bottom on a phone, a card in the middle from `md`; focus stays inside until it closes. `ConfirmDialog` is only for what cannot be undone: a question as the title, the verb on the button, never "OK" |
 | `Status` | The outcome of an action, in one line | An `<output>`, so a new message is read out without moving focus. Keeps its line when empty, so nothing below jumps |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |

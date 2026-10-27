@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { CloseIcon } from "@/shared/ui/icon/icons";
 
 import styles from "./filter-chips.module.scss";
@@ -29,7 +28,7 @@ export function FilterChips({ label, chips, removeLabel }: FilterChipsProps) {
       <ul className={styles.list}>
         {chips.map((chip) => (
           <li key={chip.removeHref}>
-            <Link
+            <AppLink
               href={chip.removeHref}
               prefetch={false}
               className={styles.chip}
@@ -37,7 +36,7 @@ export function FilterChips({ label, chips, removeLabel }: FilterChipsProps) {
             >
               {chip.label}
               <CloseIcon aria-hidden />
-            </Link>
+            </AppLink>
           </li>
         ))}
       </ul>

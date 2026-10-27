@@ -19,7 +19,7 @@ export type Stat = {
 
 export type StatsProps = {
   readonly label: string;
-  // The screen's one big number, in green above the rest
+  // The screen's one big number, above the rest
   readonly hero?: Stat | undefined;
   readonly items: ReadonlyArray<Stat>;
 };

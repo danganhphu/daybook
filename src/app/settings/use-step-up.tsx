@@ -47,6 +47,7 @@ export function useStepUp(account: StepUpAccount): StepUp {
         setRound((value) => value + 1);
         setOpen(true);
       }
+      // Usually awaited inside the caller's transition, so the dialog answers with plain state, never a transition
       if (!(await asked.promise)) {
         return err(cancelled);
       }

@@ -35,7 +35,7 @@ import { productTable } from "@/features/products/infrastructure/product.table";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
 import { orderChangeTable } from "./order-change.table";

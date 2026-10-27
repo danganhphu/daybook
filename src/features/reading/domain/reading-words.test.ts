@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 
 import { nameWords } from "./customer-words";
 import { unitPriceOf } from "./line-price";

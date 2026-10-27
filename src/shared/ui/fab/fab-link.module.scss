@@ -1,0 +1,40 @@
+@use "abstracts" as *;
+
+// Bottom right, above the tab bar on a phone; from `md` the tab bar is a rail at the side
+.fab {
+  position: fixed;
+  inset-block-end: calc(#{size(tab-bar)} + env(safe-area-inset-bottom, 0px) + #{space(4)});
+  inset-inline-end: space(4);
+  z-index: z(sticky);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: size(fab);
+  block-size: size(fab);
+  color: color(on-accent);
+  background: color(accent);
+  border-radius: radius(surface);
+  box-shadow: var(--shadow-overlay);
+  touch-action: manipulation;
+
+  @include focus-ring;
+
+  svg {
+    inline-size: size(icon-row);
+    block-size: size(icon-row);
+  }
+
+  &:active {
+    background: color(accent-hover);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: color(accent-hover);
+    }
+  }
+
+  @include from(md) {
+    inset-block-end: space(6);
+  }
+}

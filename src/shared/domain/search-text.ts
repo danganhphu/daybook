@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 // The longest search worth running; anything longer is a paste, not a search
 export const searchTermMaxLength = 100;
 
@@ -15,12 +13,3 @@ export function searchText(text: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
-
-// A search as typed, made comparable with stored search text
-export const searchTermSchema = z
-  .string()
-  .transform(searchText)
-  .pipe(z.string().min(1).max(searchTermMaxLength))
-  .brand<"SearchTerm">();
-
-export type SearchTerm = z.infer<typeof searchTermSchema>;

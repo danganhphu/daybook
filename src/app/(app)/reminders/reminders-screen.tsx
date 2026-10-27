@@ -13,7 +13,6 @@ import { IconButton } from "@/shared/ui/button/icon-button";
 import { ChipLinks, type ChipLink } from "@/shared/ui/chip-links/chip-links";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import { AddIcon } from "@/shared/ui/icon/icons";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { routes } from "@/shared/web/routes";
 
@@ -52,8 +51,7 @@ export function RemindersScreen({ view, done }: RemindersScreenProps) {
   );
 
   return (
-    <Screen>
-      <PageHeader title={remindersCopy.title} back={routes.today} actions={addButton} />
+    <Screen title={remindersCopy.title} back={routes.today} actions={addButton}>
       <ChipLinks label={remindersCopy.title} chips={chips} />
       {done !== undefined ? (
         <DoneReminders view={done} />

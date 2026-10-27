@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { describe, expect, it } from "vitest";
 
 import { err, ok } from "@/shared/domain/result";
+import { routes } from "@/shared/web/routes";
 
 import { attempt, faultMessage } from "./attempt";
 
@@ -19,5 +21,16 @@ describe("attempt", () => {
     expect(await attempt(() => Promise.reject(new TypeError("Failed to fetch")))).toEqual(
       err(faultMessage),
     );
+  });
+
+  it("given a redirect to sign in, as when the session has ended, when attempted, then it goes on to the framework", async () => {
+    let redirected: unknown;
+    try {
+      redirect(routes.signIn);
+    } catch (error) {
+      redirected = error;
+    }
+
+    await expect(attempt(() => Promise.reject(redirected))).rejects.toBe(redirected);
   });
 });

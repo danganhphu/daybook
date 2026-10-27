@@ -1,4 +1,4 @@
-import { moneySchema, type Money } from "@/shared/domain/money";
+import { parseMoney, type Money } from "@/shared/domain/money";
 import { searchText } from "@/shared/domain/search-text";
 
 // Money as the trade writes it: "500k", "85 nghìn", "1tr2" (1.200.000), "2tr5", "6 triệu", "2 củ", "1,5tr",
@@ -23,7 +23,7 @@ export function moneyWords(written: string): Money | undefined {
 }
 
 function money(amount: number): Money | undefined {
-  const parsed = moneySchema.safeParse(Math.round(amount));
+  const parsed = parseMoney(Math.round(amount));
 
-  return parsed.success ? parsed.data : undefined;
+  return parsed.ok ? parsed.value : undefined;
 }

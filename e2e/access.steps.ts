@@ -21,7 +21,18 @@ Given("tôi vừa đăng nhập bằng mật khẩu", async ({ page, context, ac
   await expect(page.getByRole("heading", { name: "Hôm nay", level: 1 })).toBeVisible();
 });
 
+// In the same tab, by the session cookie: a password sign-in per run would spend the account's attempts, and the
+// sign-in screen itself has scenarios of its own
+When("tôi đăng nhập lại rồi về trang Hôm nay", async ({ page, access }) => {
+  await access.signIn();
+  await page.goto("/");
+});
+
 Given("tôi chưa đăng nhập", async ({ context }) => {
+  await context.clearCookies();
+});
+
+Given("phiên đăng nhập vừa hết", async ({ context }) => {
   await context.clearCookies();
 });
 
@@ -37,12 +48,22 @@ When("tôi mở link cài đặt mới", async ({ page, access }) => {
   await page.goto(`/setup#${access.nextSetupToken()}`);
 });
 
+// The page's clock jumps, the server's does not: what is checked is that the page fetched a fresh prompt by itself
+When("tôi mở trang đăng nhập rồi để đó 5 phút", async ({ page }) => {
+  await page.clock.install();
+  await page.goto("/sign-in");
+  await expect(page.getByRole("button", { name: "Đăng nhập", exact: true })).toBeEnabled();
+  const freshPrompt = page.waitForResponse((response) => response.request().method() === "POST");
+  await page.clock.fastForward("05:00");
+  await freshPrompt;
+});
+
 When("tôi mở một link cài đặt không có thật", async ({ page }) => {
   await page.goto(`/setup#${randomBytes(32).toString("base64url")}`);
 });
 
 When("tôi đăng xuất", async ({ page }) => {
-  await page.getByRole("button", { name: "Tuỳ chọn", exact: true }).click();
+  await page.getByRole("button", { name: "Tài khoản", exact: true }).click();
   await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
 });
 

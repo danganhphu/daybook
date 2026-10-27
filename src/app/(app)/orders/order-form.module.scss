@@ -4,7 +4,7 @@
 .form {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(4);
+  gap: space(6);
 }
 
 .lines {
@@ -18,7 +18,7 @@
 
 .legend {
   padding: 0;
-  margin-block-end: space(1);
+  margin-block-end: space(2);
 
   @include text(label);
 }
@@ -27,9 +27,10 @@
 .line {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(3);
-  padding: space(3);
+  gap: space(4);
+  padding: space(4);
   background: color(surface);
+  border: 1px solid color(border);
   border-radius: radius(surface);
 }
 
@@ -59,7 +60,7 @@
 
 .note-label {
   display: grid;
-  gap: space(1);
+  gap: space(2);
 
   > span {
     @include text(label);

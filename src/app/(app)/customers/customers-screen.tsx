@@ -1,24 +1,24 @@
 import Form from "next/form";
 
+import { AccountMenu } from "@/app/(app)/_shell/account-menu";
 import type { CustomersView } from "@/features/customers/web/commands";
 import { customersCopy } from "@/features/customers/web/customers-copy";
 import { customersPath } from "@/features/customers/web/customers-path";
 import { searchTermMaxLength } from "@/shared/domain/search-text";
-import { IconLink } from "@/shared/ui/button/icon-link";
 import { ChipLinks, type ChipLink } from "@/shared/ui/chip-links/chip-links";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
+import { FabLink } from "@/shared/ui/fab/fab-link";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import { AddIcon, PersonIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { QuietLink } from "@/shared/ui/quiet-link/quiet-link";
 import { Screen } from "@/shared/ui/screen/screen";
 import { SearchField } from "@/shared/ui/search-field/search-field";
 import { moneyText } from "@/shared/web/money-text";
 import { customerPath, routes } from "@/shared/web/routes";
 
-const addLink = <IconLink icon={AddIcon} label={customersCopy.add} href={routes.newCustomer} />;
+const accountMenu = <AccountMenu />;
 
 // All kinds, then one chip a kind; the search and the hidden view carry over
 function kindChips(view: CustomersView): ReadonlyArray<ChipLink> {
@@ -44,13 +44,11 @@ export function CustomersScreen({ view }: { readonly view: CustomersView }) {
   const hidden = view.showingHidden ? ("1" as const) : undefined;
 
   return (
-    <Screen wash={!view.showingHidden}>
-      <PageHeader
-        title={view.showingHidden ? customersCopy.hidden : customersCopy.title}
-        back={view.showingHidden ? routes.customers : undefined}
-        actions={addLink}
-      />
-
+    <Screen
+      title={view.showingHidden ? customersCopy.hidden : customersCopy.title}
+      back={view.showingHidden ? routes.customers : undefined}
+      actions={view.showingHidden ? undefined : accountMenu}
+    >
       <search>
         <Form action={routes.customers}>
           {hidden === undefined ? null : <input type="hidden" name="hidden" value={hidden} />}
@@ -93,7 +91,10 @@ export function CustomersScreen({ view }: { readonly view: CustomersView }) {
       )}
 
       {view.showingHidden ? null : (
-        <QuietLink href={customersPath({ hidden: "1" })}>{customersCopy.hidden}</QuietLink>
+        <>
+          <QuietLink href={customersPath({ hidden: "1" })}>{customersCopy.hidden}</QuietLink>
+          <FabLink icon={AddIcon} label={customersCopy.add} href={routes.newCustomer} />
+        </>
       )}
     </Screen>
   );

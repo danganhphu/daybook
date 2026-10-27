@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { searchTermSchema, searchText } from "./search-text";
+import { searchTermSchema } from "./search-term";
+import { searchText } from "./search-text";
 
 describe("searchText", () => {
   it.each([

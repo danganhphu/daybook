@@ -1,19 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import {
-  startTransition,
-  useCallback,
-  useId,
-  useMemo,
-  useOptimistic,
-  useRef,
-  useState,
-} from "react";
+import { startTransition, useCallback, useId, useMemo, useOptimistic, useState } from "react";
 
-import { PickCustomerDialog } from "@/app/(app)/_day/pick-customer-dialog";
 import { DueBar } from "@/app/(app)/_reminders/due-bar";
-import { ReminderDialog } from "@/app/(app)/_reminders/reminder-dialog";
+import { AccountMenu } from "@/app/(app)/_shell/account-menu";
 import { deleteOrder } from "@/app/(app)/orders/actions";
 import { deleteReminder } from "@/app/(app)/reminders/actions";
 import {
@@ -24,7 +16,6 @@ import {
   recordNote,
   restoreNote,
 } from "@/app/actions";
-import { accessCopy } from "@/features/access/web/access-copy";
 import { Composer } from "@/features/capture/web/composer";
 import type { DayView } from "@/features/notes/web/commands";
 import { applyChange, type ShownNote } from "@/features/notes/web/note-list";
@@ -37,7 +28,6 @@ import type { AnswerView, DayReadings, MadeView } from "@/features/reading/web/r
 import type { DueView } from "@/features/reminders/web/reminder-view";
 import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
-import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { IconLink } from "@/shared/ui/button/icon-link";
 import { DayPicker } from "@/shared/ui/day-picker/day-picker";
@@ -45,16 +35,22 @@ import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  LogoutIcon,
   NotificationsIcon,
   SearchIcon,
-  SettingsIcon,
 } from "@/shared/ui/icon/icons";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { dayPath, routes } from "@/shared/web/routes";
 
 import styles from "./day-screen.module.scss";
+
+// Opened from a note now and then: their code (suggestions, the dialog) comes when one opens, not with every visit
+const PickCustomerDialog = dynamic(() =>
+  import("@/app/(app)/_day/pick-customer-dialog").then((module) => module.PickCustomerDialog),
+);
+const ReminderDialog = dynamic(() =>
+  import("@/app/(app)/_reminders/reminder-dialog").then((module) => module.ReminderDialog),
+);
 
 export type DayScreenProps = {
   readonly view: DayView;
@@ -73,13 +69,26 @@ function withPending(
   return new Map(pending).set(noteId, what);
 }
 
+function without(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
+  const rest = new Set(ids);
+  rest.delete(id);
+  return rest;
+}
+
 // A day as a chat: the notes above, oldest first. Today also has the box at the bottom, where the thumb is; an
 // earlier day is read, corrected and tidied, but nothing new is written into it. Each note is read once saved: what
 // its message became shows under it, with Undo in a toast.
 export function DayScreen({ view, due, readings }: DayScreenProps) {
   const toast = useToast();
   const canRead = readings?.canRead ?? false;
-  const [pending, markPending] = useOptimistic(nothingPending, withPending);
+  const [saving, markSaving] = useOptimistic(nothingPending, withPending);
+  // Not a transition: a reading takes seconds, and the note just saved would wait for it (docs/ui/design-system.md)
+  const [reading, setReading] = useState<ReadonlySet<string>>(new Set());
+  const pendingFor = useCallback(
+    (noteId: string): ReadingPending | undefined =>
+      saving.get(noteId) ?? (reading.has(noteId) ? "reading" : undefined),
+    [saving, reading],
+  );
   // The note whose customer is being picked from the list
   const [picking, setPicking] = useState<string>();
   const stopPicking = useCallback(() => setPicking(undefined), []);
@@ -91,18 +100,6 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
   );
   const router = useRouter();
   const titleId = useId();
-  const signOutForm = useRef<HTMLFormElement>(null);
-  const menuActions = useMemo<ReadonlyArray<MenuAction>>(
-    () => [
-      { label: accessCopy.settings, icon: SettingsIcon, href: routes.settings },
-      {
-        label: accessCopy.signOut,
-        icon: LogoutIcon,
-        onSelect: () => signOutForm.current?.requestSubmit(),
-      },
-    ],
-    [],
-  );
   const saved = useMemo<ReadonlyArray<ShownNote>>(
     () => view.notes.map((note) => ({ ...note, saving: false })),
     [view.notes],
@@ -177,17 +174,19 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
   // Asked for by a tap, so a failure to reach the server is said; after saving it is not, since the note is kept
   const startReading = useCallback(
     (noteId: string, again: boolean, asked: boolean) => {
-      startTransition(async () => {
-        markPending([noteId, "reading"]);
+      setReading((current) => new Set(current).add(noteId));
+      void (async () => {
         const result = await attempt(() => readNote(noteId, again));
+        // Lands with the refreshed readings, in the same commit
+        startTransition(() => setReading((current) => without(current, noteId)));
         if (result.ok) {
           announce(result.value);
         } else if (asked) {
           toast.show({ title: result.error });
         }
-      });
+      })();
     },
-    [announce, markPending, toast],
+    [announce, toast],
   );
 
   const readAgain = useCallback(
@@ -217,7 +216,7 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
   const answer = useCallback(
     (noteId: string, given: AnswerView) => {
       startTransition(async () => {
-        markPending([noteId, "saving"]);
+        markSaving([noteId, "saving"]);
         const result = await attempt(() => answerReading(noteId, given));
         if (result.ok) {
           announce(result.value);
@@ -226,7 +225,7 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
         }
       });
     },
-    [announce, markPending, toast],
+    [announce, markSaving, toast],
   );
 
   const pickedFor = picking === undefined ? undefined : shown.find((note) => note.id === picking);
@@ -245,7 +244,7 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
   );
 
   return (
-    <div className={styles.screen} data-wash={view.isToday ? "" : undefined}>
+    <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.heading}>
@@ -268,10 +267,8 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
               href={routes.history}
               prefetch={false}
             />
-            <ActionMenu label={actionLabels.options} actions={menuActions} />
+            <AccountMenu />
           </div>
-          {/* A plain POST, so the response can tell the browser to drop the cookies */}
-          <form ref={signOutForm} method="post" action={routes.signOut} hidden />
         </div>
         <nav className={styles.days} aria-label={notesCopy.otherDays}>
           <IconLink
@@ -305,7 +302,8 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
           ) : (
             <ol className={styles.list} aria-labelledby={titleId}>
               {shown.map((note) => {
-                const reading = readings?.byNote[note.id];
+                const made = readings?.byNote[note.id];
+                const pending = pendingFor(note.id);
                 return (
                   <NoteRow
                     key={note.id}
@@ -315,15 +313,15 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
                     onDelete={remove}
                     onRemind={setReminding}
                     read={
-                      canRead && reading?.kind === "unread" && !pending.has(note.id)
+                      canRead && made?.kind === "unread" && pending === undefined
                         ? readAction
                         : undefined
                     }
                   >
                     <NoteReading
                       noteId={note.id}
-                      view={reading}
-                      pending={pending.get(note.id)}
+                      view={made}
+                      pending={pending}
                       onReadAgain={readAgain}
                       onAnswer={answer}
                       onPickCustomer={setPicking}

@@ -6,18 +6,26 @@
  * https://npmjs.com/vite-css-modules
  */
 
-declare const header: string;
-declare const heading: string;
+declare const bar: string;
+declare const barInner: string;
+declare const barHeading: string;
+declare const barTitle: string;
+declare const large: string;
+declare const actions: string;
 declare const title: string;
 declare const subtitle: string;
-declare const actions: string;
+declare const edge: string;
 
 declare const __default_export__: {
-	header: typeof header;
-	heading: typeof heading;
+	bar: typeof bar;
+	barInner: typeof barInner;
+	barHeading: typeof barHeading;
+	barTitle: typeof barTitle;
+	large: typeof large;
+	actions: typeof actions;
 	title: typeof title;
 	subtitle: typeof subtitle;
-	actions: typeof actions;
+	edge: typeof edge;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGFnZS1oZWFkZXIubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsicGFnZS1oZWFkZXIubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FFQTtjQVdBO2NBS0E7Y0FVQTtjQU1BOzs7Q0FoQ0E7Q0FXQTtDQUtBO0NBVUE7Q0FNQTs7In0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGFnZS1oZWFkZXIubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsicGFnZS1oZWFkZXIubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FHQTtjQVlBO2NBVUE7Y0FNQTtjQVFhO2NBY2I7Y0FlQTtjQU1BO2NBT0E7OztDQTlFQTtDQVlBO0NBVUE7Q0FNQTtDQVFhO0NBY2I7Q0FlQTtDQU1BO0NBT0E7OyJ9

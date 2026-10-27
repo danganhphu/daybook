@@ -1,35 +1,19 @@
 @use "abstracts" as *;
 
-// A frosted pill floating over the foot of the page, the page fading out behind it, in the room the shell keeps for it
-// (app-shell.module.scss); from `md`, a rail down the left side
+// A white bar along the foot of the screen, a hairline above it, the places sharing its width; from `md`, a rail down
+// the left side
 .tab-bar {
-  --tab-bar-padding-end: calc(#{space(2)} + env(safe-area-inset-bottom, 0px));
+  --tab-bar-padding-end: env(safe-area-inset-bottom, 0px);
 
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  block-size: var(--tab-bar-room);
-  padding: 0 space(4) var(--tab-bar-padding-end);
-
-  // Only the pill takes a tap; around it the page is still the page
-  pointer-events: none;
-
-  &::before {
-    position: absolute;
-    inset: 0;
-    content: "";
-    background: var(--tab-bar-fade);
-  }
+  padding-block-end: var(--tab-bar-padding-end);
+  background: color(surface-float);
+  border-block-start: 1px solid color(border);
 
   @include from(md) {
-    block-size: auto;
-    padding: space(4);
-    pointer-events: auto;
-
-    &::before {
-      content: none;
-    }
+    block-size: 100%;
+    padding: space(4) space(2);
+    border-block-start: 0;
+    border-inline-end: 1px solid color(border);
   }
 
   // A text field has focus on a phone (use-typing.ts): the keyboard and the box being typed in take its room
@@ -41,49 +25,32 @@
 }
 
 .list {
-  // Above the fade
-  position: relative;
   display: grid;
-
-  // Tabs give up some width on a narrow phone rather than push the pill off the screen
-  grid-auto-columns: minmax(0, size(tab));
+  grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
-  inline-size: fit-content;
-  max-inline-size: 100%;
-  padding: space(1);
-  margin: 0 auto;
+  padding: 0;
+  margin: 0;
   list-style: none;
-  pointer-events: auto;
-  background: color(surface-float);
-  border-radius: radius(full);
-  box-shadow: var(--shadow-float);
-  backdrop-filter: blur(20px);
 
-  @media (prefers-reduced-transparency: reduce) {
-    background: color(surface);
-    backdrop-filter: none;
-  }
-
-  // Standing, the pill's round ends would cut into the first and last labels without the extra room
   @include from(md) {
+    grid-auto-columns: size(tab);
     grid-auto-flow: row;
     gap: space(1);
-    padding-block: space(4);
-    margin: 0;
   }
 }
 
 .tab {
   display: flex;
   flex-direction: column;
+  gap: space(1);
   align-items: center;
   justify-content: center;
-
-  // The bar's height less its padding
-  block-size: calc(#{size(tab-bar)} - #{space(1)} * 2);
+  min-inline-size: 0;
+  block-size: size(tab-bar);
+  padding-inline: space(1);
   color: color(text-muted);
   text-decoration: none;
-  border-radius: radius(full);
+  border-radius: radius(control);
   touch-action: manipulation;
 
   @include focus-ring;
@@ -93,16 +60,36 @@
     block-size: size(icon-tab);
   }
 
-  // The filled icon and the heavier label say it too, for anyone who cannot tell the colour
+  // The pill behind the icon and the filled icon say it too, for anyone who cannot tell the colour
   &[aria-current="page"] {
     color: color(accent-text);
-
-    .label {
-      @include text(caption-strong);
-    }
   }
 }
 
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: size(tab-indicator);
+  max-inline-size: 100%;
+  block-size: size(tab-indicator-height);
+  border-radius: radius(full);
+
+  .tab:active & {
+    background: color(surface-subtle);
+  }
+
+  .tab[aria-current="page"] & {
+    background: color(accent-wash);
+  }
+}
+
+// Cut rather than pushed past the screen when the phone's text is large
 .label {
-  @include text(caption);
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include text(caption-strong);
 }

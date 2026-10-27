@@ -1,4 +1,5 @@
-import { moneySchema, type Money } from "@/shared/domain/money";
+import type { Money } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 
 // The unit price a written amount means for a line. When the message says it is for one unit, it is. Otherwise it
 // is the line's total - unless the product sold before at a price nearer the amount itself, since "50 hộp khẩu

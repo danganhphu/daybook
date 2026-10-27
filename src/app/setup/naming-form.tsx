@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { usernameRule } from "@/features/access/domain/account";
+import { usernameRule } from "@/features/access/domain/account-limits";
 import type { NamingProblem } from "@/features/access/web/access-commands";
 import { accessCopy } from "@/features/access/web/access-copy";
 import { accessFields } from "@/features/access/web/access-fields";

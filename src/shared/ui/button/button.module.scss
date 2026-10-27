@@ -1,6 +1,6 @@
 @use "abstracts" as *;
 
-// Pills: filled green for the one action a screen exists for, grey for the rest, words alone for the quiet ones
+// Pills: filled blue for the one action a screen exists for, grey for the rest, words alone for the quiet ones
 .button {
   display: inline-flex;
   flex-shrink: 0;
@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   min-block-size: size(control);
-  padding-inline: space(5);
+  padding-inline: space(4);
   color: color(text);
   text-decoration: none;
   white-space: nowrap;
@@ -19,7 +19,7 @@
   border-radius: radius(full);
   touch-action: manipulation;
 
-  @include text(label);
+  @include text(label-strong);
   @include focus-ring;
 
   svg {
@@ -50,8 +50,6 @@
   &[data-variant="primary"] {
     color: color(on-accent);
     background: color(accent);
-
-    @include text(label-strong);
   }
 
   &[data-variant="secondary"] {

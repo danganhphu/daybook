@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 import {
   changeOf,
   content,

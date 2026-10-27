@@ -8,14 +8,14 @@ import type { Archival, Audit } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { requiredTextSchema } from "@/shared/domain/short-text";
 
+import { kindNameMaxLength } from "./customer-limits";
+
 // Read as a module: `import * as CustomerKinds`. What kinds exist is the owner's data, typed into Settings; the code
 // names none of them (ADR 0011, decision 4).
 
 export const customerKindIdSchema = z.uuid().brand<"CustomerKindId">();
 
 export type CustomerKindId = z.infer<typeof customerKindIdSchema>;
-
-export const kindNameMaxLength = 40;
 
 export const kindNameSchema = requiredTextSchema(kindNameMaxLength, {
   empty: "Chưa nhập tên loại khách",

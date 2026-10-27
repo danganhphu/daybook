@@ -15,6 +15,7 @@ import { DayPicker } from "@/shared/ui/day-picker/day-picker";
 import { ConfirmDialog } from "@/shared/ui/dialog/confirm-dialog";
 import { Dialog } from "@/shared/ui/dialog/dialog";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
+import { FabLink } from "@/shared/ui/fab/fab-link";
 import { FilterChips } from "@/shared/ui/filter-chips/filter-chips";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
@@ -236,6 +237,9 @@ export function Gallery() {
         <Sample caption="IconLink: looks like a quiet IconButton, goes to another page, read as a link">
           <IconLink icon={ArrowBackIcon} label={actionLabels.back} href={routes.componentGallery} />
           <IconLink icon={SearchIcon} label="Tìm ghi chú" href={routes.componentGallery} />
+        </Sample>
+        <Sample caption="FabLink: fixed over the foot of the screen, so it is the blue circle at the bottom right">
+          <FabLink icon={AddIcon} label="Tạo đơn" href={routes.componentGallery} />
         </Sample>
       </Section>
 

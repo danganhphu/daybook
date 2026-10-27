@@ -13,7 +13,7 @@ import { productAliasIdSchema } from "@/features/products/domain/product-alias";
 import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 
 import type { ProductScreenView, ProductsView } from "./product-view";
 import { orderCountText } from "./products-copy";

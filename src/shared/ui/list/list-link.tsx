@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import type { Icon } from "@/shared/ui/icon/icon";
 import type { IconTone } from "@/shared/ui/icon/icon-tone";
 import { ChevronRightIcon } from "@/shared/ui/icon/icons";
@@ -33,7 +32,7 @@ export function ListLink({
 }: ListLinkProps) {
   return (
     <li>
-      <Link href={href} prefetch={false} className={styles.link}>
+      <AppLink href={href} prefetch={false} className={styles.link}>
         {icon === undefined ? null : <RowIcon icon={icon} tone={iconTone} />}
         <span className={styles.text}>
           <span className={styles.title}>{title}</span>
@@ -45,7 +44,7 @@ export function ListLink({
           </span>
         )}
         <ChevronRightIcon aria-hidden className={styles.chevron} />
-      </Link>
+      </AppLink>
     </li>
   );
 }

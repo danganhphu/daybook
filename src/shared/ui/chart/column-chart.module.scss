@@ -2,6 +2,7 @@
 
 .section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: space(2);
 }
 
@@ -13,9 +14,11 @@
 .card {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: space(3);
   padding: space(5);
   background: color(surface);
+  border: 1px solid color(border);
   border-radius: radius(surface);
 }
 
@@ -128,7 +131,7 @@
 // At most a column's width, and never the whole slot, so neighbours keep a gap of the card between them
 .mark {
   inline-size: min(#{size(column)}, 70%);
-  background: color(icon-green);
+  background: color(accent);
   border-start-start-radius: radius(mark);
   border-start-end-radius: radius(mark);
 

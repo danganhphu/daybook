@@ -1,7 +1,7 @@
 "use client";
 
 import { Autocomplete } from "@base-ui/react/autocomplete";
-import { useCallback, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { useHydrated } from "@/shared/web/use-hydrated";
 
@@ -35,6 +35,9 @@ export type SuggestFieldProps<Item> = {
 // The server's suggestions, with the text they answer
 type Answer<Item> = { readonly text: string; readonly items: ReadonlyArray<Item> };
 
+// How long the typing must pause before the server is asked, so a word typed quickly is one request, not one a key
+const askAfterMs = 250;
+
 // Free text with suggestions from the server as it is typed (Base UI's Autocomplete, async). Picking one fills the
 // field and tells the form which it was; typing past them keeps the text as typed. A newer answer replaces an older
 // one, and a late older one is dropped.
@@ -51,9 +54,10 @@ export function SuggestField<Item>({
   focusOnMount = false,
 }: SuggestFieldProps<Item>) {
   const [answer, setAnswer] = useState<Answer<Item>>({ text: "", items: [] });
-  const [searching, startSearch] = useTransition();
+  const [searching, setSearching] = useState(false);
   const [focused, setFocused] = useState(false);
   const latest = useRef(0);
+  const pause = useRef<ReturnType<typeof setTimeout>>(undefined);
   const input = useRef<HTMLInputElement>(null);
   const id = useId();
   const hintId = useId();
@@ -68,23 +72,44 @@ export function SuggestField<Item>({
     }
   }, [focusOnMount, hydrated]);
 
+  useEffect(() => () => clearTimeout(pause.current), []);
+
+  const ask = useCallback(
+    async (text: string, asked: number) => {
+      let found: ReadonlyArray<Item>;
+      try {
+        found = await suggest(text);
+      } catch {
+        // No answer is not "nothing matches": keep what is shown
+        if (asked === latest.current) {
+          setSearching(false);
+        }
+        return;
+      }
+      if (asked === latest.current) {
+        setAnswer({ text, items: found });
+        setSearching(false);
+      }
+    },
+    [suggest],
+  );
+
+  // Plain state, not a transition: one still waiting on the server would hold back every other update on the page
   const change = useCallback(
     (text: string) => {
       onValueChange(text);
       const asked = ++latest.current;
+      clearTimeout(pause.current);
       if (text.trim() === "") {
+        setSearching(false);
         setAnswer({ text, items: [] });
         return;
       }
 
-      startSearch(async () => {
-        const found = await suggest(text);
-        if (asked === latest.current) {
-          startSearch(() => setAnswer({ text, items: found }));
-        }
-      });
+      setSearching(true);
+      pause.current = setTimeout(() => void ask(text, asked), askAfterMs);
     },
-    [onValueChange, suggest],
+    [onValueChange, ask],
   );
 
   const toString = useCallback((item: Item) => describe(item).label, [describe]);
@@ -153,11 +178,13 @@ export function SuggestField<Item>({
           onFocus={focus}
           onBlur={blur}
         />
-        {nothingFound ? (
+        {/* Its line is kept while empty: the hint comes after a pause in typing, and must not move a button the
+            finger is already on its way to */}
+        {emptyText === undefined ? null : (
           <p id={hintId} className={styles.hint}>
-            {emptyText}
+            {nothingFound ? emptyText : null}
           </p>
-        ) : null}
+        )}
       </div>
       {error === undefined ? null : (
         <p role="alert" className={styles.error}>

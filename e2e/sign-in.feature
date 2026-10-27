@@ -30,3 +30,11 @@ Feature: Đăng nhập
     And trang không có lỗi trợ năng
     When tôi bấm "Đăng nhập"
     Then tôi đang ở trang Hôm nay
+
+  @chromium-only
+  Scenario: Để trang đăng nhập lâu rồi mới bấm vẫn vào được
+    Given tôi chưa đăng nhập
+    And máy này có Face ID của Hoa
+    When tôi mở trang đăng nhập rồi để đó 5 phút
+    And tôi bấm "Đăng nhập"
+    Then tôi đang ở trang Hôm nay

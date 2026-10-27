@@ -9,7 +9,6 @@ import { iconTones } from "@/shared/ui/icon/icon-tone";
 import { Inventory2Icon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { QuietLink } from "@/shared/ui/quiet-link/quiet-link";
 import { Screen } from "@/shared/ui/screen/screen";
 import { SearchField } from "@/shared/ui/search-field/search-field";
@@ -26,13 +25,11 @@ export function ProductsScreen({ view }: { readonly view: ProductsView }) {
   const hidden = view.showingHidden ? ("1" as const) : undefined;
 
   return (
-    <Screen>
-      <PageHeader
-        title={view.showingHidden ? productsCopy.hidden : productsCopy.title}
-        back={view.showingHidden ? routes.products : routes.orders}
-        actions={view.showingHidden ? undefined : addProduct}
-      />
-
+    <Screen
+      title={view.showingHidden ? productsCopy.hidden : productsCopy.title}
+      back={view.showingHidden ? routes.products : routes.orders}
+      actions={view.showingHidden ? undefined : addProduct}
+    >
       <search>
         <Form action={routes.products}>
           {hidden === undefined ? null : <input type="hidden" name="hidden" value={hidden} />}

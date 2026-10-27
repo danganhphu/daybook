@@ -1,28 +1,24 @@
-// Every pair used for text meets WCAG AA: 4.5:1, or 3:1 for the filled button's large bold label; border-strong and
-// every icon tone meet 3:1 as UI parts. Ratios are in docs/ui/design-system.md. Change a value and re-check them.
-@use "sass:color";
+// Every pair used for text meets WCAG AA 4.5:1; border-strong and every icon tone meet 3:1 as UI parts. Ratios are in
+// docs/ui/design-system.md. Change a value and re-check them.
 @use "sass:list";
 @use "sass:map";
 @use "../abstracts/tokens";
 
 $colors: (
-  canvas: oklch(95.8% 0 0deg),
+  canvas: oklch(100% 0 0deg),
   surface: oklch(100% 0 0deg),
-  // The tab bar, which the page shows through blurred. At 88% its labels keep 4.5:1 even over unblurred black text.
-  surface-float: oklch(100% 0 0deg / 88%),
-  surface-subtle: oklch(91.6% 0 0deg),
-  // A grey button, a round icon tile: a step off white, and off the canvas
-  control-fill: oklch(97.3% 0 0deg),
-  border: oklch(92.5% 0 0deg),
-  border-strong: oklch(63.3% 0 0deg),
+  surface-float: oklch(100% 0 0deg),
+  surface-subtle: oklch(96% 0.005 258deg),
+  control-fill: oklch(92.5% 0.007 269deg),
+  border: oklch(92.5% 0.007 269deg),
+  border-strong: oklch(64.2% 0.007 255deg),
   text: oklch(11.5% 0 0deg),
-  text-muted: oklch(48.5% 0 0deg),
-  // A fill under white text: the filled button, the send button
-  accent: oklch(63.7% 0.212 143deg),
-  accent-hover: oklch(58.1% 0.193 143deg),
-  // Green words on a light background: links, the current tab, a row that is an action, the focus ring
-  accent-text: oklch(47.8% 0.14 148deg),
-  accent-wash: oklch(98.4% 0.018 143deg),
+  text-muted: oklch(51.3% 0.007 265deg),
+  accent: oklch(56.4% 0.24 261deg),
+  accent-hover: oklch(49.8% 0.208 261deg),
+  // Blue words: `accent` itself drops under 4.5:1 on the greys
+  accent-text: oklch(52.1% 0.186 257deg),
+  accent-wash: oklch(96.2% 0.018 258deg),
   on-accent: oklch(100% 0 0deg),
   danger: oklch(52% 0.2 27deg),
   // Dims the page behind a dialog; a tint, not a colour anything is read on
@@ -36,8 +32,8 @@ $colors: (
   icon-amber: oklch(64% 0.15 70deg),
 );
 
-// Cards at rest are flat. What floats over the page - the message field, the tab bar - takes a soft, wide shadow;
-// overlays sit clearly above everything.
+// Cards at rest are flat, edged by a hairline on the white page. What floats over the page - the message box, the
+// chosen chip - takes a soft shadow; overlays sit clearly above everything.
 $shadow-float:
   0 1px 3px oklch(11.5% 0 0deg / 6%),
   0 6px 20px oklch(11.5% 0 0deg / 10%);
@@ -66,18 +62,4 @@ $shadow-overlay:
 
   --shadow-float: #{$shadow-float};
   --shadow-overlay: #{$shadow-overlay};
-
-  // The wash at the top of a tab's own screen, gone into the canvas by the first cards
-  --wash: linear-gradient(
-    to bottom,
-    #{map.get($colors, accent-wash)},
-    #{map.get($colors, canvas)} 320px
-  );
-
-  // Behind the floating tab bar: the page fading into the canvas as it passes under
-  --tab-bar-fade: linear-gradient(
-    to bottom,
-    transparent,
-    #{color.change(map.get($colors, canvas), $alpha: 0.8)}
-  );
 }

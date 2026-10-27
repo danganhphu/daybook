@@ -1,7 +1,7 @@
 // What the end-to-end database starts with, made fresh for every run: real rows, random secrets, nothing committed.
 // The SQL goes in through cf's own migration command, the same way the schema does. Secrets are made with the app's
 // own code, so a seeded password is checked exactly as one set in the app.
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, generateKeyPairSync, randomBytes } from "node:crypto";
 
 import { Temporal } from "temporal-polyfill/implementation";
 import { v7 as uuidv7 } from "uuid";
@@ -11,7 +11,6 @@ import {
   passwordSaltByteLength,
   secretByteLength,
   sessionLifetime,
-  setupLinkLifetime,
   stepUpWindow,
 } from "@/features/access/domain/access-policy";
 import { currentArgon2Parameters, derivedKeySchema } from "@/features/access/domain/password";
@@ -47,6 +46,14 @@ export type Fixtures = {
   readonly lanPassword: string;
   // Setup links for Minh, who has no way in yet
   readonly setupTokens: ReadonlyArray<string>;
+  // Hoa's sessions from long ago; she has a passkey, so she confirms with it
+  readonly hoaStaleSessionCookies: ReadonlyArray<string>;
+  // Hoa's passkey as Chrome's virtual authenticator takes it (WebAuthn.addCredential): binary as standard base64
+  readonly hoaPasskey: {
+    readonly credentialId: string;
+    readonly privateKey: string;
+    readonly userHandle: string;
+  };
 };
 
 // Between statements of a migration file, as drizzle-kit writes them and cf splits them
@@ -55,6 +62,10 @@ const statementBreak = ";\n--> statement-breakpoint\n";
 // One per scenario that spends one, per project, with room for CI's retry
 const setupLinkCount = 16;
 const staleSessionCount = 8;
+const hoaStaleSessionCount = 4;
+
+// A run takes longer than a link's ten minutes, and its last scenarios still need unspent links
+const setupLinksValidFor = Temporal.Duration.from({ hours: 2 });
 
 // Written yesterday at noon, Vietnam time: what the history scenarios look back at. Scenarios only read it, so it
 // holds for every project in the run.
@@ -119,6 +130,59 @@ function session(accountId: string, authenticatedAt: number, now: number) {
         detail: JSON.stringify({ method: "passkey" }),
       }),
     ].join(statementBreak),
+  };
+}
+
+// A P-256 public key as COSE (RFC 9053), CBOR-encoded by hand (RFC 8949): a map of kty EC2, alg ES256, crv P-256, x, y.
+// The library's encoder does not load in plain Node.
+function coseEs256(x: Buffer, y: Buffer): Buffer {
+  const bytes32 = [0x58, 0x20];
+  return Buffer.from([
+    0xa5,
+    0x01,
+    0x02,
+    0x03,
+    0x26,
+    0x20,
+    0x01,
+    0x21,
+    ...bytes32,
+    ...x,
+    0x22,
+    ...bytes32,
+    ...y,
+  ]);
+}
+
+// An ES256 passkey made here rather than in a browser: the public key stored as the app stores one (COSE, base64url),
+// the private key handed to the virtual authenticator
+function passkey(accountId: string, now: number) {
+  const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+  const { x, y } = publicKey.export({ format: "jwk" });
+  if (x === undefined || y === undefined) {
+    throw new Error("The seeded passkey's public key has no coordinates");
+  }
+  const cose = coseEs256(Buffer.from(x, "base64url"), Buffer.from(y, "base64url"));
+  const credentialId = randomBytes(16);
+
+  return {
+    sql: insert("passkey", {
+      id: uuidv7(),
+      account_id: accountId,
+      credential_id: credentialId.toString("base64url"),
+      public_key: cose.toString("base64url"),
+      algorithm: -7,
+      sign_count: 0,
+      transports: JSON.stringify(["internal"]),
+      aaguid: "00000000-0000-0000-0000-000000000000",
+      backup_eligible: 0,
+      backed_up: 0,
+      name: deviceLabel,
+      created_at: now,
+      last_used_at: null,
+    }),
+    credentialId: credentialId.toString("base64"),
+    privateKey: privateKey.export({ format: "der", type: "pkcs8" }).toString("base64"),
   };
 }
 
@@ -265,15 +329,20 @@ export async function seed(
 ): Promise<{ readonly sql: string; readonly fixtures: Fixtures }> {
   const lan = uuidv7();
   const minh = uuidv7();
+  const hoa = uuidv7();
   const lanPassword = randomValue(18);
   const setupTokens = Array.from({ length: setupLinkCount }, () => randomValue());
   const fresh = session(lan, now, now);
   const longAgo = now - 2 * milliseconds(stepUpWindow);
   const stale = Array.from({ length: staleSessionCount }, () => session(lan, longAgo, now));
+  const hoaStale = Array.from({ length: hoaStaleSessionCount }, () => session(hoa, longAgo, now));
+  const hoaPasskey = passkey(hoa, now);
+  const hoaUserHandle = randomValue();
 
   const people = [
-    { id: lan, username: "lan", name: "Lan" },
-    { id: minh, username: "minh", name: "Minh" },
+    { id: lan, username: "lan", name: "Lan", userHandle: randomValue() },
+    { id: minh, username: "minh", name: "Minh", userHandle: randomValue() },
+    { id: hoa, username: "hoa", name: "Hoa", userHandle: hoaUserHandle },
   ];
 
   const statements = [
@@ -282,13 +351,15 @@ export async function seed(
         id: person.id,
         username: person.username,
         display_name: person.name,
-        webauthn_user_handle: randomValue(),
+        webauthn_user_handle: person.userHandle,
         created_at: now,
         updated_at: now,
       }),
     ),
     fresh.sql,
     ...stale.map(({ sql }) => sql),
+    hoaPasskey.sql,
+    ...hoaStale.map(({ sql }) => sql),
     await password(lan, lanPassword, pepper, now),
     note(lan, yesterdaysNote, yesterdayNoon(now)),
     seededBook(lan, now),
@@ -300,7 +371,7 @@ export async function seed(
         created_by: null,
         token_hash: sha256(token),
         created_at: now,
-        expires_at: now + milliseconds(setupLinkLifetime),
+        expires_at: now + milliseconds(setupLinksValidFor),
         redeemed_at: null,
       }),
     ),
@@ -313,6 +384,12 @@ export async function seed(
       staleSessionCookies: stale.map(({ cookie }) => cookie),
       lanPassword,
       setupTokens,
+      hoaStaleSessionCookies: hoaStale.map(({ cookie }) => cookie),
+      hoaPasskey: {
+        credentialId: hoaPasskey.credentialId,
+        privateKey: hoaPasskey.privateKey,
+        userHandle: Buffer.from(hoaUserHandle, "base64url").toString("base64"),
+      },
     },
   };
 }

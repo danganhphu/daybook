@@ -1,4 +1,4 @@
-import type { SearchTerm } from "@/shared/domain/search-text";
+import type { SearchTerm } from "@/shared/domain/search-term";
 
 import type { Product, ProductId } from "./product";
 import type { ProductAlias, ProductAliasId } from "./product-alias";

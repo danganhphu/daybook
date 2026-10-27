@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 import { accountTable } from "@/features/access/infrastructure/account.table";
-import { productNameMaxLength } from "@/features/products/domain/product";
+import { productNameMaxLength } from "@/features/products/domain/product-limits";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
 import { productTable } from "./product.table";

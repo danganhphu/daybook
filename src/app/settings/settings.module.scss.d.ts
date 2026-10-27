@@ -6,18 +6,12 @@
  * https://npmjs.com/vite-css-modules
  */
 
-declare const screen: string;
-declare const header: string;
-declare const title: string;
 declare const form: string;
 declare const buttons: string;
 
 declare const __default_export__: {
-	screen: typeof screen;
-	header: typeof header;
-	title: typeof title;
 	form: typeof form;
 	buttons: typeof buttons;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2V0dGluZ3MubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsic2V0dGluZ3MubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FHQTtjQVVBO2NBTUE7Y0FJQTtjQU1BOzs7Q0ExQkE7Q0FVQTtDQU1BO0NBSUE7Q0FNQTs7In0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2V0dGluZ3MubW9kdWxlLnNjc3MuZC50cyIsInNvdXJjZXMiOlsic2V0dGluZ3MubW9kdWxlLnNjc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Y0FFQTtjQU1BOzs7Q0FOQTtDQU1BOzsifQ==

@@ -1,4 +1,4 @@
-import { moneySchema, type Money } from "@/shared/domain/money";
+import { parseMoney, type Money } from "@/shared/domain/money";
 
 // Money as people write it here: dots between thousands and đ stuck to the end, "850.000đ". Grouped by hand rather than
 // by Intl, since the Worker's ICU and a browser's do not always agree on Vietnamese formats.
@@ -34,9 +34,9 @@ export function parseMoneyInput(text: string): Money | undefined {
     return undefined;
   }
 
-  const parsed = moneySchema.safeParse(Number(digits));
+  const parsed = parseMoney(Number(digits));
 
-  return parsed.success ? parsed.data : undefined;
+  return parsed.ok ? parsed.value : undefined;
 }
 
 // What a money field shows once left: the digits grouped, without the đ that sits beside the field

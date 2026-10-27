@@ -2,20 +2,23 @@
 
 .page {
   min-block-size: 100%;
-
-  &[data-wash] {
-    background: var(--wash);
-  }
 }
 
 // One column that never grows past the screen: a grid item's minimum is its content, and a date field's is wide
 .column {
+  --column-padding-end: #{space(8)};
+
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(6);
+  gap: space(8);
   align-content: start;
   inline-size: 100%;
   max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
-  padding: space(4) space(4) space(8);
+  padding: space(4) space(4) var(--column-padding-end);
   margin-inline: auto;
+
+  // Clear of the floating button at the foot
+  &:has([data-fab]) {
+    --column-padding-end: calc(#{size(fab)} + #{space(8)});
+  }
 }

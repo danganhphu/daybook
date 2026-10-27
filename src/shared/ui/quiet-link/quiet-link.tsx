@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppLink } from "@/shared/ui/app-link/app-link";
 
 import styles from "./quiet-link.module.scss";
 
@@ -11,8 +11,8 @@ export type QuietLinkProps = {
 // No prefetch: most visits never follow it.
 export function QuietLink({ href, children }: QuietLinkProps) {
   return (
-    <Link href={href} prefetch={false} className={styles.link}>
+    <AppLink href={href} prefetch={false} className={styles.link}>
       {children}
-    </Link>
+    </AppLink>
   );
 }

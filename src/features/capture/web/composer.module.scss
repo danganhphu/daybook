@@ -1,7 +1,7 @@
 @use "abstracts" as *;
 
-// Docked under the list on the canvas itself, above the room the shell keeps for the tab bar and the home indicator.
-// From `md` the tab bar is a rail at the side, so the box keeps that room itself.
+// Docked under the list, just above the tab bar. From `md` the tab bar is a rail at the side, so the box keeps the
+// home indicator's room itself.
 .composer {
   --composer-padding-end: #{space(2)};
 
@@ -12,24 +12,20 @@
   }
 }
 
-// One rounded field holding the text and the send button, as a messaging app's. It draws the focus ring for the
-// bare text area inside it.
+// One grey pill holding the text and the send button, as a messaging app's. Its edge turns blue for the bare text
+// area inside it.
 .field {
   display: flex;
   gap: space(1);
   align-items: flex-end;
   max-inline-size: size(content);
-  padding: space(1);
+  padding: rem(2px);
   margin-inline: auto;
-  background: color(surface);
+  background: color(surface-subtle);
   border: 1px solid transparent;
   border-radius: radius(field);
-  box-shadow: var(--shadow-float);
 
-  &:focus-within {
-    outline: 2px solid color(accent-text);
-    outline-offset: -1px;
-  }
+  @include field-focus;
 
   &:has([aria-invalid="true"]) {
     border-color: color(danger);

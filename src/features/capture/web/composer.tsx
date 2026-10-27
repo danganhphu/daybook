@@ -24,6 +24,8 @@ import { attempt } from "@/shared/web/attempt";
 import { currentDevice, enterSends } from "@/shared/web/enter-key";
 import { useHydrated } from "@/shared/web/use-hydrated";
 
+import { keepUnsent, takeUnsent } from "./unsent";
+
 import styles from "./composer.module.scss";
 
 export type ComposerProps = {
@@ -45,14 +47,18 @@ export function Composer({ record, onPending }: ComposerProps) {
   const form = useRef<HTMLFormElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const hydrated = useHydrated();
+  const unsent = useRef(new Map<string, string>());
   // Docked at the bottom, so the Undo toast must sit above the box, not on it
   useToastClearance(form);
 
-  // Words typed before React took over are in the box but not in state; without this, Ghi would send nothing
+  // Words typed before React took over are in the box but not in state; without this, Ghi would send nothing. Words
+  // whose send ended at sign-in go first.
   useEffect(() => {
-    const early = box.current?.value ?? "";
-    if (early !== "") {
-      setText(early);
+    const restored = [takeUnsent(), box.current?.value ?? ""]
+      .filter((part) => part !== "")
+      .join("\n");
+    if (restored !== "") {
+      setText((current) => (current === "" ? restored : current));
     }
   }, []);
 
@@ -71,12 +77,15 @@ export function Composer({ record, onPending }: ComposerProps) {
 
     setText("");
     setError(undefined);
+    const id = crypto.randomUUID();
+    unsent.current.set(id, typed);
+    keepUnsent(unsent.current.values());
     startTransition(async () => {
       const now = Date.now();
       onPending({
         kind: "add",
         note: {
-          id: crypto.randomUUID(),
+          id,
           content: typed,
           createdAt: new Date(now).toISOString(),
           time: clockTime(now),
@@ -85,6 +94,8 @@ export function Composer({ record, onPending }: ComposerProps) {
       });
 
       const result = await attempt(() => record(typed));
+      unsent.current.delete(id);
+      keepUnsent(unsent.current.values());
       if (!result.ok) {
         // Never lose the user's words: put them back, ahead of anything typed since
         setText((current) => (current === "" ? typed : `${typed}\n${current}`));

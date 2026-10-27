@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import * as Captures from "@/features/capture/domain/capture";
 import { accountIdSchema } from "@/shared/domain/account-id";
-import { contentSchema } from "@/shared/domain/content";
+import { contentSchema } from "@/shared/domain/content-schema";
 import { anAuthorId } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 

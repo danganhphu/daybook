@@ -176,7 +176,7 @@ import { createReportQueries } from "@/features/reports/infrastructure/report-qu
 import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import type { AccountId } from "@/shared/domain/account-id";
-import type { SearchTerm } from "@/shared/domain/search-text";
+import type { SearchTerm } from "@/shared/domain/search-term";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import { systemClock } from "@/shared/infrastructure/system-clock";

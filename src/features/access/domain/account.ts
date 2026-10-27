@@ -4,17 +4,11 @@ import { z } from "zod";
 
 import { accountIdSchema, type AccountId } from "@/shared/domain/account-id";
 
+import { displayNameMaxLength, usernameLength, usernameRule } from "./account-limits";
 import { randomValueSchema } from "./secret";
 
 // Read as a module: `import * as Accounts` then `Accounts.create(...)`. The id lives in the shared kernel
 // (`@/shared/domain/account-id`), since every feature records who acted.
-
-export const usernameLength = { minimum: 3, maximum: 32 } as const;
-
-export const displayNameMaxLength = 60;
-
-// What a valid username looks like, for the field's hint and its error alike
-export const usernameRule = `${usernameLength.minimum}-${usernameLength.maximum} ký tự, chỉ gồm chữ không dấu, số và . _ -`;
 
 // What someone types to sign in with the fallback password. Plain Latin so every keyboard types it the same way,
 // lower-cased so "Lan" and "lan" are one name.

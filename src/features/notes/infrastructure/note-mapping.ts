@@ -1,6 +1,6 @@
 import { captureIdSchema } from "@/features/capture/domain/capture";
 import { noteIdSchema, type Note } from "@/features/notes/domain/note";
-import { contentSchema } from "@/shared/domain/content";
+import { contentSchema } from "@/shared/domain/content-schema";
 import { searchText } from "@/shared/domain/search-text";
 import {
   toAudit,
