@@ -7,7 +7,7 @@ import { newAccount } from "@/features/access/application/new-account";
 import { displayNameSchema, usernameSchema } from "@/features/access/domain/account";
 import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
 import { peppersFrom } from "@/features/access/infrastructure/pepper-keys";
-import type { RelyingParty } from "@/features/access/infrastructure/simple-webauthn-verifier";
+import type { RelyingParty } from "@/features/access/infrastructure/relying-party";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import type { MessageReader } from "@/features/reading/application/message-reader";
 import type { Clock } from "@/shared/application/clock";

@@ -1,7 +1,11 @@
-// Draws the app icon and writes every file browsers and phones ask for. Run `pnpm icons` after changing it.
+// Draws the app icon and writes every file browsers and phones ask for, the manifest too: static files, so asking
+// for them never wakes the Worker. Run `pnpm icons` after changing it or src/app/identity.ts.
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { chromium } from "@playwright/test";
+
+import { webManifest } from "@/app/web-manifest";
+import { routes } from "@/shared/web/routes";
 
 // The accent role from docs/ui/design-system.md as hex, since an image cannot read the SCSS tokens; white on it is
 // 4.82:1
@@ -40,10 +44,11 @@ const pngs = [
   { path: "public/icons/icon-192.png", size: 192, shape: "rounded" },
   { path: "public/icons/icon-512.png", size: 512, shape: "rounded" },
   { path: "public/icons/icon-maskable-512.png", size: 512, shape: "square" },
-  { path: "src/app/apple-icon.png", size: 180, shape: "square" },
+  { path: `public${routes.appleIcon}`, size: 180, shape: "square" },
 ] as const satisfies ReadonlyArray<{ path: string; size: number; shape: Shape }>;
 
-writeFileSync("src/app/icon.svg", icon("rounded"));
+writeFileSync(`public${routes.icon}`, icon("rounded"));
+writeFileSync(`public${routes.manifest}`, `${JSON.stringify(webManifest, null, 2)}\n`);
 mkdirSync("public/icons", { recursive: true });
 
 const browser = await chromium.launch({ channel: "chromium" });

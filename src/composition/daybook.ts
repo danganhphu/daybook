@@ -5,7 +5,7 @@ import { appName } from "@/app/identity";
 import type { Peppers } from "@/features/access/application/peppers";
 import { pepperFitsOrigin } from "@/features/access/infrastructure/development-pepper";
 import { pepperSchema, peppersFrom } from "@/features/access/infrastructure/pepper-keys";
-import { relyingPartyFor } from "@/features/access/infrastructure/simple-webauthn-verifier";
+import { relyingPartyFor } from "@/features/access/infrastructure/relying-party";
 import type { MessageReader } from "@/features/reading/application/message-reader";
 import {
   createReplayReader,

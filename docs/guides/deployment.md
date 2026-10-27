@@ -81,7 +81,7 @@ A new pepper stops every fallback password until it is set again; passkeys keep 
 
 ## Checks after a deploy
 
-- The headers of a page, a static file (`/_next/static/...`) and `/manifest.webmanifest`, read with `curl -sI`:
+- The headers of a page and of static files (`/_next/static/...`, `/manifest.webmanifest`), read with `curl -sI`:
   HSTS, `nosniff`, `Referrer-Policy` and a CSP on each. Done on 2026-10-26: all there, static files from
   `public/_headers`, compressed with Brotli.
 - The sign-in page's prompt request (`POST /sign-in`) answers 200: the database and both secrets work.

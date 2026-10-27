@@ -56,6 +56,15 @@ D1 takes only a region as a hint, not a city, so the database cannot simply be p
 primary is with `pnpm exec cf d1 query <database-id> --sql "select 1"` (`served_by_colo` in the answer), and move the
 placement if it ever changes.
 
+**CPU per request.** Workers Free allows 10 ms of CPU per request, with some slack for the odd request over; a
+Worker over it consistently is cut off (error 1102). Waiting on D1 does not count. Measured on 2026-10-27, a first
+open on a cold Worker took 62 ms and a screen change 10-25 ms, mostly vinext and React rendering, and no request was
+cut. What the app keeps off that path: no Intl on the server (the day is a fixed `+07:00`), the WebAuthn library
+loaded only when a passkey is used, the icons and manifest as static files, and one read per kind of record rather
+than one per person. To look again, profile locally through workerd's inspector under `vite preview` (port 9229;
+send `Origin: http://localhost`), or in production with `cf workers versions profile` while the app is in use. Workers
+Paid ($5 a month) lifts the limit to 30 s by default.
+
 Static files are served before the Worker runs, so they carry `public/_headers` instead of the proxy's headers. Keep
 the two in step; `src/features/access/web/static-headers.test.ts` fails when they drift.
 

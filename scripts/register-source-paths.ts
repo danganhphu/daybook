@@ -10,7 +10,8 @@ function sourceUrl(specifier: string, parentUrl: string | undefined): URL | unde
     return new URL(specifier.slice(2), source);
   }
 
-  return specifier.startsWith("./") && parentUrl !== undefined
+  // Only the app's own relative imports: a package's CommonJS require("./lib") must stay a path, not a URL
+  return specifier.startsWith("./") && parentUrl?.startsWith(source.href) === true
     ? new URL(specifier, parentUrl)
     : undefined;
 }

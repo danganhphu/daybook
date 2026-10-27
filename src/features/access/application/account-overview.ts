@@ -7,6 +7,7 @@ import type { AccountRepository } from "@/features/access/domain/account-reposit
 import type { Passkey } from "@/features/access/domain/passkey";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
 import * as Passwords from "@/features/access/domain/password";
+import type { Password } from "@/features/access/domain/password";
 import type { PasswordRepository } from "@/features/access/domain/password-repository";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
@@ -66,55 +67,45 @@ function summarize(session: Session): SessionSummary {
   };
 }
 
-async function hasWayIn(deps: AccountOverviewDeps, accountId: AccountId): Promise<boolean> {
-  const [passkeys, password] = await Promise.all([
-    deps.passkeys.listForAccount(accountId),
-    deps.passwords.get(accountId),
-  ]);
-
+function hasWayIn(passkeys: ReadonlyArray<Passkey>, password: Password | undefined): boolean {
   return passkeys.length > 0 || (password !== undefined && !Passwords.isLocked(password));
 }
 
-async function listPeople(deps: AccountOverviewDeps): Promise<ReadonlyArray<PersonSummary>> {
-  const [accounts, lastSignIns] = await Promise.all([
-    deps.accounts.list(),
-    deps.accessEvents.lastSignIns(),
-  ]);
-
-  return Promise.all(
-    accounts.map(async (account) => ({
-      account,
-      lastSignInAt: lastSignIns.get(account.id),
-      hasWayIn: await hasWayIn(deps, account.id),
-    })),
-  );
-}
-
+// Everyone's passkeys and passwords are read once, and each person's taken from them: a query per person grew the
+// page's reads with every account
 export async function accountOverview(
   deps: AccountOverviewDeps,
   accountId: AccountId,
 ): Promise<AccountOverview> {
-  const [account, passkeys, password, sessions, activity, people] = await Promise.all([
-    deps.accounts.get(accountId),
-    deps.passkeys.listForAccount(accountId),
-    deps.passwords.get(accountId),
+  const [accounts, allPasskeys, allPasswords, sessions, activity, lastSignIns] = await Promise.all([
+    deps.accounts.list(),
+    deps.passkeys.list(),
+    deps.passwords.list(),
     listSessions(deps, accountId),
     deps.accessEvents.listForAccount(accountId, activityShown),
-    listPeople(deps),
+    deps.accessEvents.lastSignIns(),
   ]);
+  const account = accounts.find((each) => each.id === accountId);
   if (account === undefined) {
     throw new Error(`Account ${accountId} does not exist`);
   }
+  const passkeysOf = (id: AccountId) => allPasskeys.filter((passkey) => passkey.accountId === id);
+  const passwordOf = (id: AccountId) => allPasswords.find((each) => each.accountId === id);
+  const password = passwordOf(accountId);
 
   return {
     account,
-    passkeys,
+    passkeys: passkeysOf(accountId),
     password:
       password === undefined
         ? { kind: "none" }
         : { kind: "set", locked: Passwords.isLocked(password), changedAt: password.changedAt },
     sessions: sessions.map(summarize),
     activity,
-    people,
+    people: accounts.map((each) => ({
+      account: each,
+      lastSignInAt: lastSignIns.get(each.id),
+      hasWayIn: hasWayIn(passkeysOf(each.id), passwordOf(each.id)),
+    })),
   };
 }

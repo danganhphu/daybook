@@ -27,5 +27,14 @@ export function createPasskeyRepository(db: Database): PasskeyRepository {
 
       return rows.map(toPasskey);
     },
+
+    async list() {
+      const rows = await db
+        .select()
+        .from(passkeyTable)
+        .orderBy(asc(passkeyTable.createdAt), asc(passkeyTable.id));
+
+      return rows.map(toPasskey);
+    },
   };
 }

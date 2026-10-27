@@ -54,14 +54,12 @@ import { createAccessEventRepository } from "@/features/access/infrastructure/ac
 import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
 import { createCeremonyRepository } from "@/features/access/infrastructure/ceremony-repository";
 import { createRateLimiter } from "@/features/access/infrastructure/d1-rate-limiter";
+import { createLazyPasskeyVerifier } from "@/features/access/infrastructure/lazy-passkey-verifier";
 import { createPasskeyRepository } from "@/features/access/infrastructure/passkey-repository";
 import { createPasswordRepository } from "@/features/access/infrastructure/password-repository";
+import type { RelyingParty } from "@/features/access/infrastructure/relying-party";
 import { createSessionRepository } from "@/features/access/infrastructure/session-repository";
 import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
-import {
-  createSimpleWebAuthnVerifier,
-  type RelyingParty,
-} from "@/features/access/infrastructure/simple-webauthn-verifier";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import {
   recordCapture,
@@ -216,7 +214,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const setupLinks = createSetupLinkRepository(db);
   const rateLimiter = createRateLimiter(db);
   const accessEvents = createAccessEventRepository(db);
-  const verifier = createSimpleWebAuthnVerifier(bindings.relyingParty);
+  const verifier = createLazyPasskeyVerifier(bindings.relyingParty);
   const secrets = webCryptoSecrets;
   const startUnitOfWork = () => createUnitOfWork(db);
   const access = {

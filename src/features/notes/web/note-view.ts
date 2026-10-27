@@ -1,6 +1,6 @@
 import type { Note } from "@/features/notes/domain/note";
 import type { Result } from "@/shared/domain/result";
-import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
+import { vietnamOffsetMilliseconds } from "@/shared/domain/vietnam-time-zone";
 
 // What the browser gets: plain strings, because Temporal values do not cross the server-client boundary
 export type NoteView = {
@@ -20,15 +20,16 @@ export type NoteResult = Result<NoteView, string>;
 // What a new note is before the server has answered: shown at once, changed only after the answer
 export const unsavedVersion = 0;
 
-const clock = new Intl.DateTimeFormat("vi-VN", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-  timeZone: vietnamTimeZone,
-});
+const minutesPerDay = 24 * 60;
 
+const twoDigits = (value: number) => String(value).padStart(2, "0");
+
+// By arithmetic on the fixed offset: an Intl formatter cost the Worker its time zone data on every cold start
 export function clockTime(epochMilliseconds: number): string {
-  return clock.format(epochMilliseconds);
+  const minutes = Math.floor((epochMilliseconds + vietnamOffsetMilliseconds) / 60_000);
+  const ofDay = ((minutes % minutesPerDay) + minutesPerDay) % minutesPerDay;
+
+  return `${twoDigits(Math.floor(ofDay / 60))}:${twoDigits(ofDay % 60)}`;
 }
 
 const previewLength = 40;
