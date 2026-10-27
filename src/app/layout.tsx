@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { NavigationProgress } from "@/shared/ui/navigation-progress/navigation-progress";
 import { Toaster } from "@/shared/ui/toast/toaster";
+import { routes } from "@/shared/web/routes";
 
 import { appDescription, appName, canvasColor } from "./identity";
 
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   // Dark status bar text on the light page, not drawn over it
   appleWebApp: { title: appName, statusBarStyle: "default" },
+  // Static files from `pnpm icons`, served without the Worker
+  manifest: routes.manifest,
+  icons: { icon: { url: routes.icon, type: "image/svg+xml" }, apple: routes.appleIcon },
 };
 
 export const viewport: Viewport = { themeColor: canvasColor };

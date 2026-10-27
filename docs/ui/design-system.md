@@ -232,8 +232,9 @@ reduced motion turns it off.
 
 The letters pn, lowercase and white on the accent, drawn as strokes - stems, a bowl and an arch - rather than set in
 a font, so the icon needs no font file and stays legible at 16px. `scripts/generate-icons.ts` is its only source:
-`pnpm icons` writes `src/app/icon.svg` (the browser tab), `src/app/apple-icon.png` (180px, the iPhone home screen)
-and the manifest's PNGs in `public/icons/`, and the output is committed.
+`pnpm icons` writes `public/icon.svg` (the browser tab), `public/apple-icon.png` (180px, the iPhone home screen),
+the manifest's PNGs in `public/icons/` and `public/manifest.webmanifest` from `src/app/web-manifest.ts`, and the
+output is committed. All static, so asking for them never wakes the Worker.
 
 - **Rounded** where the icon is shown as drawn (the tab, the manifest's `any` icons); **square** where the phone cuts
   its own shape out of it (Android's `maskable` icon, every icon on iOS).

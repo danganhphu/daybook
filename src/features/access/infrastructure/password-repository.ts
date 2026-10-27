@@ -20,6 +20,12 @@ export function createPasswordRepository(db: Database): PasswordRepository {
       return row === undefined ? undefined : toPassword(row);
     },
 
+    async list() {
+      const rows = await db.select().from(passwordTable);
+
+      return rows.map(toPassword);
+    },
+
     async findForUsername(username) {
       const [row] = await db
         .select()

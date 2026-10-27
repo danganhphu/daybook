@@ -16,7 +16,7 @@ export const routes = {
   signOut: "/sign-out",
   settings: "/settings",
   componentGallery: "/dev/ui",
-  // Made by src/app's manifest.ts, icon.svg and apple-icon.png
+  // Static files in public/, written by `pnpm icons`
   manifest: "/manifest.webmanifest",
   icon: "/icon.svg",
   appleIcon: "/apple-icon.png",

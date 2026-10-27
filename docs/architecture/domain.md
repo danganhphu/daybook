@@ -11,7 +11,7 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Note | ghi chú | An entry in the list. Starts as a capture's words; it can be edited, deleted and restored |
 | Content | nội dung | The user's text. Not blank, at most 4,000 characters, otherwise kept exactly as typed: spaces, line breaks, diacritics |
 | Source | | Where a capture came in: `web` or `telegram` |
-| Day | ngày | A calendar day in `Asia/Ho_Chi_Minh`. A day's notes are those created from its first instant up to the next day's |
+| Day | ngày | A calendar day in Vietnam, at UTC+07:00: the offset `Asia/Ho_Chi_Minh` has kept since 1975, used as a fixed offset so the Worker loads no time zone data (a test holds the two together). A day's notes are those created from its first instant up to the next day's |
 | Audit | | Who made a record and when, who changed it last and when, and its version. On every record people change |
 | Version | | How many times a record has been saved. A change carries the version its screen showed; a stale one is refused |
 | Search text | | A note's words as a search matches them: no diacritics, `đ` as `d`, lower case, single spaces |

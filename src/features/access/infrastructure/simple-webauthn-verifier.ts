@@ -3,18 +3,14 @@ import {
   generateRegistrationOptions,
   verifyAuthenticationResponse,
   verifyRegistrationResponse,
-  type AuthenticationResponseJSON,
-  type RegistrationResponseJSON,
 } from "@simplewebauthn/server";
 import { cose, decodeCredentialPublicKey } from "@simplewebauthn/server/helpers";
-import { z } from "zod";
 
 import type {
   PasskeyRejection,
   PasskeyVerifier,
 } from "@/features/access/application/passkey-verifier";
 import { ceremonyLifetime } from "@/features/access/domain/access-policy";
-import { userHandleSchema } from "@/features/access/domain/account";
 import {
   credentialIdSchema,
   isPasskeyAlgorithm,
@@ -23,60 +19,10 @@ import {
 import { decodeBase64Url, encodeBase64Url } from "@/shared/domain/base64url";
 import { err, ok } from "@/shared/domain/result";
 
-// Who the passkeys belong to. The RP ID is the full host: workers.dev is on the Public Suffix List, so no parent
-// domain could serve as one (ADR 0009). The origin comes from configuration, never from a request header.
-export type RelyingParty = {
-  readonly id: string;
-  readonly origin: string;
-  readonly name: string;
-};
-
-// The app's own origin, as configured, decides both: the host is the RP ID
-export function relyingPartyFor(appOrigin: URL, name: string): RelyingParty {
-  return { id: appOrigin.hostname, origin: appOrigin.origin, name };
-}
+import type { RelyingParty } from "./relying-party";
+import { authenticationResponse, readAssertion, registrationResponse } from "./webauthn-responses";
 
 const timeout = ceremonyLifetime.total("milliseconds");
-
-// The shape navigator.credentials.create() and .get() answer with, checked before the library sees it. The library
-// validates every field's content; this only refuses what is not even the right kind of object.
-const base64Url = z.string().regex(/^[A-Za-z0-9_-]+$/);
-const clientFields = {
-  id: base64Url,
-  rawId: base64Url,
-  type: z.literal("public-key"),
-  clientExtensionResults: z.record(z.string(), z.unknown()),
-  authenticatorAttachment: z.enum(["platform", "cross-platform"]).optional(),
-};
-const sameId = (value: { readonly id: string; readonly rawId: string }) => value.id === value.rawId;
-const registrationShape = z
-  .looseObject({
-    ...clientFields,
-    response: z.looseObject({
-      clientDataJSON: base64Url,
-      attestationObject: base64Url,
-      transports: z.array(z.string()).optional(),
-    }),
-  })
-  .refine(sameId);
-const authenticationShape = z
-  .looseObject({
-    ...clientFields,
-    response: z.looseObject({
-      clientDataJSON: base64Url,
-      authenticatorData: base64Url,
-      signature: base64Url,
-      userHandle: base64Url.optional(),
-    }),
-  })
-  .refine(sameId);
-// Typed as the library's own response types once the shape holds
-const registrationResponse = z.custom<RegistrationResponseJSON>(
-  (value) => registrationShape.safeParse(value).success,
-);
-const authenticationResponse = z.custom<AuthenticationResponseJSON>(
-  (value) => authenticationShape.safeParse(value).success,
-);
 
 // The library throws an Error naming the check that failed. Its messages can quote the challenge, so only the kind
 // of failure leaves this file. The adapter tests pin each mapping, so a reworded message shows up on upgrade.
@@ -209,21 +155,7 @@ export function createSimpleWebAuthnVerifier(relyingParty: RelyingParty): Passke
       }
     },
 
-    readAssertion(response) {
-      const parsed = authenticationResponse.safeParse(response);
-      if (!parsed.success) {
-        return undefined;
-      }
-
-      const credentialId = credentialIdSchema.safeParse(parsed.data.id);
-      const { userHandle } = parsed.data.response;
-      const handle = userHandle === undefined ? undefined : userHandleSchema.safeParse(userHandle);
-      if (!credentialId.success || handle?.success === false) {
-        return undefined;
-      }
-
-      return { credentialId: credentialId.data, userHandle: handle?.data };
-    },
+    readAssertion,
 
     async verifyAssertion(response, challenge, passkey) {
       const parsed = authenticationResponse.safeParse(response);
