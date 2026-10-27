@@ -97,6 +97,6 @@ A new pepper stops every fallback password until it is set again; passkeys keep 
 
 | Limit | Consequence |
 | --- | --- |
-| 10 ms CPU per request | Password hashing runs in the browser for this reason. Measured 2026-10-27: a warm screen took 15-37 ms, so every request is already over; nothing has been refused yet, but "consistently" over is when Cloudflare starts to (error 1102) |
+| 10 ms CPU per request | Password hashing runs in the browser for this reason. Measured 2026-10-27, after the work in [configuration](configuration.md#runtime): a screen change about 22 ms, a first open about 65 ms, so most requests are over; none has been refused, but "consistently" over is when Cloudflare starts to (error 1102). Watch for it: the dashboard shows "Exceeded CPU Time Limits", and Workers Logs an outcome of `exceededCpu` instead of `ok`. If it appears, Workers Paid ($5 a month, 30 s per request) needs no code change |
 | 100,000 requests a day | Static assets do not count |
 | D1: 5M rows read, 100k rows written a day | Every lookup is indexed |
