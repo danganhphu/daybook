@@ -52,6 +52,12 @@ When("tôi mở Cài đặt từ tab {string}", async ({ page }, tab: string) =>
   await openSettingsFrom(page, undefined);
 });
 
+// A row of the overview opens the screen of the same name
+When("tôi mở {string} trong Cài đặt", async ({ page }, section: string) => {
+  await page.getByRole("link", { name: new RegExp(`^${section}`) }).click();
+  await expect(page.getByRole("heading", { name: section, level: 1 })).toBeVisible();
+});
+
 When("tôi bấm quay lại", async ({ page }) => {
   await page.getByRole("link", { name: "Quay lại", exact: true }).click();
 });

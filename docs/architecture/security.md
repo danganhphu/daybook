@@ -95,7 +95,7 @@ ASVS asks for these to be written down; each is a choice, not an oversight.
 | 6.2.3 | Changing the password asks for a fresh step-up, not the current password | The step-up is a passkey whenever the account has one |
 | 6.1.1 | Anyone who knows a username can keep its password locked | Passkeys stay open, so it is an annoyance, not a lockout |
 | 7.1.2 | No cap on sessions per account | Two people; every session is listed and can be ended |
-| 7.4.4 | Sign-out is two taps from most screens | Hôm nay's menu, or the end of Settings |
+| 7.4.4 | Sign-out is two taps from most screens | The account menu on every tab, or the foot of Settings |
 | 7.3.1 (NIST 5.1) | The session cookie survives closing the app | An app that forgets its sign-in on every launch loses to the notes app on day one; 30 days, 14 idle |
 | 3.5 (NIST 5.1) | No per-request CSRF token | Fetch Metadata, Origin from configuration, SameSite and `__Host-` cover a modern-browser-only app |
 | 6.2 | The password policy runs in the browser | The server never sees the password, only its Argon2id key |

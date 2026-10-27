@@ -49,7 +49,7 @@ export function Devices({ devices, run }: DevicesProps) {
   );
 
   return (
-    <List heading="Thiết bị đang đăng nhập">
+    <List>
       {devices.map((device) => (
         <DeviceItem key={device.id} device={device} onEnd={endOne} />
       ))}

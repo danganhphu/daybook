@@ -7,6 +7,7 @@ Feature: Người dùng
   Scenario: Mời một người mới
     Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt
+    And tôi mở "Người dùng" trong Cài đặt
     And tôi mời một người dùng mới
     Then tôi được hỏi "Link mời"
     And trang không có lỗi trợ năng
@@ -23,6 +24,7 @@ Feature: Người dùng
   Scenario: Gửi link khôi phục cho người kia
     Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt
+    And tôi mở "Người dùng" trong Cài đặt
     And tôi tạo link khôi phục cho "Minh"
     Then tôi được hỏi "Tạo link khôi phục cho Minh"
     When người được mời mở link trên máy của họ
