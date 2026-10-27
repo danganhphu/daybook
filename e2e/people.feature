@@ -2,8 +2,9 @@ Feature: Người dùng
   Hai người dùng chung, không ai là quản trị. Ai cũng mời được người mới, và gửi được link khôi phục cho người kia khi
   họ mất điện thoại. Link chỉ hiện một lần, dùng được một lần, trong 10 phút.
 
-  # WebKit in Playwright has no passkeys, and the newcomer's first way in is one
-  @chromium-only
+  # WebKit in Playwright has no passkeys, and the newcomer's first way in is one. Android alone, as every scenario
+  # that opens a setup link (sign-in.feature).
+  @chromium-only @phone-only
   Scenario: Mời một người mới
     Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt
@@ -20,7 +21,7 @@ Feature: Người dùng
     When tôi bấm "Để sau"
     Then tôi đang ở trang Hôm nay
 
-  @chromium-only
+  @chromium-only @phone-only
   Scenario: Gửi link khôi phục cho người kia
     Given tôi vừa đăng nhập bằng mật khẩu
     When tôi mở Cài đặt

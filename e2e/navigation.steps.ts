@@ -20,6 +20,12 @@ Given("màn {string} đang tới chậm", async ({ page }, path: string) => {
   );
 });
 
+// A link tapped before React takes the page over loads the next page in full, which no bar follows; Ghi is enabled
+// once it has
+When("trang Hôm nay đã sẵn sàng", async ({ page }) => {
+  await expect(page.getByRole("button", { name: "Ghi", exact: true })).toBeEnabled();
+});
+
 When("tôi bấm tab {string}", async ({ page }, tab: string) => {
   await page
     .getByRole("navigation", { name: "Mục chính" })

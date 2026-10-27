@@ -12,14 +12,15 @@ Feature: Đăng nhập
     Given tôi đã đăng nhập
     Then một trang web khác không gửi được ghi chú vào daybook
 
-  # WebKit in Playwright has no passkeys, so it shows "not supported" before it ever reads the link
-  @chromium-only
+  # WebKit in Playwright has no passkeys, so it shows "not supported" before it ever reads the link. Setup links run
+  # on Android alone: the run is one address, allowed ten in ten minutes, and two devices used all ten.
+  @chromium-only @phone-only
   Scenario: Link cài đặt không có thật
     When tôi mở một link cài đặt không có thật
     Then tôi thấy "Link này không còn dùng được. Hãy xin link mới."
     And trang không có lỗi trợ năng
 
-  @chromium-only
+  @chromium-only @phone-only
   Scenario: Bật Face ID từ link cài đặt, rồi đăng nhập lại bằng nó
     Given máy này có Face ID
     When tôi mở link cài đặt mới
