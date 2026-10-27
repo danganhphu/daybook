@@ -27,6 +27,12 @@ export default defineConfig({
     // Workers Logs (free: 3 days, 200,000 lines a day): src/instrumentation.ts's faults, and each request's URL
     // without its query, where search words travel (ASVS 14.2.1, 16.2.3)
     observability: { enabled: true, redactQueryString: true },
+    // Served at daybook.<subdomain>.workers.dev, the passkeys' RP ID. No preview URL per version: each would be one
+    // more host on the same database (ASVS 3.5.4).
+    workersDev: true,
+    previewUrls: false,
+    // Beside the D1 primary in Osaka; from the edge each query was ~100 ms (docs/guides/configuration.md)
+    placement: { region: "aws:ap-northeast-3" },
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: "daybook", id: databaseId }),

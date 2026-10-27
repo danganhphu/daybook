@@ -16,7 +16,7 @@ import {
 import { productIdSchema } from "@/features/products/domain/product";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import { optionalTextSchema } from "@/shared/domain/short-text";
 import {
   toAudit,

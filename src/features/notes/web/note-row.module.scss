@@ -1,6 +1,6 @@
 @use "abstracts" as *;
 
-// Each note its own card, as a message is in a chat: flat white on the grey canvas.
+// Each note its own bubble, as a message is in a chat: light grey on the white page.
 // The words and the menu share the first row; what the message became sits under the words; the time sits in the
 // bottom-right corner, as a chat puts it.
 .card {
@@ -8,25 +8,25 @@
   grid-template-columns: minmax(0, 1fr) auto;
   column-gap: space(1);
   align-items: start;
-  padding: space(1) space(1) space(2) space(4);
-  background: color(surface);
+  padding: 0 0 space(2) space(3);
+  background: color(surface-subtle);
   border-radius: radius(surface);
 }
 
 // While the words are being edited the editor takes the whole card
 .editing {
   display: flex;
-  padding: space(1) space(1) space(1) space(4);
-  background: color(surface);
+  padding: space(1) space(1) space(1) space(3);
+  background: color(surface-subtle);
   border-radius: radius(surface);
 }
 
 // The words as typed: line breaks kept, long words broken rather than overflowing.
-// The first line is centred on the 44px menu button beside it.
+// The first line is centred on the 40px menu button beside it.
 .content {
   grid-row: 1;
   grid-column: 1;
-  padding-block-start: rem(10px);
+  padding-block-start: space(2);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }

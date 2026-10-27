@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import { describe, expect, it } from "vitest";
 
 import { accessErrorMessages } from "@/features/access/application/access-errors";
 import { err, ok } from "@/shared/domain/result";
 import { faultMessage } from "@/shared/web/attempt";
+import { routes } from "@/shared/web/routes";
 
 import { attemptSetting, problemMessage } from "./attempt-setting";
 
@@ -21,6 +23,17 @@ describe("attemptSetting", () => {
     expect(await attemptSetting(() => Promise.reject(new TypeError("Failed to fetch")))).toEqual(
       err({ code: "fault", message: faultMessage }),
     );
+  });
+
+  it("given a redirect to sign in, as when the session has ended, when attempted, then it goes on to the framework", async () => {
+    let redirected: unknown;
+    try {
+      redirect(routes.signIn);
+    } catch (error) {
+      redirected = error;
+    }
+
+    await expect(attemptSetting(() => Promise.reject(redirected))).rejects.toBe(redirected);
   });
 });
 

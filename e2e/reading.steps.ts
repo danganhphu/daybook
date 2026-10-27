@@ -1,7 +1,30 @@
 import { expect, type Page } from "@playwright/test";
 
-import { Then, When } from "./fixtures";
+import { Given, Then, When } from "./fixtures";
 import type { TodayPage } from "./today-page";
+
+// The model taking its time, as Workers AI did on the phone (3.7 s): every reading's answer is held back
+const slowReading = 4000;
+
+Given("đọc tin đang chậm", async ({ page }) => {
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (
+      request.method() === "POST" &&
+      (await request.headerValue("next-action"))?.endsWith("#readNote")
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, slowReading));
+    }
+    await route.fallback();
+  });
+});
+
+Then("ghi chú {string} sửa, xoá được trong lúc còn đang đọc", async ({ today }, text: string) => {
+  const row = today.note(text);
+  await expect(row.getByRole("status")).toHaveText("Đang đọc tin...");
+  await expect(row.getByRole("button", { name: /^Tuỳ chọn/ })).toBeVisible();
+  await expect(row.getByRole("status")).toBeVisible();
+});
 
 // What a note's message became, found under the note's words by role and by what it says
 

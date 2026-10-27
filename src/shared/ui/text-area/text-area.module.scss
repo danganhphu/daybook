@@ -3,9 +3,9 @@
 .text-area {
   display: block;
   inline-size: 100%;
-  min-block-size: size(control-lg);
-  max-block-size: calc(8lh + #{space(3)} * 2);
-  padding: space(3);
+  min-block-size: size(control);
+  max-block-size: calc(8lh + #{space(2)} * 2);
+  padding: space(2) space(3);
   color: color(text);
   resize: none;
   background: color(surface);
@@ -14,14 +14,10 @@
   field-sizing: content;
 
   @include text(body);
+  @include field-focus($within: false);
 
   &::placeholder {
     color: color(text-muted);
-  }
-
-  &:focus-visible {
-    outline: 2px solid color(accent-text);
-    outline-offset: -1px;
   }
 
   &[aria-invalid="true"] {
@@ -38,10 +34,11 @@
   // Inside a field that draws the edge and the focus ring
   &[data-appearance="bare"] {
     min-block-size: size(control);
-    padding: rem(10px) space(3);
+    padding: space(2) space(3);
     background: transparent;
     border: 0;
     border-radius: 0;
     outline: 0;
+    box-shadow: none;
   }
 }

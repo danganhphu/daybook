@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { accessErrorMessages } from "@/features/access/application/access-errors";
-import { usernameRule } from "@/features/access/domain/account";
+import { usernameRule } from "@/features/access/domain/account-limits";
 import { origin } from "@/testing/support/access";
 import { testApp, testClock } from "@/testing/support/app";
 import { seedPasskeyAccount } from "@/testing/support/passkeys";

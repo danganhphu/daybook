@@ -1,5 +1,6 @@
 import Form from "next/form";
 
+import { AccountMenu } from "@/app/(app)/_shell/account-menu";
 import type { BarListView, ReportsView } from "@/features/reports/web/report-view";
 import { removeFilter, reportsCopy } from "@/features/reports/web/reports-copy";
 import { filtersAnchor } from "@/features/reports/web/reports-path";
@@ -15,13 +16,14 @@ import { ChevronLeftIcon, ChevronRightIcon, PersonIcon } from "@/shared/ui/icon/
 import { List } from "@/shared/ui/list/list";
 import { ListBar } from "@/shared/ui/list/list-bar";
 import { ListLink } from "@/shared/ui/list/list-link";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats } from "@/shared/ui/stats/stats";
 import { TextField } from "@/shared/ui/text-field/text-field";
 import { routes } from "@/shared/web/routes";
 
 import styles from "./reports.module.scss";
+
+const accountMenu = <AccountMenu />;
 
 function Ranking({ list }: { readonly list: BarListView | undefined }) {
   if (list === undefined) {
@@ -50,9 +52,7 @@ export function ReportsScreen({ view }: { readonly view: ReportsView }) {
   const { report, range } = view;
 
   return (
-    <Screen wash>
-      <PageHeader title={reportsCopy.title} />
-
+    <Screen title={reportsCopy.title} actions={accountMenu}>
       <div className={styles.filters} id={filtersAnchor}>
         <ChipLinks label={reportsCopy.periodChoice} chips={view.periods} />
         {range === undefined ? null : (

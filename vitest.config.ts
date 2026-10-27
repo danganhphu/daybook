@@ -9,7 +9,11 @@ import { compatibilityDate, compatibilityFlags, developmentPepper } from "./clou
 // the plugin's reader for cloudflare.config.ts is still experimental.
 export default defineConfig({
   // The `@/` imports the app uses; vinext resolves them for the app, Vite's own option does it here
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    // vinext's own module for it, as its plugin maps it for the app
+    alias: { "next/navigation": "vinext/shims/navigation" },
+  },
   plugins: [
     cloudflareTest(async () => ({
       miniflare: {

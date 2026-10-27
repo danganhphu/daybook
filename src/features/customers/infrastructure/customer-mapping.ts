@@ -2,7 +2,6 @@ import { Temporal } from "temporal-polyfill/implementation";
 
 import {
   customerIdSchema,
-  customerLimits,
   customerNameSchema,
   type Customer,
 } from "@/features/customers/domain/customer";
@@ -11,6 +10,7 @@ import {
   type CustomerAlias,
 } from "@/features/customers/domain/customer-alias";
 import { customerKindIdSchema } from "@/features/customers/domain/customer-kind";
+import { customerLimits } from "@/features/customers/domain/customer-limits";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { searchText } from "@/shared/domain/search-text";
 import { optionalTextSchema, requiredTextSchema } from "@/shared/domain/short-text";

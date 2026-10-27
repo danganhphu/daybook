@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { ChevronRightIcon } from "@/shared/ui/icon/icons";
 
 import styles from "./list.module.scss";
@@ -34,10 +33,10 @@ export function ListBar({ title, detail, value, share, href }: ListBarProps) {
       {href === undefined ? (
         <div className={styles.row}>{content}</div>
       ) : (
-        <Link href={href} prefetch={false} className={styles.link}>
+        <AppLink href={href} prefetch={false} className={styles.link}>
           {content}
           <ChevronRightIcon aria-hidden className={styles.chevron} />
-        </Link>
+        </AppLink>
       )}
     </li>
   );

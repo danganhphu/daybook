@@ -5,7 +5,6 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { orderForm } from "@/features/orders/web/commands";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { customerPath, routes } from "@/shared/web/routes";
 
@@ -25,11 +24,10 @@ export default async function NewOrderPage({ searchParams }: NewOrderPageProps) 
   const view = await orderForm(app, { customer });
 
   return (
-    <Screen>
-      <PageHeader
-        title={ordersCopy.add}
-        back={view?.customer === undefined ? routes.orders : customerPath(view.customer.id)}
-      />
+    <Screen
+      title={ordersCopy.add}
+      back={view?.customer === undefined ? routes.orders : customerPath(view.customer.id)}
+    >
       {view === undefined ? null : <OrderForm view={view} />}
     </Screen>
   );

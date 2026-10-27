@@ -1,6 +1,6 @@
 import type { LiveNote } from "@/features/notes/domain/note";
 import type { NoteRepository } from "@/features/notes/domain/note-repository";
-import type { SearchTerm } from "@/shared/domain/search-text";
+import type { SearchTerm } from "@/shared/domain/search-term";
 
 // Enough to scroll through on a phone; a longer list means the search should be narrower
 export const notesSearchLimit = 50;

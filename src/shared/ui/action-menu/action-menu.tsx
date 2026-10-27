@@ -1,9 +1,9 @@
 "use client";
 
 import { Menu } from "@base-ui/react/menu";
-import Link from "next/link";
 import { useMemo } from "react";
 
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import type { Icon } from "@/shared/ui/icon/icon";
 import { MoreHorizIcon } from "@/shared/ui/icon/icons";
@@ -19,6 +19,8 @@ export type MenuAction = { readonly label: string; readonly icon: Icon } & (
 export type ActionMenuProps = {
   // Names the trigger for screen readers, e.g. "Tuỳ chọn cho ghi chú"
   readonly label: string;
+  // The trigger's picture; three dots unless the menu is about something else, such as the account
+  readonly icon?: Icon;
   readonly actions?: ReadonlyArray<MenuAction>;
   // Always last, below a divider and in the danger color, so it is never hit by mistake
   readonly destructive?: MenuAction | undefined;
@@ -26,8 +28,13 @@ export type ActionMenuProps = {
 
 const noActions: ReadonlyArray<MenuAction> = [];
 
-export function ActionMenu({ label, actions = noActions, destructive }: ActionMenuProps) {
-  const trigger = useMemo(() => <IconButton icon={MoreHorizIcon} label={label} />, [label]);
+export function ActionMenu({
+  label,
+  icon = MoreHorizIcon,
+  actions = noActions,
+  destructive,
+}: ActionMenuProps) {
+  const trigger = useMemo(() => <IconButton icon={icon} label={label} />, [icon, label]);
 
   return (
     <Menu.Root>
@@ -73,7 +80,8 @@ function MenuItem({
   );
 }
 
-// The framework's link, so the page opens without a full load
+// The framework's link, so the page opens without a full load. No prefetch: opening the menu rendered the page on the
+// server, and following the item rendered it again.
 function MenuLink({
   label,
   icon: Icon,
@@ -85,7 +93,7 @@ function MenuLink({
   readonly href: string;
   readonly tone: "danger" | "neutral";
 }) {
-  const link = useMemo(() => <Link href={href} />, [href]);
+  const link = useMemo(() => <AppLink href={href} prefetch={false} />, [href]);
 
   return (
     <Menu.LinkItem className={styles.item} data-tone={tone} render={link} closeOnClick>

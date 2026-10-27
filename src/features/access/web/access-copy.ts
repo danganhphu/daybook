@@ -9,6 +9,7 @@ export const accessCopy = {
   signOutOthers: "Đăng xuất các thiết bị khác",
   signOutEverywhere: "Đăng xuất mọi thiết bị",
   settings: "Cài đặt",
+  account: "Tài khoản",
   displayName: "Tên",
   username: "Tên đăng nhập",
   password: "Mật khẩu",

@@ -9,13 +9,15 @@
 declare const tabBar: string;
 declare const list: string;
 declare const tab: string;
+declare const indicator: string;
 declare const label: string;
 
 declare const __default_export__: {
 	tabBar: typeof tabBar;
 	list: typeof list;
 	tab: typeof tab;
+	indicator: typeof indicator;
 	label: typeof label;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidGFiLWJhci5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJ0YWItYmFyLm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBSUE7Y0FzQ0E7Y0FpQ0E7Y0F3Qkk7OztDQS9GSjtDQXNDQTtDQWlDQTtDQXdCSTs7In0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidGFiLWJhci5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJ0YWItYmFyLm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBSUE7Y0FzQkE7Y0FlQTtjQTJCQTtjQW1CQTs7O0NBbkZBO0NBc0JBO0NBZUE7Q0EyQkE7Q0FtQkE7OyJ9

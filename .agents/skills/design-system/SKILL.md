@@ -23,12 +23,16 @@ The rules and the numbers are in `docs/ui/design-system.md`. This is how to work
 
 - Mobile first: write for the phone, add `@include from(md)` (640px) or `from(lg)` (1024px) for wider screens.
   Review the phone screenshot first.
-- One bright green, neutral greys, flat cards with 24px corners, pill buttons, large type. Icons are coloured by
-  meaning through `iconTones` (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. The only gradients are
-  the wash on a tab's own screen (`<Screen wash>`) and the fade behind the tab bar; the tab bar is the only frosted
-  thing. No glow.
-- Two greens: `accent` is a fill under white text, which must be large and bold there (`label-strong`); green words
-  use `accent-text`. Never put `accent` on text or small white text on `accent`.
+- A white page, one blue, cards edged by a hairline with 16px corners, pill buttons, Material's sizes (16px body,
+  40px controls), room between groups. Icons are coloured by meaning through `iconTones`
+  (`src/shared/ui/icon/icon-tone.ts`), never by picking a colour. No gradient, no glass, no glow.
+- A screen is `<Screen title back actions>`: its header sits outside the column so the bar sticks, and a tab's own
+  title moves into the bar as the page scrolls. A list screen adds through one `FabLink`. A long screen scrolls; a
+  separate small task gets a screen of its own, pushed and popped with back, rather than more on one page.
+- Blue fills use `accent`; blue words use `accent-text`, which holds 4.5:1 on the greys too.
+- Never await a person or a slow call inside a transition: React holds every transition's updates until all have
+  ended (see "Interaction rules" in the design system).
+- No screen may scroll sideways at 320px with text at 200% (`e2e/layout.feature`).
 - A new colour pair is checked for WCAG AA (4.5:1 text, 3:1 large text and boundaries) before it lands, in every
   state: a hover or pressed background counts. Every icon tone clears 3:1 on white.
 - Comments and docs state a rule and its reason, never which app it looks like.

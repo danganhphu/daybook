@@ -4,7 +4,7 @@ import { Temporal } from "temporal-polyfill/implementation";
 import { captureIdSchema } from "@/features/capture/domain/capture";
 import type { CaptureRepository } from "@/features/capture/domain/capture-repository";
 import { accountIdSchema } from "@/shared/domain/account-id";
-import { contentSchema } from "@/shared/domain/content";
+import { contentSchema } from "@/shared/domain/content-schema";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
 import { captureTable } from "./capture.table";

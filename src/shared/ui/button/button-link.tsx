@@ -1,11 +1,10 @@
-import Link from "next/link";
-import type { ComponentProps } from "react";
+import { AppLink, type AppLinkProps } from "@/shared/ui/app-link/app-link";
 
 import type { ButtonSize } from "./button";
 
 import styles from "./button.module.scss";
 
-export type ButtonLinkProps = Omit<ComponentProps<typeof Link>, "className" | "style"> & {
+export type ButtonLinkProps = Omit<AppLinkProps, "className" | "style"> & {
   readonly variant?: "primary" | "secondary" | "quiet";
   readonly size?: ButtonSize;
 };
@@ -19,7 +18,7 @@ export function ButtonLink({
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link
+    <AppLink
       {...props}
       prefetch={prefetch}
       className={styles.button}

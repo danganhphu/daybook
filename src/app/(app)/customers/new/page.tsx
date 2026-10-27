@@ -6,7 +6,6 @@ import { requireSession } from "@/features/access/web/session-gate";
 import { customerForm } from "@/features/customers/web/commands";
 import type { KindView } from "@/features/customers/web/customer-view";
 import { customersCopy } from "@/features/customers/web/customers-copy";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { routes } from "@/shared/web/routes";
 
@@ -23,8 +22,7 @@ export default async function NewCustomerPage() {
   const form = await customerForm(app);
 
   return (
-    <Screen>
-      <PageHeader title={customersCopy.add} back={routes.customers} />
+    <Screen title={customersCopy.add} back={routes.customers}>
       <CustomerForm customer={undefined} kinds={form?.kinds ?? noKinds} />
     </Screen>
   );

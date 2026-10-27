@@ -4,27 +4,24 @@
 .field {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(1);
+  gap: space(2);
 }
 
 .label {
   @include text(label);
 }
 
-// The box draws the edge and the focus ring, so the eye button sits inside it
+// The box draws the edge, so the eye button sits inside it
 .box {
   display: flex;
   align-items: center;
-  min-block-size: size(control-lg);
+  min-block-size: size(control);
   padding-inline-end: space(1);
   background: color(surface);
   border: 1px solid color(border-strong);
   border-radius: radius(control);
 
-  &:focus-within {
-    outline: 2px solid color(accent-text);
-    outline-offset: -1px;
-  }
+  @include field-focus;
 
   .field[data-invalid] & {
     border-color: color(danger);
@@ -34,7 +31,7 @@
 .input {
   flex: 1;
   min-inline-size: 0;
-  padding: space(3);
+  padding: space(2) space(3);
   color: color(text);
   background: transparent;
   border: 0;

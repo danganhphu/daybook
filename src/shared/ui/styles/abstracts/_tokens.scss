@@ -42,84 +42,99 @@ $space: (
   16: 64px,
 );
 
-// Buttons and chips are pills (`full`). `field` is half the 48px message field, so one line is a pill and more lines
+// Buttons and chips are pills (`full`). `field` is half the 44px message box, so one line is a pill and more lines
 // stay a soft rectangle.
 $radius: (
   // The data end of a chart's bar; its base stays square on the baseline
   mark: 4px,
-  control: 14px,
-  surface: 24px,
-  field: 24px,
+  control: 10px,
+  surface: 16px,
+  field: 22px,
   full: 9999px,
 );
 
-// Nothing below 13px; inputs are 17px, so iOS never zooms into one. `label-strong` is a filled button's label: 19px
-// bold is large text to WCAG, held to 3:1, which lets the button be a bright green.
+// Material 3's type scale (material-web md-sys-typescale), named for what each is for here. No input under 16px, or
+// iOS zooms into it.
 $text-styles: (
+  // body-small
   caption: (
-    size: 13px,
-    leading: 18px,
+    size: 12px,
+    leading: 16px,
     weight: 400,
   ),
+  // label-medium
   caption-strong: (
-    size: 13px,
-    leading: 18px,
-    weight: 600,
+    size: 12px,
+    leading: 16px,
+    weight: 500,
   ),
+  // body-medium
   body-sm: (
-    size: 15px,
+    size: 14px,
     leading: 20px,
     weight: 400,
   ),
+  // body-large
   body: (
-    size: 17px,
+    size: 16px,
     leading: 24px,
     weight: 400,
   ),
+  // label-large: a field's label, a group's name
   label: (
-    size: 17px,
-    leading: 24px,
-    weight: 600,
+    size: 14px,
+    leading: 20px,
+    weight: 500,
   ),
+  // label-large: a button's words
   label-strong: (
-    size: 19px,
-    leading: 24px,
-    weight: 700,
+    size: 14px,
+    leading: 20px,
+    weight: 500,
   ),
+  // title-large
   title: (
     size: 22px,
     leading: 28px,
-    weight: 600,
+    weight: 400,
   ),
+  // headline-small: a tab's own screen
   display: (
-    size: 30px,
-    leading: 38px,
-    weight: 600,
+    size: 24px,
+    leading: 32px,
+    weight: 400,
   ),
+  // headline-medium: the one figure a card is for
   hero: (
-    size: 36px,
-    leading: 44px,
-    weight: 600,
+    size: 28px,
+    leading: 36px,
+    weight: 400,
   ),
 );
 $font-sans: var(--font-sans), system-ui, sans-serif;
 
-// Controls meet the 44px touch minimum; primary actions and list rows get 48px
+// Material 3's component sizes (material-web tokens; the navigation bar from Material 3 Expressive). Fields are 40px,
+// under Material's 56px, on the owner's ask for smaller boxes.
 $sizes: (
-  control: 44px,
-  control-lg: 48px,
+  control: 40px,
+  control-lg: 44px,
   icon: 20px,
   icon-row: 24px,
-  // The one picture of each place in the tab bar
-  icon-tab: 28px,
-  // A list row, one line or two
-  row: 60px,
-  // One tab of the floating tab bar, and the bar's height
-  tab: 88px,
+  icon-tab: 24px,
+  // A list item, one line
+  row: 56px,
+  // One place in the rail beside the page from `md`, and the navigation bar's height on a phone
+  tab: 80px,
   tab-bar: 64px,
+  // Behind the current tab's icon
+  tab-indicator: 56px,
+  tab-indicator-height: 32px,
+  // The small top app bar
+  app-bar: 64px,
+  fab: 56px,
   menu: 200px,
-  // A filter chip: smaller than a button, still a fair target (WCAG 2.2 asks 24px; Material uses 32px)
-  chip: 36px,
+  // A filter chip: smaller than a button, still a fair target (Material uses 32px)
+  chip: 32px,
   // The tallest a list of suggestions grows before it scrolls: about six rows
   suggestions: 280px,
   // A chart over time: the plot's height, the gutter for its axis numbers, the widest a column gets
@@ -128,6 +143,8 @@ $sizes: (
   column: 24px,
   // A bar under a row of a ranking
   bar: 6px,
+  // The linear progress indicator's track
+  progress: 4px,
   toast: 360px,
   // The sign-in and setup action: one thumb's width on a phone, not a banner on a desk
   panel: 400px,
@@ -136,6 +153,10 @@ $sizes: (
 $duration: (
   fast: 120ms,
   slow: 240ms,
+  // How long a wait goes without a sign of it (Nielsen Norman Group: an indicator from about one second)
+  waiting: 1000ms,
+  // One cycle of the indeterminate linear progress indicator (material-web)
+  indeterminate: 2s,
 );
 $easing: (
   out: cubic-bezier(0, 0, 0, 1),
@@ -145,6 +166,7 @@ $z: (
   sticky: 10,
   overlay: 100,
   toast: 200,
+  progress: 300,
 );
 $breakpoints: (
   md: 640px,

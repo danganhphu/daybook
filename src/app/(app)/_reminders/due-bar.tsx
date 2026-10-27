@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useOptimistic } from "react";
 
 import { preview } from "@/features/notes/web/note-view";
 import type { DueView } from "@/features/reminders/web/reminder-view";
 import { markDone, moreDue, remindersCopy } from "@/features/reminders/web/reminders-copy";
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { ChevronRightIcon, RadioButtonUncheckedIcon } from "@/shared/ui/icon/icons";
 import { routes } from "@/shared/web/routes";
@@ -39,7 +39,7 @@ export function DueBar({ due }: { readonly due: DueView }) {
         label={markDone(preview(first.text))}
         onClick={tick}
       />
-      <Link href={routes.reminders} prefetch={false} className={styles.link}>
+      <AppLink href={routes.reminders} prefetch={false} className={styles.link}>
         <span className={styles.text}>{first.text}</span>
         <span className={styles.detail}>
           {first.customer === undefined ? null : `${first.customer.name}, `}
@@ -52,7 +52,7 @@ export function DueBar({ due }: { readonly due: DueView }) {
           </span>
         ) : null}
         <ChevronRightIcon aria-hidden className={styles.chevron} />
-      </Link>
+      </AppLink>
     </section>
   );
 }

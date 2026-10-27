@@ -18,7 +18,9 @@ export function SearchField({ label, ...props }: SearchFieldProps) {
   return (
     <span className={styles.searchField}>
       <SearchIcon aria-hidden className={styles.icon} />
+      {/* An input is twenty characters wide of its own, which can hold the box wider than a narrow screen */}
       <input
+        size={1}
         {...props}
         type="search"
         enterKeyHint="search"

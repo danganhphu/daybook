@@ -1,9 +1,9 @@
 @use "abstracts" as *;
 
-// A group of rows, as the phone's own settings draw one: a small heading, one white card, a note beneath
+// A group of rows: a small heading, one card edged by a hairline on the white page, a note beneath
 .section {
   display: grid;
-  gap: space(2);
+  gap: space(3);
 }
 
 .heading,
@@ -17,6 +17,7 @@
   overflow: hidden;
   list-style: none;
   background: color(surface);
+  border: 1px solid color(border);
   border-radius: radius(surface);
 
   // Rows are split by a hairline that starts where the text does, not at the card's edge
@@ -27,7 +28,7 @@
   > li + li::before {
     position: absolute;
     inset-block-start: 0;
-    inset-inline: space(5);
+    inset-inline: space(4);
     block-size: 1px;
     content: "";
     background: color(border);
@@ -35,16 +36,16 @@
 
   // With icons, the hairline starts past them, where the words do
   &:has(.row-icon) > li + li::before {
-    inset-inline-start: calc(#{space(5)} + #{size(icon-row)} + #{space(4)});
+    inset-inline-start: calc(#{space(4)} + #{size(icon-row)} + #{space(3)});
   }
 }
 
 .row {
   display: flex;
-  gap: space(4);
+  gap: space(3);
   align-items: center;
   min-block-size: size(row);
-  padding: space(3) space(3) space(3) space(5);
+  padding: space(3) space(2) space(3) space(4);
 }
 
 // The leading icon, in the colour of what the row is about (icon-tone.ts)
@@ -102,10 +103,10 @@
 // A row that opens a page: the whole row takes the tap
 .link {
   display: flex;
-  gap: space(4);
+  gap: space(3);
   align-items: center;
   min-block-size: size(row);
-  padding: space(3) space(4) space(3) space(5);
+  padding: space(3) space(3) space(3) space(4);
   color: inherit;
   text-decoration: none;
   touch-action: manipulation;
@@ -138,12 +139,12 @@
   }
 }
 
-// A ranking's bar: money, so the money green, square where it starts and round at its end
+// A ranking's bar, square where it starts and round at its end
 .bar {
   display: block;
   block-size: size(bar);
   margin-block-start: space(2);
-  background: color(icon-green);
+  background: color(accent);
   border-start-end-radius: radius(mark);
   border-end-end-radius: radius(mark);
 
@@ -161,17 +162,17 @@
 .content {
   display: grid;
   gap: space(3);
-  padding: space(4) space(5) space(5);
+  padding: space(3) space(4) space(4);
 }
 
 // A row that is itself the action: the accent text says it can be tapped
 .action {
   display: flex;
-  gap: space(4);
+  gap: space(3);
   align-items: center;
   inline-size: 100%;
   min-block-size: size(row);
-  padding-inline: space(5);
+  padding-inline: space(4);
   color: color(accent-text);
   text-align: start;
   cursor: pointer;

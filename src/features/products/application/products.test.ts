@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { App } from "@/composition/create-app";
 import type { LiveOrder } from "@/features/orders/domain/order";
 import { productNameSchema, type ProductId } from "@/features/products/domain/product";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 import { changeOf, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer, anOrder, line } from "@/testing/support/orders";
 import { expectOk } from "@/testing/support/result";

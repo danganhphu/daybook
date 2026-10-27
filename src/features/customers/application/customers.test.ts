@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { customerDetailsSchema } from "@/features/customers/domain/customer";
 import { customerKindIdSchema, kindNameSchema } from "@/features/customers/domain/customer-kind";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 import { changeOf, testApp, testClock, theAuthor, thePartner } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
 

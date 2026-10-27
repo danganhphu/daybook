@@ -4,12 +4,8 @@
 .screen {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   block-size: 100%;
-
-  // Today is the tab's own screen, so it has the wash; an earlier day is a page within it
-  &[data-wash] {
-    background: var(--wash);
-  }
 }
 
 // A large title: the date small above, the day big below, nothing boxed
@@ -23,8 +19,10 @@
   margin-inline: auto;
 }
 
+// With large text the actions go under the title rather than past the screen
 .header-inner {
   display: flex;
+  flex-wrap: wrap;
   gap: space(2);
   align-items: flex-start;
   justify-content: space-between;
@@ -32,6 +30,7 @@
 
 .heading {
   min-inline-size: 0;
+  overflow-wrap: anywhere;
 }
 
 .subtitle {

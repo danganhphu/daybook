@@ -14,7 +14,6 @@ import { iconTones } from "@/shared/ui/icon/icon-tone";
 import { EditNoteIcon, NotificationsIcon, ReceiptLongIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListRow } from "@/shared/ui/list/list-row";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
@@ -33,12 +32,11 @@ export function DeletedScreen({ orders, notes, reminders }: DeletedScreenProps) 
   const nothing = orders.length + notes.length + reminders.length === 0;
 
   return (
-    <Screen>
-      <PageHeader
-        title={recentlyDeletedCopy.title}
-        subtitle={recentlyDeletedCopy.window}
-        back={routes.settings}
-      />
+    <Screen
+      title={recentlyDeletedCopy.title}
+      subtitle={recentlyDeletedCopy.window}
+      back={routes.settings}
+    >
       {nothing ? (
         <EmptyState title={recentlyDeletedCopy.empty} />
       ) : (

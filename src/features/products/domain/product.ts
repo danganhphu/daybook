@@ -8,14 +8,14 @@ import type { Archival, Audit } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { requiredTextSchema } from "@/shared/domain/short-text";
 
+import { productNameMaxLength } from "./product-limits";
+
 // Read as a module: `import * as Products`. Made where an order line names something new, so there is no catalogue
 // to fill in first. Its last price is read from the orders, never stored here.
 
 export const productIdSchema = z.uuid().brand<"ProductId">();
 
 export type ProductId = z.infer<typeof productIdSchema>;
-
-export const productNameMaxLength = 100;
 
 export const productNameSchema = requiredTextSchema(productNameMaxLength, {
   empty: "Chưa nhập tên sản phẩm",

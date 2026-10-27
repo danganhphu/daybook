@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useCallback, useRef, useState, type MouseEvent } from "react";
 
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { useToastClearance } from "@/shared/ui/toast/use-toast-clearance";
 
-import { sections } from "./sections";
+import { sections, type Section } from "./sections";
 import { useTyping } from "./use-typing";
 
 import styles from "./tab-bar.module.scss";
@@ -19,6 +19,14 @@ export function TabBar() {
   const bar = useRef<HTMLElement>(null);
   useToastClearance(bar);
   const typing = useTyping();
+  // Lit at the tap, not when the screen arrives
+  const [tapped, setTapped] = useState<string>();
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) {
+    setSeenPath(pathname);
+    setTapped(undefined);
+  }
+  const shown = tapped ?? pathname;
 
   return (
     <nav
@@ -28,26 +36,53 @@ export function TabBar() {
       data-typing={typing ? "" : undefined}
     >
       <ul className={styles.list}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const current = tab.owns(pathname);
-
-          return (
-            <li key={tab.href}>
-              {/* No prefetch: a tab is a Worker request and D1 reads that most visits never use */}
-              <Link
-                href={tab.href}
-                prefetch={false}
-                className={styles.tab}
-                aria-current={current ? "page" : undefined}
-              >
-                <Icon filled={current} />
-                <span className={styles.label}>{tab.label}</span>
-              </Link>
-            </li>
-          );
-        })}
+        {tabs.map((tab) => (
+          <li key={tab.href}>
+            <Tab tab={tab} current={tab.owns(shown)} onTap={setTapped} />
+          </li>
+        ))}
       </ul>
     </nav>
+  );
+}
+
+type TabProps = {
+  readonly tab: Section;
+  readonly current: boolean;
+  readonly onTap: (href: string) => void;
+};
+
+function Tab({ tab, current, onTap }: TabProps) {
+  const Icon = tab.icon;
+  const tap = useCallback(
+    (event: MouseEvent) => {
+      // A modified click opens a new tab and leaves this page where it is
+      if (
+        event.button === 0 &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        onTap(tab.href);
+      }
+    },
+    [onTap, tab.href],
+  );
+
+  return (
+    // No prefetch: each would render a whole screen on the server, and the screen in view stays until the next is ready
+    <AppLink
+      href={tab.href}
+      prefetch={false}
+      className={styles.tab}
+      aria-current={current ? "page" : undefined}
+      onClick={tap}
+    >
+      <span className={styles.indicator}>
+        <Icon filled={current} />
+      </span>
+      <span className={styles.label}>{tab.label}</span>
+    </AppLink>
   );
 }

@@ -12,7 +12,7 @@ Every script in `package.json`. Run them from the repository root.
 | `pnpm start` | Serve the production build locally; needs `APP_ORIGIN` and `PASSWORD_PEPPER` ([configuration](configuration.md)) |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`; commit the output |
 | `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx` ([icons](../ui/design-system.md#icons)); commit the output |
-| `pnpm deploy` | Deploy the Worker. Not done yet; see [deployment](deployment.md) |
+| `pnpm run deploy` | Build for production and deploy the Worker ([deployment](deployment.md)). `pnpm deploy` is pnpm's own command, not this script |
 
 ## Check
 

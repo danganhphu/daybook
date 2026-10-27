@@ -34,7 +34,6 @@ import { ListAction } from "@/shared/ui/list/list-action";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
 import { Notice } from "@/shared/ui/notice/notice";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
@@ -157,14 +156,12 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
   const closePayment = useCallback(() => setPaying(false), []);
 
   return (
-    <Screen>
-      <PageHeader
-        title={view.customerName}
-        subtitle={`${ordersCopy.orderedOn} ${shortDay(view.orderedOn)}`}
-        back={routes.orders}
-        actions={menuButton}
-      />
-
+    <Screen
+      title={view.customerName}
+      subtitle={`${ordersCopy.orderedOn} ${shortDay(view.orderedOn)}`}
+      back={routes.orders}
+      actions={menuButton}
+    >
       {view.deleted ? (
         <Notice message={ordersCopy.isDeleted} tone="danger">
           <Button onClick={restore}>

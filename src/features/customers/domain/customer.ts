@@ -9,20 +9,13 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import { optionalTextSchema, requiredTextSchema } from "@/shared/domain/short-text";
 
 import { customerKindIdSchema } from "./customer-kind";
+import { customerLimits } from "./customer-limits";
 
 // Read as a module: `import * as Customers`
 
 export const customerIdSchema = z.uuid().brand<"CustomerId">();
 
 export type CustomerId = z.infer<typeof customerIdSchema>;
-
-export const customerLimits = {
-  name: 100,
-  area: 60,
-  phone: 20,
-  address: 200,
-  note: 1000,
-} as const;
 
 // A customer's name, and any other name they are known by
 export const customerNameSchema = requiredTextSchema(customerLimits.name, {

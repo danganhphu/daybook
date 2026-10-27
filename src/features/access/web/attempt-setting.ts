@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 import { err } from "@/shared/domain/result";
 import { faultMessage } from "@/shared/web/attempt";
 
@@ -12,7 +14,8 @@ export async function attemptSetting<T>(
 ): Promise<SettingsResult<T>> {
   try {
     return await call();
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     return err(fault);
   }
 }

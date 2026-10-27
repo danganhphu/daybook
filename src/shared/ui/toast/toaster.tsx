@@ -7,6 +7,7 @@ import { IconButton } from "@/shared/ui/button/icon-button";
 import { CloseIcon } from "@/shared/ui/icon/icons";
 
 import { plainToastTimeout } from "./toast-timing";
+import { toastManager } from "./use-toast";
 
 import styles from "./toast.module.scss";
 
@@ -15,7 +16,7 @@ const closeButton = <IconButton icon={CloseIcon} label="Đóng thông báo" />;
 // One viewport for the whole app: mount once, near the root, and raise toasts with useToast()
 export function Toaster({ children }: { readonly children: ReactNode }) {
   return (
-    <Toast.Provider timeout={plainToastTimeout}>
+    <Toast.Provider timeout={plainToastTimeout} toastManager={toastManager}>
       {children}
       <Toast.Portal>
         <Toast.Viewport className={styles.viewport} aria-label="Thông báo">

@@ -1,6 +1,4 @@
-import Link from "next/link";
-import type { ComponentProps } from "react";
-
+import { AppLink, type AppLinkProps } from "@/shared/ui/app-link/app-link";
 import type { Icon } from "@/shared/ui/icon/icon";
 
 import type { ButtonSize } from "./button";
@@ -8,7 +6,7 @@ import type { ButtonSize } from "./button";
 import styles from "./button.module.scss";
 
 export type IconLinkProps = Omit<
-  ComponentProps<typeof Link>,
+  AppLinkProps,
   "className" | "style" | "children" | "aria-label"
 > & {
   readonly icon: Icon;
@@ -28,7 +26,7 @@ export function IconLink({
   ...props
 }: IconLinkProps) {
   return (
-    <Link
+    <AppLink
       {...props}
       prefetch={prefetch}
       aria-label={label}
@@ -39,6 +37,6 @@ export function IconLink({
       data-icon-only=""
     >
       <Icon />
-    </Link>
+    </AppLink>
   );
 }

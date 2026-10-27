@@ -1,11 +1,11 @@
 import Form from "next/form";
-import Link from "next/link";
 
 import type { SearchView } from "@/features/notes/web/commands";
 import { NoteCard } from "@/features/notes/web/note-card";
 import { notesCopy } from "@/features/notes/web/notes-copy";
 import { searchTermMaxLength } from "@/shared/domain/search-text";
 import { actionLabels } from "@/shared/ui/action-labels";
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import { IconLink } from "@/shared/ui/button/icon-link";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import { ArrowBackIcon, ChevronRightIcon } from "@/shared/ui/icon/icons";
@@ -49,10 +49,10 @@ export function HistoryScreen({ view }: { readonly view: SearchView }) {
             <section key={day.day} className={styles.day} aria-labelledby={`day-${day.day}`}>
               <h2 id={`day-${day.day}`} className={styles.dayHeading}>
                 {/* A prefetch per day found would render every one of them; only one gets opened */}
-                <Link href={day.path} className={styles.dayLink} prefetch={false}>
+                <AppLink href={day.path} className={styles.dayLink} prefetch={false}>
                   {day.label}
                   <ChevronRightIcon aria-hidden className={styles.chevron} />
-                </Link>
+                </AppLink>
               </h2>
               <ol className={styles.list}>
                 {day.notes.map((note) => (

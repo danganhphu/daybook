@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import { giveFaceId } from "./face-id";
 import { Given, Then, When } from "./fixtures";
 
 // A row of a settings list, found by what it shows
@@ -16,6 +17,14 @@ Given("tôi đã đăng nhập từ lâu", async ({ access }) => {
   await access.signInLongAgo();
 });
 
+Given("máy này có Face ID của Hoa", async ({ page, access }) => {
+  await giveFaceId(page, access.hoaPasskey);
+});
+
+Given("Hoa đã đăng nhập từ lâu", async ({ access }) => {
+  await access.signInAsHoaLongAgo();
+});
+
 // The breach check runs in the browser against Have I Been Pwned; the run answers for it, with only padding lines,
 // so it never depends on someone else's service
 Given("mật khẩu nào cũng chưa từng bị lộ", async ({ page }) => {
@@ -30,12 +39,36 @@ Given("mật khẩu nào cũng chưa từng bị lộ", async ({ page }) => {
 });
 
 When("tôi mở Cài đặt", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Tuỳ chọn", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Cài đặt" }).click();
-  await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("heading", { name: "Cài đặt", level: 1 })).toBeVisible();
+  await openSettingsFrom(page, "/");
 });
+
+When("tôi mở Cài đặt từ tab {string}", async ({ page }, tab: string) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation", { name: "Mục chính" })
+    .getByRole("link", { name: tab })
+    .click();
+  await expect(page.getByRole("heading", { name: tab, level: 1 })).toBeVisible();
+  await openSettingsFrom(page, undefined);
+});
+
+When("tôi bấm quay lại", async ({ page }) => {
+  await page.getByRole("link", { name: "Quay lại", exact: true }).click();
+});
+
+Then("tôi thấy tiêu đề {string}", async ({ page }, title: string) => {
+  await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
+});
+
+async function openSettingsFrom(page: Page, path: string | undefined) {
+  if (path !== undefined) {
+    await page.goto(path);
+  }
+  await page.getByRole("button", { name: "Tài khoản", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Cài đặt" }).click();
+  await expect(page).toHaveURL(/\/settings(\?|$)/);
+  await expect(page.getByRole("heading", { name: "Cài đặt", level: 1 })).toBeVisible();
+}
 
 When("tôi sửa {string} thành {string}", async ({ page }, label: string, value: string) => {
   await editButton(page, label).click();
@@ -62,6 +95,21 @@ Then("tôi được hỏi {string}", async ({ page }, title: string) => {
 When("tôi xác nhận bằng mật khẩu của Lan", async ({ page, access }) => {
   const dialog = page.getByRole("dialog", { name: "Xác nhận lại" });
   await dialog.getByLabel("Mật khẩu", { exact: true }).fill(access.lanPassword);
+  await dialog.getByRole("button", { name: "Xác nhận", exact: true }).click();
+  await expect(dialog).toBeHidden();
+});
+
+// The dialog answers while the change that asked is still waiting on it
+When("tôi xác nhận bằng mật khẩu sai thì được báo sai ngay", async ({ page }) => {
+  const dialog = page.getByRole("dialog", { name: "Xác nhận lại" });
+  await dialog.getByLabel("Mật khẩu", { exact: true }).fill("không phải mật khẩu của Lan");
+  await dialog.getByRole("button", { name: "Xác nhận", exact: true }).click();
+  await expect(dialog.getByRole("status")).toHaveText("Sai tên đăng nhập hoặc mật khẩu.");
+  await expect(dialog.getByRole("button", { name: "Xác nhận", exact: true })).toBeEnabled();
+});
+
+When("tôi xác nhận bằng Face ID", async ({ page }) => {
+  const dialog = page.getByRole("dialog", { name: "Xác nhận lại" });
   await dialog.getByRole("button", { name: "Xác nhận", exact: true }).click();
   await expect(dialog).toBeHidden();
 });

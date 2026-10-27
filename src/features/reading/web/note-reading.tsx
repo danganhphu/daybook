@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@base-ui/react/button";
-import Link from "next/link";
 import { useCallback } from "react";
 
 import { actionLabels } from "@/shared/ui/action-labels";
+import { AppLink } from "@/shared/ui/app-link/app-link";
 import type { Icon } from "@/shared/ui/icon/icon";
 import { NotificationsIcon, ReceiptLongIcon } from "@/shared/ui/icon/icons";
 
@@ -85,12 +85,12 @@ function Made({
 }) {
   return (
     <div className={styles.reading}>
-      <Link href={path} prefetch={false} className={styles.made}>
+      <AppLink href={path} prefetch={false} className={styles.made}>
         <Glyph aria-hidden />
         <span>
           <span className={styles.madeLabel}>{label}</span> {children}
         </span>
-      </Link>
+      </AppLink>
     </div>
   );
 }

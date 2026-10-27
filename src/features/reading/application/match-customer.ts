@@ -1,7 +1,7 @@
 import type { Customer, CustomerId } from "@/features/customers/domain/customer";
 import type { CustomerRepository } from "@/features/customers/domain/customer-repository";
 import { nameWords } from "@/features/reading/domain/customer-words";
-import { searchTermSchema } from "@/shared/domain/search-text";
+import { searchTermSchema } from "@/shared/domain/search-term";
 
 export type CustomerMatch =
   | { readonly found: "one"; readonly customerId: CustomerId }

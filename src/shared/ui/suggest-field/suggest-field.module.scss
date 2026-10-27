@@ -4,7 +4,7 @@
 .field {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(1);
+  gap: space(2);
 }
 
 .label {
@@ -13,15 +13,15 @@
 
 .input {
   min-inline-size: 0;
-  min-block-size: size(control-lg);
-  padding: space(3);
+  min-block-size: size(control);
+  padding: space(2) space(3);
   color: color(text);
   background: color(surface);
   border: 1px solid color(border-strong);
   border-radius: radius(control);
 
   @include text(body);
-  @include focus-ring;
+  @include field-focus($within: false);
 
   &[aria-invalid="true"] {
     border-color: color(danger);
@@ -59,6 +59,7 @@
 }
 
 .hint {
+  min-block-size: 1lh;
   color: color(text-muted);
 
   @include text(body-sm);

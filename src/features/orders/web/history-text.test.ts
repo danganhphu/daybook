@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { customerIdSchema } from "@/features/customers/domain/customer";
 import type { OrderSnapshot } from "@/features/orders/domain/order-change";
 import { productIdSchema } from "@/features/products/domain/product";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 
 import { changeText, type Names } from "./history-text";
 

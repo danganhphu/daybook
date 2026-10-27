@@ -2,18 +2,17 @@
 
 import { useCallback, useId, useMemo } from "react";
 
-import { usernameRule } from "@/features/access/domain/account";
+import { usernameRule } from "@/features/access/domain/account-limits";
 import { accessCopy } from "@/features/access/web/access-copy";
 import type { AccountView } from "@/features/access/web/account-view";
 import type { KindView } from "@/features/customers/web/customer-view";
-import { actionLabels } from "@/shared/ui/action-labels";
-import { IconLink } from "@/shared/ui/button/icon-link";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
-import { ArrowBackIcon, LogoutIcon, RestoreFromTrashIcon } from "@/shared/ui/icon/icons";
+import { LogoutIcon, RestoreFromTrashIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
+import { Screen } from "@/shared/ui/screen/screen";
 import { recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { routes } from "@/shared/web/routes";
 
@@ -24,8 +23,6 @@ import { EditableRow } from "./editable-row";
 import { People } from "./people";
 import { SignInMethods } from "./sign-in-methods";
 import { useStepUp } from "./use-step-up";
-
-import styles from "./settings.module.scss";
 
 const usernameField = {
   autoComplete: "username",
@@ -39,9 +36,12 @@ const nameField = { autoComplete: "name" } as const;
 export function SettingsScreen({
   view,
   kinds,
+  back,
 }: {
   readonly view: AccountView;
   readonly kinds: ReadonlyArray<KindView>;
+  // The tab they were opened from
+  readonly back: string;
 }) {
   const signOutForm = useId();
   const stepUpAccount = useMemo(
@@ -55,12 +55,7 @@ export function SettingsScreen({
   const saveUsername = useCallback((value: string) => run(() => renameUsername(value)), [run]);
 
   return (
-    <main className={styles.screen}>
-      <header className={styles.header}>
-        <IconLink icon={ArrowBackIcon} label={actionLabels.back} href={routes.today} />
-        <h1 className={styles.title}>{accessCopy.settings}</h1>
-      </header>
-
+    <Screen title={accessCopy.settings} back={back}>
       <List heading="Tài khoản">
         <EditableRow
           label={accessCopy.displayName}
@@ -120,6 +115,6 @@ export function SettingsScreen({
       <form id={signOutForm} method="post" action={routes.signOut} hidden />
 
       {stepUp.dialog}
-    </main>
+    </Screen>
   );
 }

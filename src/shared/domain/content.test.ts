@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { contentMaxLength, contentSchema, parseContent } from "./content";
+import { contentMaxLength, parseContent } from "./content";
+import { contentSchema } from "./content-schema";
 
 describe("contentSchema", () => {
   it("given text with spaces, line breaks and diacritics, when parsed, then it is kept exactly as typed", () => {
@@ -19,6 +20,10 @@ describe("contentSchema", () => {
   it("given text at the limit, when parsed, then it is accepted, and one character more is refused", () => {
     expect(contentSchema.safeParse("a".repeat(contentMaxLength)).success).toBe(true);
     expect(contentSchema.safeParse("a".repeat(contentMaxLength + 1)).success).toBe(false);
+  });
+
+  it("given blank input, when parsed, then the issue carries the sentence the user reads", () => {
+    expect(contentSchema.safeParse(" ").error?.issues[0]?.message).toBe("Chưa có nội dung");
   });
 });
 

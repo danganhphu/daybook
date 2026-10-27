@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 import { accountTable } from "@/features/access/infrastructure/account.table";
-import { customerLimits } from "@/features/customers/domain/customer";
+import { customerLimits } from "@/features/customers/domain/customer-limits";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
 import { customerTable } from "./customer.table";

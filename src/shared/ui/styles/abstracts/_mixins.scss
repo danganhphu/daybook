@@ -43,6 +43,25 @@
   }
 }
 
+// A box being typed in: its own edge turns blue, with no second ring around it
+@mixin field-focus($within: true) {
+  @if $within {
+    &:focus-within {
+      @include -field-focused;
+    }
+  } @else {
+    &:focus {
+      @include -field-focused;
+    }
+  }
+}
+
+@mixin -field-focused {
+  border-color: fn.color(accent-text);
+  outline: 0;
+  box-shadow: inset 0 0 0 1px fn.color(accent-text);
+}
+
 @mixin motion {
   @media (prefers-reduced-motion: no-preference) {
     @content;
@@ -61,7 +80,7 @@
 
 // The small heading above a card of rows or a chart
 @mixin group-heading {
-  padding-inline: fn.space(5);
+  padding-inline: fn.space(4);
   color: fn.color(text-muted);
 
   @include text(body-sm);

@@ -28,7 +28,7 @@ import type {
 } from "@/features/reports/application/report-queries";
 import type { BucketKind } from "@/features/reports/domain/report-period";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
 // Sales are summed over order lines, so a product filter sums that product's lines rather than whole orders

@@ -132,6 +132,9 @@ Inside a slice:
   (`LiveNote | DeletedNote`), so a function that needs a live note says so in its type.
 - **Checked values are branded Zod types** (`Content`, `NoteId`): they can only be had by parsing, so nothing
   downstream receives unchecked input. Rows read back from D1 are parsed into them too.
+- **The browser does not load Zod** outside the passkey screens. A value it checks as well (`Content`, `Money`) has
+  its rule in plain code and its schema built from that rule (`checkedSchema`, `content-schema.ts`); a limit a form
+  shows sits in a `*-limits.ts` beside the aggregate. `src/testing/browser-imports.test.ts` holds the line.
 - The model, its vocabulary and its rules are in [docs/architecture/domain.md](docs/architecture/domain.md).
   Propose a change to the data model there before writing it.
 - **A value used twice has one name.** Paths are `routes` (`src/shared/web/routes.ts`); words every screen shares
@@ -391,7 +394,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm access:revoke` | Ends every session of an account: `--username`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
-| `pnpm deploy` | Deploy to Cloudflare. Only when asked |
+| `pnpm run deploy` | Deploy to Cloudflare. Only when asked. `pnpm deploy` is pnpm's own command, not this script |
 
 Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass. When a screen
 changed, `test:e2e` too, after `build`.

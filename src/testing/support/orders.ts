@@ -6,7 +6,7 @@ import { kindNameSchema } from "@/features/customers/domain/customer-kind";
 import type { LineInput } from "@/features/orders/application/order-input";
 import { quantitySchema, type LiveOrder } from "@/features/orders/domain/order";
 import { productNameSchema, type ProductId } from "@/features/products/domain/product";
-import { moneySchema } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 
 import { theAuthor } from "./app";
 import { expectOk } from "./result";

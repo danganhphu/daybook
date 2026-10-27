@@ -6,7 +6,6 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { orderForm } from "@/features/orders/web/commands";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { orderPath } from "@/shared/web/routes";
 
@@ -27,8 +26,7 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
   }
 
   return (
-    <Screen>
-      <PageHeader title={ordersCopy.edit} back={orderPath(view.order.id)} />
+    <Screen title={ordersCopy.edit} back={orderPath(view.order.id)}>
       <OrderForm view={view} />
     </Screen>
   );

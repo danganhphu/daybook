@@ -14,7 +14,7 @@ import {
   showCustomer,
 } from "@/app/(app)/customers/actions";
 import { findCustomers } from "@/app/(app)/orders/actions";
-import { customerLimits } from "@/features/customers/domain/customer";
+import { customerLimits } from "@/features/customers/domain/customer-limits";
 import type { CustomerScreenView } from "@/features/customers/web/commands";
 import { customerDetail } from "@/features/customers/web/customer-view";
 import { customersCopy } from "@/features/customers/web/customers-copy";
@@ -45,7 +45,6 @@ import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
 import { Notice } from "@/shared/ui/notice/notice";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
@@ -138,14 +137,12 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
   );
 
   return (
-    <Screen>
-      <PageHeader
-        title={view.name}
-        subtitle={customerDetail(view)}
-        back={routes.customers}
-        actions={menu}
-      />
-
+    <Screen
+      title={view.name}
+      subtitle={customerDetail(view)}
+      back={routes.customers}
+      actions={menu}
+    >
       {view.mergedInto === undefined ? null : (
         <Notice message={mergingCopy.customerIsMerged}>
           <ButtonLink href={customerPath(view.mergedInto)}>{mergingCopy.seeKept}</ButtonLink>

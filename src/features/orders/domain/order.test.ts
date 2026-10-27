@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { customerIdSchema } from "@/features/customers/domain/customer";
 import { productIdSchema } from "@/features/products/domain/product";
 import { accountIdSchema } from "@/shared/domain/account-id";
-import { moneyMax, moneySchema } from "@/shared/domain/money";
+import { moneyMax } from "@/shared/domain/money";
+import { moneySchema } from "@/shared/domain/money-schema";
 import { expectOk } from "@/testing/support/result";
 
 import * as Orders from "./order";

@@ -3,6 +3,7 @@
 // One column, as the day screens: the search box where the title would be
 .screen {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: space(4);
   align-content: start;
   inline-size: 100%;

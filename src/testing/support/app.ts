@@ -14,7 +14,8 @@ import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import { accountIdSchema, type AccountId } from "@/shared/domain/account-id";
 import type { Audit } from "@/shared/domain/audit";
-import { contentSchema, type Content } from "@/shared/domain/content";
+import type { Content } from "@/shared/domain/content";
+import { contentSchema } from "@/shared/domain/content-schema";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 
 // A clock the test moves by hand

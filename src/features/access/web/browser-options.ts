@@ -4,6 +4,10 @@ import type {
 } from "@simplewebauthn/browser";
 import { z } from "zod";
 
+// The one place the browser runs Zod. The CSP has no 'unsafe-eval', so its compiled parsers could never run here, and
+// the `new Function` probe would be blocked and reported. The Worker turns them off by itself.
+z.config({ jitless: true });
+
 // The server sends prompt options in the standard's JSON types, where every enumerated value is a plain string; the
 // browser library wants the enumerations themselves. Parsed, not cast: what the page hands to navigator.credentials
 // is exactly what the server meant, and anything else fails here. exactOptional keeps an absent field absent.

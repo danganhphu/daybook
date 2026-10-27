@@ -4,7 +4,7 @@
 .field {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: space(1);
+  gap: space(2);
 }
 
 .label {
@@ -24,9 +24,8 @@
 // The browser's arrow is replaced by the same chevron everywhere, so the box looks one way on every phone
 .select {
   inline-size: 100%;
-  min-block-size: size(control-lg);
-  padding: space(3);
-  padding-inline-end: space(10);
+  min-block-size: size(control);
+  padding: space(2) space(10) space(2) space(3);
   color: color(text);
   appearance: none;
   background: color(surface);
@@ -34,7 +33,7 @@
   border-radius: radius(control);
 
   @include text(body);
-  @include focus-ring;
+  @include field-focus($within: false);
 
   &:disabled {
     color: color(text-muted);

@@ -9,7 +9,7 @@ import {
 } from "@/features/reminders/domain/reminder";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
-import { contentSchema } from "@/shared/domain/content";
+import { contentSchema } from "@/shared/domain/content-schema";
 import {
   toAudit,
   toAuditRow,

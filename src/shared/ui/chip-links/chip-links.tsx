@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppLink } from "@/shared/ui/app-link/app-link";
 
 import styles from "./chip-links.module.scss";
 
@@ -21,14 +21,14 @@ export function ChipLinks({
       <ul className={styles.list}>
         {chips.map((chip) => (
           <li key={chip.href}>
-            <Link
+            <AppLink
               href={chip.href}
               prefetch={false}
               className={styles.chip}
               aria-current={chip.current ? "page" : undefined}
             >
               {chip.label}
-            </Link>
+            </AppLink>
           </li>
         ))}
       </ul>

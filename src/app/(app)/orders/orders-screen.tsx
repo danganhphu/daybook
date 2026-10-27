@@ -1,3 +1,4 @@
+import { AccountMenu } from "@/app/(app)/_shell/account-menu";
 import type { OrdersView } from "@/features/orders/web/commands";
 import type { OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
@@ -8,6 +9,7 @@ import { IconButton } from "@/shared/ui/button/icon-button";
 import { IconLink } from "@/shared/ui/button/icon-link";
 import { ChipLinks, type ChipLink } from "@/shared/ui/chip-links/chip-links";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
+import { FabLink } from "@/shared/ui/fab/fab-link";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
   AddIcon,
@@ -18,7 +20,6 @@ import {
 } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListLink } from "@/shared/ui/list/list-link";
-import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { moneyText } from "@/shared/web/money-text";
@@ -36,14 +37,14 @@ function rowDetail(row: OrderRowView): string {
     .join(", ");
 }
 
-// The products the orders are made of, named in words rather than a bare icon, then a new order
+// The products the orders are made of, named in words rather than a bare icon, then the account
 const headerActions = (
   <>
     <ButtonLink href={routes.products} variant="quiet">
       <Inventory2Icon aria-hidden />
       {productsCopy.title}
     </ButtonLink>
-    <IconLink icon={AddIcon} label={ordersCopy.add} href={routes.newOrder} />
+    <AccountMenu />
   </>
 );
 
@@ -101,9 +102,7 @@ function kindChips(view: OrdersView): ReadonlyArray<ChipLink> {
 // the kind chips are links, so the filters live in the URL.
 export function OrdersScreen({ view }: { readonly view: OrdersView }) {
   return (
-    <Screen wash>
-      <PageHeader title={ordersCopy.title} actions={headerActions} />
-
+    <Screen title={ordersCopy.title} actions={headerActions}>
       <nav className={styles.months} aria-label={view.title}>
         <IconLink
           icon={ChevronLeftIcon}
@@ -148,6 +147,7 @@ export function OrdersScreen({ view }: { readonly view: OrdersView }) {
       )}
 
       {view.more ? <p className={styles.more}>{ordersCopy.more}</p> : null}
+      <FabLink icon={AddIcon} label={ordersCopy.add} href={routes.newOrder} />
     </Screen>
   );
 }

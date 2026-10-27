@@ -1,29 +1,75 @@
 @use "abstracts" as *;
 
-.header {
-  display: flex;
-  gap: space(1);
-  align-items: center;
-  min-block-size: size(control-lg);
+// Above the screen's column (Screen), so it sticks for the whole page
+.bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: z(sticky);
+  background: color(canvas);
+  border-block-end: 1px solid transparent;
 
-  &[data-root] {
-    padding-block-start: space(4);
+  &[data-scrolled] {
+    border-block-end-color: color(border);
   }
 }
 
-.heading {
+.bar-inner {
+  display: flex;
+  gap: space(1);
+  align-items: center;
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  min-block-size: size(app-bar);
+  padding-inline: space(2);
+  margin-inline: auto;
+}
+
+.bar-heading {
   flex: 1;
   min-inline-size: 0;
+  padding-inline: space(2);
+}
+
+.bar-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include text(title);
+
+  // On a tab's own screen it waits for the large title to scroll under the bar
+  .bar:has(+ .large) & {
+    opacity: 0;
+
+    @include motion {
+      transition: opacity duration(fast) easing(out);
+    }
+  }
+
+  .bar[data-scrolled]:has(+ .large) & {
+    opacity: 1;
+  }
+}
+
+// With large text they wrap onto a second line rather than run past the screen
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  align-items: center;
+  justify-content: flex-end;
+  min-inline-size: 0;
+}
+
+.large {
+  max-inline-size: calc(#{size(content)} + #{space(4)} * 2);
+  padding: space(2) space(4) 0;
+  margin-inline: auto;
 }
 
 .title {
   overflow-wrap: anywhere;
 
-  @include text(title);
-
-  .header[data-root] & {
-    @include text(display);
-  }
+  @include text(display);
 }
 
 .subtitle {
@@ -32,9 +78,7 @@
   @include text(body-sm);
 }
 
-.actions {
-  display: flex;
-  flex-shrink: 0;
-  gap: space(1);
-  align-items: center;
+// Zero height: only marks where the page starts scrolling under the bar
+.edge {
+  block-size: 0;
 }
