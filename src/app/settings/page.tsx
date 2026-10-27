@@ -1,38 +1,29 @@
 import type { Metadata } from "next";
 
-import { knownTab } from "@/app/(app)/_shell/sections";
 import { daybook } from "@/composition/daybook";
-import { toAccountView } from "@/features/access/web/account-view";
+import { accessCopy } from "@/features/access/web/access-copy";
 import { requireSession } from "@/features/access/web/session-gate";
 import { kindsView } from "@/features/customers/web/commands";
-import { settingsFromParameter } from "@/shared/web/routes";
 
+import { accountView, openedFrom, type SettingsPageProps } from "./settings-data";
 import { SettingsScreen } from "./settings-screen";
 
-export const metadata: Metadata = { title: "Cài đặt", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: accessCopy.settings,
+  robots: { index: false, follow: false },
+};
 
 // Devices and activity change with every visit
 export const dynamic = "force-dynamic";
 
-type SettingsPageProps = {
-  readonly searchParams: Promise<Readonly<Record<string, string | string[] | undefined>>>;
-};
-
-export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+export default async function SettingsPage(props: SettingsPageProps) {
   const app = daybook();
   const session = await requireSession(app);
-  const [overview, kinds, query] = await Promise.all([
-    app.accountOverview(session.accountId),
+  const [view, kinds, from] = await Promise.all([
+    accountView(app, session),
     kindsView(app),
-    searchParams,
+    openedFrom(props),
   ]);
-  const from = query[settingsFromParameter];
 
-  return (
-    <SettingsScreen
-      view={toAccountView(overview, session.id)}
-      kinds={kinds}
-      back={knownTab(typeof from === "string" ? from : undefined)}
-    />
-  );
+  return <SettingsScreen view={view} kinds={kinds} from={from} />;
 }

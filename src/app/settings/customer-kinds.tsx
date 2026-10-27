@@ -34,7 +34,7 @@ export function CustomerKinds({ kinds }: { readonly kinds: ReadonlyArray<KindVie
   const openNew = useCallback(() => setEditing("new"), []);
 
   return (
-    <List heading={customersCopy.kinds.title} footer={customersCopy.kinds.footer}>
+    <List footer={customersCopy.kinds.footer}>
       {kinds.map((kind) =>
         editing === kind.id ? (
           <NameEditor key={kind.id} kind={kind} onClose={close} />

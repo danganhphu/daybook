@@ -15,6 +15,12 @@ export const routes = {
   setup: "/setup",
   signOut: "/sign-out",
   settings: "/settings",
+  settingsAccount: "/settings/account",
+  settingsSignIn: "/settings/sign-in",
+  settingsDevices: "/settings/devices",
+  settingsActivity: "/settings/activity",
+  settingsPeople: "/settings/people",
+  settingsKinds: "/settings/customer-kinds",
   componentGallery: "/dev/ui",
   // Static files in public/, written by `pnpm icons`
   manifest: "/manifest.webmanifest",
@@ -48,8 +54,9 @@ export function editCustomerPath(id: string): string {
 // The tab the settings were opened from, where their back arrow returns
 export const settingsFromParameter = "from";
 
-export function settingsPath(from: string): string {
-  return `${routes.settings}?${new URLSearchParams({ [settingsFromParameter]: from })}`;
+// Every settings page carries it, so going back from a section, then from Settings, ends on that tab
+export function settingsPath(from: string, page: string = routes.settings): string {
+  return `${page}?${new URLSearchParams({ [settingsFromParameter]: from })}`;
 }
 
 // Today has one address, the home screen, so a day page never shows what the home screen shows. Days are YYYY-MM-DD

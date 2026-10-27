@@ -6,4 +6,4 @@ Feature: Màn hẹp, chữ to
   @iphone-later
   Scenario: Các màn chính không phải kéo ngang
     Given tôi đã đăng nhập
-    Then các màn "/, /orders, /customers, /reports, /history?q=kim, /reminders, /products, /orders/new, /customers/new, /settings" không phải kéo ngang khi màn hẹp và chữ to
+    Then các màn "/, /orders, /customers, /reports, /history?q=kim, /reminders, /products, /orders/new, /customers/new, /settings, /settings/account, /settings/sign-in, /settings/devices, /settings/activity, /settings/people, /settings/customer-kinds" không phải kéo ngang khi màn hẹp và chữ to

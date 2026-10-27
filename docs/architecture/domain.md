@@ -350,7 +350,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `endOtherSessions` | Ends every other session of the account | `step_up_required` |
 | `endPersonSessions` | Ends every session of the other account, its passkeys left alone | `step_up_required`, `not_found` |
 | `listSessions` | The account's sessions still running, most recently used first | - |
-| `accountOverview` | Everything Settings shows: account, passkeys, password status, sessions, activity, people | - |
+| `accountOverview` | What Settings and its account sections show: account, passkeys, password status, sessions, activity, people | - |
 | `changeDisplayName` | Renames the account | - |
 | `changeUsername` | Changes the username | `step_up_required`, `username_taken` |
 | `beginPasswordChange` | A new salt for a new fallback password | `step_up_required` |

@@ -59,6 +59,10 @@ confirmation dialog is only for something irreversible.
   behind it (`useOptimistic`). Progress shows in place, never as a full-screen spinner.
 - **A screen that could not be made** says so in one line with "Thử lại" (`src/app/_errors/error-screen.tsx`, used by
   both `error.tsx` files); inside the tabs the tab bar stays, so she can go elsewhere.
+- **Settings is an overview, each section a screen of its own** (Android's settings pattern): short groups of rows,
+  each row named as the screen it opens, its second line what it holds now ("2 thiết bị"), never a description.
+  Every settings page carries the tab Settings was opened from, so back from a section, then back from Settings,
+  ends on that tab. Names are in `src/app/settings/settings-copy.ts`.
 - **Nothing waits inside a transition** for a person or for something slow. React holds back every transition's
   updates until all pending ones have ended, so a dialog awaited inside one never draws its own state, and a
   seconds-long call inside one holds up every other update on the page. A dialog that answers a waiting action keeps

@@ -74,7 +74,7 @@ export function SignInMethods({ view, hasOtherDevices, run }: SignInMethodsProps
 
   return (
     <>
-      <List heading="Cách đăng nhập" footer={accessCopy.backupPasswordPurpose}>
+      <List footer={accessCopy.backupPasswordPurpose}>
         {view.passkeys.map((passkey) => (
           <PasskeyItem key={passkey.id} passkey={passkey} onRemove={askToRemove} />
         ))}

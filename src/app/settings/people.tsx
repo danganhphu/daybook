@@ -97,7 +97,7 @@ export function People({ people, run }: PeopleProps) {
 
   return (
     <>
-      <List heading="Người dùng">
+      <List>
         {people.map((person) => (
           <PersonItem
             key={person.id}

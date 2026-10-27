@@ -1,17 +1,21 @@
 Feature: Cài đặt
   Mỗi người tự lo tài khoản của mình ngay trong app: tên, tên đăng nhập, Face ID hoặc vân tay, mật khẩu dự phòng và
-  các thiết bị đang đăng nhập. Việc liên quan đến bảo mật phải xác nhận lại nếu đã đăng nhập từ lâu.
+  các thiết bị đang đăng nhập. Cài đặt là một danh sách ngắn, mỗi mục mở một màn riêng. Việc liên quan đến bảo mật
+  phải xác nhận lại nếu đã đăng nhập từ lâu.
 
   Scenario: Mở Cài đặt từ menu
     Given tôi đã đăng nhập
     When tôi mở Cài đặt
-    Then tôi thấy "Lan"
-    And tôi thấy "Thiết bị này"
+    Then tôi thấy "Lan, lan"
+    And trang không có lỗi trợ năng
+    When tôi mở "Thiết bị đang đăng nhập" trong Cài đặt
+    Then tôi thấy "Thiết bị này"
     And trang không có lỗi trợ năng
 
   Scenario: Đổi tên ngay trong hàng
     Given tôi đã đăng nhập
     When tôi mở Cài đặt
+    And tôi mở "Tên và tên đăng nhập" trong Cài đặt
     And tôi sửa "Tên" thành "Lan Anh"
     Then tôi thấy thông báo "Đã đổi tên"
     And tôi thấy "Lan Anh"
@@ -21,6 +25,7 @@ Feature: Cài đặt
   Scenario: Nhấn Esc thì thôi sửa, con trỏ về lại nút Sửa
     Given tôi đã đăng nhập
     When tôi mở Cài đặt
+    And tôi mở "Tên và tên đăng nhập" trong Cài đặt
     And tôi bắt đầu sửa "Tên" rồi nhấn Esc
     Then tôi thấy "Lan"
     And nút "Sửa tên" đang được chọn
@@ -31,9 +36,19 @@ Feature: Cài đặt
     And tôi bấm quay lại
     Then tôi thấy tiêu đề "Đơn hàng"
 
+  Scenario: Từ một mục quay lại Cài đặt, rồi về đúng tab đã mở
+    Given tôi đã đăng nhập
+    When tôi mở Cài đặt từ tab "Khách hàng"
+    And tôi mở "Người dùng" trong Cài đặt
+    And tôi bấm quay lại
+    Then tôi thấy tiêu đề "Cài đặt"
+    When tôi bấm quay lại
+    Then tôi thấy tiêu đề "Khách hàng"
+
   Scenario: Đăng nhập đã lâu thì đổi tên đăng nhập phải xác nhận lại
     Given tôi đã đăng nhập từ lâu
     When tôi mở Cài đặt
+    And tôi mở "Tên và tên đăng nhập" trong Cài đặt
     And tôi sửa "Tên đăng nhập" thành "lan.nguyen"
     Then tôi được hỏi "Xác nhận lại"
     And trang không có lỗi trợ năng
@@ -51,6 +66,7 @@ Feature: Cài đặt
     And Hoa đã đăng nhập từ lâu
     And mật khẩu nào cũng chưa từng bị lộ
     When tôi mở Cài đặt
+    And tôi mở "Cách đăng nhập" trong Cài đặt
     And tôi đặt mật khẩu dự phòng "một câu đủ dài để xác nhận lại bằng Face ID"
     Then tôi được hỏi "Xác nhận lại"
     When tôi xác nhận bằng Face ID
@@ -65,9 +81,11 @@ Feature: Cài đặt
     And tôi bấm "Bật ngay"
     Then tôi đang ở trang Hôm nay
     When tôi mở Cài đặt
+    And tôi mở "Cách đăng nhập" trong Cài đặt
     And tôi đặt mật khẩu dự phòng "một câu đủ dài để thử đăng nhập"
     Then mật khẩu dự phòng đã được lưu
-    When tôi đăng xuất từ Cài đặt
+    When tôi bấm quay lại
+    And tôi đăng xuất từ Cài đặt
     Then tôi đang ở trang đăng nhập
     When tôi đăng nhập bằng "minh" và mật khẩu "một câu đủ dài để thử đăng nhập"
     Then tôi đang ở trang Hôm nay

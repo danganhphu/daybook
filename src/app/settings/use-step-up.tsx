@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 
+import type { AccountView } from "@/features/access/web/account-view";
 import { attemptSetting } from "@/features/access/web/attempt-setting";
 import { promptMessages } from "@/features/access/web/prompt-errors";
 import type { Problem, SettingsResult } from "@/features/access/web/settings-commands";
@@ -19,6 +20,16 @@ export type StepUp = {
   // Rendered once by the screen
   readonly dialog: ReactNode;
 };
+
+// For a screen of the signed-in person's own settings
+export function useAccountStepUp(view: Pick<AccountView, "username" | "passkeys">): StepUp {
+  const account = useMemo(
+    () => ({ username: view.username, hasPasskey: view.passkeys.length > 0 }),
+    [view.username, view.passkeys.length],
+  );
+
+  return useStepUp(account);
+}
 
 export function useStepUp(account: StepUpAccount): StepUp {
   const router = useRouter();
