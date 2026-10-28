@@ -14,6 +14,7 @@ import {
   KeyIcon,
   LabelIcon,
   LogoutIcon,
+  NotificationsIcon,
   PersonIcon,
   RestoreFromTrashIcon,
 } from "@/shared/ui/icon/icons";
@@ -60,6 +61,11 @@ export function SettingsScreen({
           detail={`${view.displayName}, ${view.username}`}
           icon={PersonIcon}
           iconTone={iconTones.customer}
+        />
+        <ListLink
+          href={settingsPath(from, routes.settingsNotifications)}
+          title={settingsCopy.notifications}
+          icon={NotificationsIcon}
         />
       </List>
 

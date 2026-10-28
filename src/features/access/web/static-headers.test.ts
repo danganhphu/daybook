@@ -7,7 +7,10 @@ import { contentSecurityPolicyHeader, securityHeaders } from "./request-policy";
 // STATIC_HEADERS exists only in tests: public/_headers as text, read by vitest.config.ts
 const file = z.string().parse(Reflect.get(env, "STATIC_HEADERS"));
 
-// Cloudflare's _headers format: a path on a line of its own, then indented "Name: value" lines
+// A rule's "! Name" line, which takes off a header a broader rule set, read as this value
+const detached = "detached";
+
+// Cloudflare's _headers format: a path on a line of its own, then indented "Name: value" or "! Name" lines
 function rulesIn(text: string): ReadonlyMap<string, ReadonlyMap<string, string>> {
   const rules = new Map<string, Map<string, string>>();
   let current = new Map<string, string>();
@@ -18,6 +21,11 @@ function rulesIn(text: string): ReadonlyMap<string, ReadonlyMap<string, string>>
     if (!/^\s/.test(line)) {
       current = new Map();
       rules.set(line.trim(), current);
+      continue;
+    }
+    const removal = /^\s*!\s*(.+)$/.exec(line);
+    if (removal?.[1] !== undefined) {
+      current.set(`!${removal[1].trim().toLowerCase()}`, detached);
       continue;
     }
     const colon = line.indexOf(":");
@@ -50,6 +58,14 @@ describe("public/_headers", () => {
     expect(policy).toContain("default-src 'none'");
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("sandbox");
+  });
+
+  it("given the service worker, when its rule is read, then the sandbox is taken off, its own policy loads only from the app, and it is never cached", () => {
+    const worker = rules.get("/sw.js");
+
+    expect(worker?.get(`!${contentSecurityPolicyHeader}`)).toBe(detached);
+    expect(worker?.get(contentSecurityPolicyHeader)).toBe("default-src 'self'");
+    expect(worker?.get("cache-control")).toBe("no-cache");
   });
 
   it("given the build's hashed files, when their cache is read, then they are kept for good, as vinext would have set", () => {

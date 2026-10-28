@@ -6,6 +6,10 @@ import type { Peppers } from "@/features/access/application/peppers";
 import { pepperFitsOrigin } from "@/features/access/infrastructure/development-pepper";
 import { pepperSchema, peppersFrom } from "@/features/access/infrastructure/pepper-keys";
 import { relyingPartyFor } from "@/features/access/infrastructure/relying-party";
+import {
+  vapidBindingsSchema,
+  vapidPairFrom,
+} from "@/features/notifications/infrastructure/vapid-config";
 import type { MessageReader } from "@/features/reading/application/message-reader";
 import {
   createReplayReader,
@@ -33,6 +37,7 @@ const bindingsSchema = z
     // The end-to-end build's stand-in for a model, as JSON: each message its tests send, and what it says
     REPLAY_READINGS: z.string().optional(),
   })
+  .extend(vapidBindingsSchema.shape)
   .refine((parsed) => pepperFitsOrigin(parsed.PASSWORD_PEPPER, parsed.APP_ORIGIN), {
     error: "PASSWORD_PEPPER is the development pepper, which only localhost may use",
   });
@@ -41,6 +46,8 @@ type Bindings = Pick<z.infer<typeof bindingsSchema>, "DB"> & {
   readonly appOrigin: URL;
   readonly peppers: Peppers;
   readonly reader: MessageReader | undefined;
+  // What a browser subscribes with; undefined when push is not configured
+  readonly pushPublicKey: string | undefined;
 };
 
 let checked: Bindings | undefined;
@@ -67,10 +74,16 @@ function bindings(): Bindings {
       appOrigin: new URL(parsed.APP_ORIGIN),
       peppers: peppersFrom(parsed.PASSWORD_PEPPER),
       reader: readerFrom(parsed),
+      pushPublicKey: vapidPairFrom(parsed, parsed.APP_ORIGIN)?.publicKey,
     };
   }
 
   return checked;
+}
+
+// The key a browser subscribes to push with, or undefined where push is not set up
+export function pushPublicKey(): string | undefined {
+  return bindings().pushPublicKey;
 }
 
 // The address the app is served from, as configured - never as a request's Host header claims
@@ -80,7 +93,13 @@ export function appOrigin(): URL {
 
 // The app over the Worker's real bindings, for server code: pages and server actions
 export function daybook() {
-  const { DB, appOrigin: origin, peppers, reader } = bindings();
+  const { DB, appOrigin: origin, peppers, reader, pushPublicKey: publicKey } = bindings();
 
-  return createApp({ db: DB, relyingParty: relyingPartyFor(origin, appName), peppers, reader });
+  return createApp({
+    db: DB,
+    relyingParty: relyingPartyFor(origin, appName),
+    peppers,
+    reader,
+    pushAvailable: publicKey !== undefined,
+  });
 }

@@ -42,9 +42,13 @@ export const relyingParty: RelyingParty = {
 // A fixed pepper, so tests can compute verifiers; never the production one
 export const testPeppers = peppersFrom("dGVzdC1wZXBwZXItZm9yLWRheWJvb2stdGVzdHMtb2s");
 
-// A reader stands in for the model where a test reads notes; none, and notes stay notes
+// A reader stands in for the model where a test reads notes; none, and notes stay notes. Push is set up, as it is
+// wherever the app is deployed.
 export function testApp(clock: Clock, reader?: MessageReader) {
-  return createApp({ db: env.DB, relyingParty, peppers: testPeppers, reader }, clock);
+  return createApp(
+    { db: env.DB, relyingParty, peppers: testPeppers, reader, pushAvailable: true },
+    clock,
+  );
 }
 
 export function content(text: string): Content {

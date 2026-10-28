@@ -13,8 +13,9 @@ export const accessEventIdSchema = z.uuid().brand<"AccessEventId">();
 
 export type AccessEventId = z.infer<typeof accessEventIdSchema>;
 
-// Every kind the sign-in plan records, so the table's check does not need rebuilding as steps land.
-// Names follow the OWASP logging vocabulary's spirit: what happened, in the past tense.
+// Every kind the sign-in plan records, then the notifications' and the bot's, each added ahead of its feature so the
+// table's check is rebuilt as rarely as possible. Names follow the OWASP logging vocabulary's spirit: what happened,
+// in the past tense.
 export const accessEventKinds = [
   "account_created",
   "setup_link_issued",
@@ -33,6 +34,11 @@ export const accessEventKinds = [
   "username_changed",
   "display_name_changed",
   "rate_limited",
+  "push_subscribed",
+  "push_unsubscribed",
+  "telegram_linked",
+  "telegram_unlinked",
+  "telegram_link_refused",
 ] as const;
 
 export type AccessEventKind = (typeof accessEventKinds)[number];

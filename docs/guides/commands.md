@@ -56,6 +56,9 @@ pnpm access:setup-link --username lan --origin https://daybook.example.workers.d
 pnpm access:revoke --username lan --remote
 ```
 
+`pnpm notifications:keys` prints a new Web Push key pair as JSON, for a deploy's two secrets; the deployment guide
+pipes it straight into them. It touches no database.
+
 A link is shown once and works once, for ten minutes; only its hash is stored. The commands run the app's own use
 cases (`src/composition/operator-console.ts`), so they keep every rule the app keeps and log to `access_event` like it.
 

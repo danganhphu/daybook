@@ -110,6 +110,18 @@ import type { NoteChange } from "@/features/notes/application/note-change";
 import { restoreNote } from "@/features/notes/application/restore-note";
 import { searchNotes } from "@/features/notes/application/search-notes";
 import { createNoteRepository } from "@/features/notes/infrastructure/note-repository";
+import {
+  changeNotificationTimes,
+  type ChangeNotificationTimesInput,
+} from "@/features/notifications/application/change-notification-times";
+import { notificationSettings } from "@/features/notifications/application/notification-settings";
+import {
+  subscribeDevice,
+  type SubscribeDeviceInput,
+} from "@/features/notifications/application/subscribe-device";
+import { unsubscribeDevice } from "@/features/notifications/application/unsubscribe-device";
+import { createNotificationPreferenceRepository } from "@/features/notifications/infrastructure/notification-preference-repository";
+import { createPushSubscriptionRepository } from "@/features/notifications/infrastructure/push-subscription-repository";
 import { deleteOrder, restoreOrder } from "@/features/orders/application/delete-order";
 import {
   deliverOrder,
@@ -184,12 +196,13 @@ import { createUnitOfWork } from "./unit-of-work";
 export type App = ReturnType<typeof createApp>;
 
 // What the app runs on: the database, who the passkeys belong to, the pepper for passwords, and what reads messages -
-// none where no model is bound, and then notes stay notes
+// none where no model is bound, and then notes stay notes. Push is available where its keys are set.
 export type AppBindings = {
   readonly db: D1Database;
   readonly relyingParty: RelyingParty;
   readonly peppers: Peppers;
   readonly reader?: MessageReader | undefined;
+  readonly pushAvailable?: boolean | undefined;
 };
 
 // The composition root: the one place that knows which implementation stands behind each port.
@@ -240,6 +253,13 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
   const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
+  const notifications = {
+    clock,
+    pushAvailable: bindings.pushAvailable ?? false,
+    subscriptions: createPushSubscriptionRepository(db),
+    preferences: createNotificationPreferenceRepository(db),
+    startUnitOfWork,
+  };
   const reading: ReadingDeps = {
     clock,
     reader: bindings.reader,
@@ -386,5 +406,13 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       issueRecoveryLink(access, session, accountId, origin),
     nameInvitedAccount: (request: NameInvitedAccountRequest) => nameInvitedAccount(access, request),
     resumeSetup: (ceremonyCookie: string | undefined) => resumeSetup(access, ceremonyCookie),
+
+    notificationSettings: (session: Session) => notificationSettings(notifications, session),
+    subscribeDevice: (session: Session, input: SubscribeDeviceInput, origin: RequestOrigin) =>
+      subscribeDevice(notifications, session, input, origin),
+    unsubscribeDevice: (session: Session, subscriptionId: unknown, origin: RequestOrigin) =>
+      unsubscribeDevice(notifications, session, subscriptionId, origin),
+    changeNotificationTimes: (session: Session, input: ChangeNotificationTimesInput) =>
+      changeNotificationTimes(notifications, session, input),
   } as const;
 }

@@ -7,6 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { Temporal } from "temporal-polyfill/implementation";
 
 import { pepperByteLength } from "@/features/access/domain/access-policy";
+import { newVapidKeys } from "@/features/notifications/infrastructure/vapid-keys";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 
 import { fixturesFile, persistTo, seedMigrations } from "./paths.ts";
@@ -22,6 +23,8 @@ if (databaseId === undefined || port === undefined || process.env["APP_ORIGIN"] 
 // The production build reads its pepper from the PASSWORD_PEPPER secret; for this run, a random one, which the seed
 // uses for Lan's password too
 const pepper = randomBytes(pepperByteLength).toString("base64url");
+// And a push key pair of its own; nothing in a run sends to a push service
+const vapid = await newVapidKeys();
 
 rmSync(persistTo, { recursive: true, force: true });
 
@@ -52,6 +55,8 @@ const server = spawn(`pnpm exec vite preview --port ${port} --strictPort`, {
     DAYBOOK_PERSIST_TO: persistTo,
     DAYBOOK_HTTPS: "1",
     PASSWORD_PEPPER: pepper,
+    VAPID_PUBLIC_KEY: vapid.publicKey,
+    VAPID_PRIVATE_KEY: vapid.privateKey,
     REPLAY_READINGS: JSON.stringify(readingsFor(vietnamDate(Temporal.Now.instant()))),
   },
 });

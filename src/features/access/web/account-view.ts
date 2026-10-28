@@ -88,6 +88,11 @@ const eventTitles: Readonly<Record<AccessEventKind, string>> = {
   username_changed: accessCopy.changeUsername,
   display_name_changed: accessCopy.changeDisplayName,
   rate_limited: "Tạm chặn vì thử quá nhiều lần",
+  push_subscribed: "Bật thông báo",
+  push_unsubscribed: "Tắt thông báo",
+  telegram_linked: "Kết nối Telegram",
+  telegram_unlinked: "Ngắt kết nối Telegram",
+  telegram_link_refused: "Kết nối Telegram không được",
 };
 
 function isPurpose(value: string | undefined): value is SetupLinkPurpose {

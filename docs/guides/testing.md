@@ -44,6 +44,10 @@ pnpm test:e2e
   step-up, Lan's fallback password, and setup links for Minh. The pepper is random per run.
 - Passkeys come from Chrome's virtual authenticator (`e2e/face-id.ts`), so passkey scenarios are tagged
   `@chromium-only`; Playwright's WebKit has none. The breach check is answered by the run, never by the real service.
+- **No scenario subscribes to push**: that would reach Google's push service. A push is handed to the app's service
+  worker over the DevTools protocol (`ServiceWorker.deliverPushMessage`) instead, which checks `public/sw.js` and its
+  headers in the production build. Chrome registers a service worker only over a certificate it trusts, so the
+  Chromium projects run with `--ignore-certificate-errors` (`ignoreHTTPSErrors` alone does not cover it).
 - Every page fails its scenario on a Content Security Policy violation or an uncaught error.
 - The step `trang không có lỗi trợ năng` runs axe against WCAG 2.2 A and AA, after animations finish.
 - Tags: `@desktop-only`, `@phone-only`, `@chromium-only`, and `@iphone-later` for a scenario that should pass on the

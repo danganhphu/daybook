@@ -51,6 +51,10 @@ const PickCustomerDialog = dynamic(() =>
 const ReminderDialog = dynamic(() =>
   import("@/app/(app)/_reminders/reminder-dialog").then((module) => module.ReminderDialog),
 );
+// Its code loads only on a day with something due, and it shows only to a browser never asked
+const PushOffer = dynamic(() =>
+  import("@/app/(app)/_day/push-offer").then((module) => module.PushOffer),
+);
 
 export type DayScreenProps = {
   readonly view: DayView;
@@ -58,6 +62,8 @@ export type DayScreenProps = {
   readonly due?: DueView | undefined;
   // What each note's message became
   readonly readings?: DayReadings | undefined;
+  // Today's, where push is set up: what a browser subscribes with, for the offer to turn notifications on
+  readonly pushPublicKey?: string | undefined;
 };
 
 const nothingPending: ReadonlyMap<string, ReadingPending> = new Map();
@@ -78,7 +84,7 @@ function without(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
 // A day as a chat: the notes above, oldest first. Today also has the box at the bottom, where the thumb is; an
 // earlier day is read, corrected and tidied, but nothing new is written into it. Each note is read once saved: what
 // its message became shows under it, with Undo in a toast.
-export function DayScreen({ view, due, readings }: DayScreenProps) {
+export function DayScreen({ view, due, readings, pushPublicKey }: DayScreenProps) {
   const toast = useToast();
   const canRead = readings?.canRead ?? false;
   const [saving, markSaving] = useOptimistic(nothingPending, withPending);
@@ -293,6 +299,9 @@ export function DayScreen({ view, due, readings }: DayScreenProps) {
       </header>
       <main className={styles.scroller}>
         <div className={styles.content}>
+          {view.isToday && due !== undefined && pushPublicKey !== undefined ? (
+            <PushOffer publicKey={pushPublicKey} />
+          ) : null}
           {shown.length === 0 ? (
             view.isToday ? (
               <EmptyState title={notesCopy.emptyToday} description={notesCopy.emptyTodayHint} />

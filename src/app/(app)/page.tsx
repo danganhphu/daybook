@@ -1,7 +1,7 @@
 import type { Viewport } from "next";
 
 import { DayScreen } from "@/app/(app)/_day/day-screen";
-import { daybook } from "@/composition/daybook";
+import { daybook, pushPublicKey } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { todaysNotes } from "@/features/notes/web/commands";
 import { dayReadings } from "@/features/reading/web/commands";
@@ -23,5 +23,5 @@ export default async function TodayPage() {
     dayReadings(app, app.today()),
   ]);
 
-  return <DayScreen view={view} due={due} readings={readings} />;
+  return <DayScreen view={view} due={due} readings={readings} pushPublicKey={pushPublicKey()} />;
 }

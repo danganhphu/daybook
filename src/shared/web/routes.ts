@@ -21,11 +21,14 @@ export const routes = {
   settingsActivity: "/settings/activity",
   settingsPeople: "/settings/people",
   settingsKinds: "/settings/customer-kinds",
+  settingsNotifications: "/settings/notifications",
   componentGallery: "/dev/ui",
   // Static files in public/, written by `pnpm icons`
   manifest: "/manifest.webmanifest",
   icon: "/icon.svg",
   appleIcon: "/apple-icon.png",
+  // Also in public/, by hand: it shows notifications
+  serviceWorker: "/sw.js",
 } as const;
 
 // The search box on the history screen sends its words under this name

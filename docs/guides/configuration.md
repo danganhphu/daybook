@@ -13,6 +13,8 @@ request (`src/composition/daybook.ts`): a missing or malformed value fails loudl
 | `PASSWORD_PEPPER` | 32 random bytes, base64url | a fixed value that guards nothing real | a Worker secret |
 | `AI` | Workers AI | the account's real one, remotely | the same; not in the end-to-end build |
 | `REPLAY_READINGS` | JSON | - | only in the end-to-end build: a secret `e2e/serve.ts` sets |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Web Push key pair, base64url | a fixed pair, refused off localhost | two Worker secrets, set together ([deployment](deployment.md#the-deploy-that-brings-notifications)) |
+| `JOBS` | Queue producer | a local queue | the `jobs` queue; its consumer is this Worker, with `jobs-dead` behind it |
 
 - **`APP_ORIGIN`** decides who passkeys belong to (the WebAuthn relying party: origin and RP ID) and which origin a
   write may come from. It is never taken from the request. It is a secret only so the real address stays out of a
@@ -32,6 +34,15 @@ request (`src/composition/daybook.ts`): a missing or malformed value fails loudl
   records notes; they are simply not read.
 - **`REPLAY_READINGS`** stands in for `AI` in the build `pnpm build:e2e` makes (`--mode e2e`): messages and what
   each says, as JSON (`e2e/readings.ts`). The production build has no such binding.
+- **`VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`** sign what the app pushes, so a push service knows it came from here
+  (RFC 8292); browsers subscribe with the public half. `pnpm notifications:keys` makes a pair. With neither set,
+  nothing is pushed and Settings says so; with one alone, or the development pair on a real address, the first request
+  fails loudly. The development pair is in the repository and the Worker refuses it unless `APP_ORIGIN` is localhost
+  (`src/features/notifications/infrastructure/vapid-keys.ts`). `e2e/serve.ts` makes a pair per run.
+- **`JOBS`** carries the notifications' jobs from the scheduler to the consumer. The cron trigger (`*/15 * * * *`)
+  and the queue's consumer settings are in `cloudflare.config.ts`. Locally the cron does not run on its own: open
+  `/cdn-cgi/local/scheduled?cron=*%2F15+*+*+*+*&time=<epoch ms>` on the dev server to run one slot, which calls the
+  real push services for whoever has notifications on in the dev database.
 
 ## Runtime
 
