@@ -62,6 +62,11 @@ export function useStepUp(account: StepUpAccount): StepUp {
       if (!(await asked.promise)) {
         return err(cancelled);
       }
+      // The confirmation opened a new session; this browser's notifications move onto it
+      void (async () => {
+        const { keepPushOn } = await import("./turn-on-push");
+        await keepPushOn();
+      })();
 
       const retried = await attemptSetting(action);
       if (!retried.ok) {

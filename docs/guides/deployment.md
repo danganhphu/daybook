@@ -68,6 +68,32 @@ script builds for production and deploys with `cf`.
 
 4. **Check on real phones:** set up a passkey, sign in from the installed app, sign out, invite the second person.
 
+## The deploy that brings notifications
+
+Once, before the first `pnpm run deploy` with notifications in it:
+
+1. **Migrations** on the remote database, as above. This one rebuilds `access_event` with its rows (checked on seeded
+   rows beforehand: every event kept, both append-only triggers back).
+2. **The two queues**, the jobs and where a job that keeps failing waits:
+
+   ```sh
+   pnpm exec cf queues create --queue-name jobs
+   pnpm exec cf queues create --queue-name jobs-dead
+   ```
+
+3. **The Web Push key pair**, as two secrets, before the deploy: `cf` refuses a deploy while a secret the config names
+   is unset. Generated straight into the pipe, never shown:
+
+   ```powershell
+   $keys = pnpm -s notifications:keys | ConvertFrom-Json
+   $keys.VAPID_PUBLIC_KEY | npx wrangler secret put VAPID_PUBLIC_KEY --name daybook
+   $keys.VAPID_PRIVATE_KEY | npx wrangler secret put VAPID_PRIVATE_KEY --name daybook
+   ```
+
+   Keep the pair for good. A new one stops every browser's subscription, which was made with the old public key; each
+   person then turns notifications on again.
+4. `pnpm run deploy`. A cron trigger takes up to 15 minutes to reach Cloudflare's network.
+
 ## Changing a secret
 
 The Worker exists now, so Wrangler sets one secret and deploys a new version at once. Pipe the value in, so it never
@@ -89,6 +115,11 @@ A new pepper stops every fallback password until it is set again; passkeys keep 
 - Workers Logs is on, and a request with a query shows without it.
 - Back after signing out, on both phones, shows the sign-in page, not the book.
 - The hostname serves nothing else, and there are no preview URLs (`previewUrls: false`).
+- `/sw.js` answers with `Content-Security-Policy: default-src 'self'` and `Cache-Control: no-cache`, not the sandbox
+  the other static files get.
+- Notifications on a real phone: turn them on in Settings > Thông báo, set the morning time to the next quarter hour
+  with something due, and wait. Workers Logs then shows `notifications_queued`, and each `scheduled` and `queue`
+  invocation's `cpuTime` - the number ADR 0015 waits for: a cron run on a fresh isolate loads vinext too.
 - The Worker runs beside the database: a page's response carries `cf-placement` naming a data center near Osaka, and
   in Workers Logs a screen's `wallTimeMs` is tens of milliseconds, not hundreds (see
   [configuration](configuration.md#runtime)). The header may go away once placement leaves beta.
@@ -100,3 +131,5 @@ A new pepper stops every fallback password until it is set again; passkeys keep 
 | 10 ms CPU per request | Password hashing runs in the browser for this reason. Measured 2026-10-27, after the work in [configuration](configuration.md#runtime): a screen change about 22 ms, a first open about 65 ms, so most requests are over; none has been refused, but "consistently" over is when Cloudflare starts to (error 1102). Watch for it: the dashboard shows "Exceeded CPU Time Limits", and Workers Logs an outcome of `exceededCpu` instead of `ok`. If it appears, Workers Paid ($5 a month, 30 s per request) needs no code change |
 | 100,000 requests a day | Static assets do not count |
 | D1: 5M rows read, 100k rows written a day | Every lookup is indexed |
+| Cron: 10 ms CPU a run | The scheduler only reads and queues; it sends nothing itself. Whether a fresh isolate's start counts toward it is not documented: read `cpuTime` for `scheduled` in Workers Logs |
+| Queues: 10,000 operations a day, 24 hours' retention | About 20 a day here. A job that fails three times waits a day in `jobs-dead`, then is gone; nothing alerts on it |

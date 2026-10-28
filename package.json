@@ -12,7 +12,7 @@
     "build:e2e": "vite build --mode e2e",
     "start": "vite preview",
     "deploy": "vinext-cloudflare deploy",
-    "typecheck": "cf workers types && tsc",
+    "typecheck": "cf workers types && tsc && tsc -p tsconfig.sw.json",
     "lint": "oxlint && stylelint \"**/*.scss\"",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
@@ -25,10 +25,12 @@
     "db:migrate": "cf d1 migrations apply f116c00d-1ef3-4841-831b-e821c5f8a29b --local --persist-to .cloudflare/state --dir migrations --pattern \"migrations/*/migration.sql\"",
     "access:account": "node --import ./scripts/register-source-paths.ts scripts/access.ts account",
     "access:setup-link": "node --import ./scripts/register-source-paths.ts scripts/access.ts setup-link",
-    "access:revoke": "node --import ./scripts/register-source-paths.ts scripts/access.ts revoke"
+    "access:revoke": "node --import ./scripts/register-source-paths.ts scripts/access.ts revoke",
+    "notifications:keys": "node --import ./scripts/register-source-paths.ts scripts/notification-keys.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@block65/webcrypto-web-push": "2.0.0",
     "@noble/hashes": "2.4.0",
     "@simplewebauthn/browser": "14.0.0",
     "@simplewebauthn/server": "14.0.3",

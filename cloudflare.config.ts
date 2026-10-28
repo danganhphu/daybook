@@ -1,4 +1,4 @@
-import { bindings, defineConfig, defineWorker } from "cf/config";
+import { bindings, defineConfig, defineWorker, triggers } from "cf/config";
 
 // The newest date the local workerd supports; raise it when the Cloudflare packages update.
 // Shared with vitest.config.ts so tests run on the same runtime behaviour.
@@ -17,10 +17,31 @@ export const endToEndMode = "e2e";
 // Its own copy: the Worker cannot load a file the config imports. development-pepper.test.ts holds the two together.
 export const developmentPepper = "ZGF5Ym9vay1kZXZlbG9wbWVudC1wZXBwZXItbm90LWE";
 
+// The same for the push keys; vapid-keys.test.ts holds them together
+export const developmentVapidKeys = {
+  publicKey:
+    "BBfpfm6Q_MlmP3iZV9GcX9Np8giJ1NPwNflJ__LCUQIpgd0TXaatflD3BTL0qlJbNwu8nsidSpHXMPsEzwCdm_w",
+  privateKey: "2T5flB504mroN0xVqiLi725B_dULBJnD6sxFG0BEzb4",
+} as const;
+
+// Every quarter hour: the scheduler for notifications, whose times are in 15-minute steps (time-of-day.ts)
+export const notificationSchedule = "*/15 * * * *";
+
 export default defineConfig({
   worker: defineWorker(({ mode }) => ({
     name: "daybook",
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./src/worker.ts",
+    triggers: [
+      triggers.scheduled({ schedule: notificationSchedule }),
+      // One message at a time, in order; a message that keeps failing waits in jobs-dead
+      triggers.queue({
+        name: "jobs",
+        deadLetterQueue: "jobs-dead",
+        maxBatchSize: 1,
+        maxConcurrency: 1,
+        maxRetries: 3,
+      }),
+    ],
     compatibilityDate,
     compatibilityFlags,
     assets: { notFoundHandling: "none", runWorkerFirst: ["/_vinext/static-cache/*"] },
@@ -36,11 +57,17 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: "daybook", id: databaseId }),
+      JOBS: bindings.queue({ name: "jobs" }),
       // The address the app is served from. A secret outside development, so the real one is not in the repository.
       APP_ORIGIN: mode === "development" ? bindings.text(developmentOrigin) : bindings.secret(),
       // Mixed into every password verifier. Development has a pepper of its own; it guards nothing real.
       PASSWORD_PEPPER:
         mode === "development" ? bindings.text(developmentPepper) : bindings.secret(),
+      // Web Push's key pair. The public half is not secret, but it is set with the private one so the two never drift.
+      VAPID_PUBLIC_KEY:
+        mode === "development" ? bindings.text(developmentVapidKeys.publicKey) : bindings.secret(),
+      VAPID_PRIVATE_KEY:
+        mode === "development" ? bindings.text(developmentVapidKeys.privateKey) : bindings.secret(),
       // Workers AI reads notes. It has no local stand-in, so development calls the account's real one; the
       // end-to-end build has a table of answers instead (ADR 0012), given as a secret by e2e/serve.ts.
       ...(mode === endToEndMode

@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, max, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNotNull, lte, max, or } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
@@ -10,6 +10,16 @@ import { accessEventTable } from "./access-event.table";
 
 export function createAccessEventRepository(db: Database): AccessEventRepository {
   return {
+    async get(id) {
+      const [row] = await db
+        .select()
+        .from(accessEventTable)
+        .where(eq(accessEventTable.id, id))
+        .limit(1);
+
+      return row === undefined ? undefined : toAccessEvent(row);
+    },
+
     async listForAccount(accountId, limit) {
       const rows = await db
         .select()
@@ -44,6 +54,36 @@ export function createAccessEventRepository(db: Database): AccessEventRepository
               ],
         ),
       );
+    },
+
+    async listAfter(after, upTo, limit) {
+      const at = after.occurredAt.epochMilliseconds;
+      const rows = await db
+        .select()
+        .from(accessEventTable)
+        .where(
+          and(
+            or(
+              gt(accessEventTable.occurredAt, at),
+              and(eq(accessEventTable.occurredAt, at), gt(accessEventTable.id, after.id)),
+            ),
+            lte(accessEventTable.occurredAt, upTo.epochMilliseconds),
+          ),
+        )
+        .orderBy(asc(accessEventTable.occurredAt), asc(accessEventTable.id))
+        .limit(limit);
+
+      return rows.map(toAccessEvent);
+    },
+
+    async latest() {
+      const [row] = await db
+        .select()
+        .from(accessEventTable)
+        .orderBy(desc(accessEventTable.occurredAt), desc(accessEventTable.id))
+        .limit(1);
+
+      return row === undefined ? undefined : toAccessEvent(row);
     },
   };
 }

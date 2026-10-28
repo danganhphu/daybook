@@ -29,5 +29,7 @@ export const accessEventTable = sqliteTable(
       sql`${table.detail} is null or (json_valid(${table.detail}) and json_type(${table.detail}) = 'object')`,
     ),
     index("access_event_by_account").on(table.accountId, table.occurredAt),
+    // The notices' relay reads the log in this order
+    index("access_event_by_time").on(table.occurredAt, table.id),
   ],
 );

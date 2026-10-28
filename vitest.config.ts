@@ -3,7 +3,12 @@ import { readFile } from "node:fs/promises";
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
 import { configDefaults, defineConfig } from "vitest/config";
 
-import { compatibilityDate, compatibilityFlags, developmentPepper } from "./cloudflare.config.ts";
+import {
+  compatibilityDate,
+  compatibilityFlags,
+  developmentPepper,
+  developmentVapidKeys,
+} from "./cloudflare.config.ts";
 
 // Kept apart from vite.config.ts so vinext's plugins stay out of tests. Bindings are declared inline:
 // the plugin's reader for cloudflare.config.ts is still experimental.
@@ -30,6 +35,9 @@ export default defineConfig({
           STATIC_HEADERS: await readFile("public/_headers", "utf8"),
           // The pepper dev runs with, for the test that holds it to the one the Worker refuses
           CONFIG_DEVELOPMENT_PEPPER: developmentPepper,
+          // The same for the push keys
+          CONFIG_DEVELOPMENT_VAPID_PUBLIC_KEY: developmentVapidKeys.publicKey,
+          CONFIG_DEVELOPMENT_VAPID_PRIVATE_KEY: developmentVapidKeys.privateKey,
         },
       },
     })),

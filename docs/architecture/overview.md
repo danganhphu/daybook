@@ -8,19 +8,25 @@ How the pieces fit. The rules for writing code against them are in [AGENTS.md](.
 ```
 Telegram (later) --webhook--+                             +-- D1 (SQLite)
                             +--> Cloudflare Worker -------+-- Workers AI (reading notes)
-Browser / installed PWA ----+    (vinext + the core)      +-- cron: digests (later)
+Browser / installed PWA ----+    (vinext + the core)      +-- queue `jobs` -> Web Push
+cron every 15 minutes ------+                             |
 ```
 
 Everything runs in one Worker on Cloudflare's free plan. The web app is vinext - the Next.js App Router API on Vite -
-rendered on the Worker, and it does everything on its own. The Telegram bot, an optional second door, and the cron
-jobs come later and will share the same core.
+rendered on the Worker, and it does everything on its own. The Telegram bot, an optional second door, comes later and
+will share the same core.
+
+`src/worker.ts` is the Worker's entry and has three ways in: `fetch` hands every request to vinext's handler,
+`scheduled` runs the notifications' scheduler, and `queue` consumes the `jobs` queue. vinext's handler is imported as
+vinext's own entry does - its build cannot split it into a chunk of its own - while the scheduler and the consumer load
+their code on first use, from `src/composition/jobs.ts`, so web requests never load it.
 
 ## Feature slices
 
 `src/features/` holds one folder per thing the product does - `access` (who is signing in), `capture` (words coming
 in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, `reading` (a message read into an
-order or a reminder), `reports` (a period's figures, reads only), and `merging` (two customers or two products that
-are one) - each in four layers:
+order or a reminder), `reports` (a period's figures, reads only), `merging` (two customers or two products that
+are one), and `notifications` (the app speaking first) - each in four layers:
 
 | Layer | Holds | Depends on |
 | --- | --- | --- |
@@ -52,6 +58,18 @@ Saving a note never waits for a model. Once the note is saved, the page asks for
 own: the model on Workers AI returns the words of the message sorted into fields, checked by a Zod schema; the code
 matches the customer and products, and places the order or adds the reminder through the same use cases as the forms,
 in one batch with a record of the reading. The rules are in [domain.md](domain.md#reading), the reasons in ADR 0012.
+
+## Speaking first
+
+Every quarter hour the cron trigger runs the scheduler. It works out the slot in Vietnam time from the run's scheduled
+time, finds who has a signed-in browser with notifications on and is due a digest in that slot (the morning list, or
+the Friday summary), reads the access log for new changes to someone's sign-in, and puts one job per person and message
+on the `jobs` queue - ids and a day only. The queue's consumer claims the delivery in a ledger (`notification_delivery`,
+one row per person, subject, day or event, and channel), reads what to say, and sends it to each of the person's
+browsers through Web Push: encrypted for the browser (RFC 8291), signed for the push service (RFC 8292). A failed send
+is retried by the queue; the ledger makes a repeat send nothing. The browser's service worker, `public/sw.js`, shows
+the notification and opens the app where it points. The rules are in [domain.md](domain.md#notifications), the
+reasons in ADR 0015.
 
 ## Merging two that are one
 

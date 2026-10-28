@@ -31,6 +31,8 @@ export default defineConfig({
   },
   // The user's phone is a Samsung Galaxy S with Chrome, so Android comes first; an iPhone and a desk are covered too.
   // Chromium is real Chrome (new headless): the default headless shell passes an install check with no manifest.
+  // Chrome refuses to register a service worker over a certificate it does not trust, whatever ignoreHTTPSErrors says,
+  // so it is told to trust them all.
   projects: [
     {
       name: "iphone",
@@ -40,12 +42,20 @@ export default defineConfig({
     },
     {
       name: "android",
-      use: { ...devices["Galaxy S24"], channel: "chromium" },
+      use: {
+        ...devices["Galaxy S24"],
+        channel: "chromium",
+        launchOptions: { args: ["--ignore-certificate-errors"] },
+      },
       grepInvert: /@desktop-only/,
     },
     {
       name: "desktop",
-      use: { ...devices["Desktop Chrome"], channel: "chromium" },
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chromium",
+        launchOptions: { args: ["--ignore-certificate-errors"] },
+      },
       grepInvert: /@phone-only/,
     },
   ],

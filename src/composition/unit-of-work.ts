@@ -32,6 +32,16 @@ import type { MergeWrites } from "@/features/merging/application/merge-writes";
 import { createMergeWrites } from "@/features/merging/infrastructure/merge-writes";
 import type { NoteWrites } from "@/features/notes/application/note-writes";
 import { createNoteWrites } from "@/features/notes/infrastructure/note-writes";
+import type {
+  NoticeCursorWrites,
+  NotificationPreferenceWrites,
+  PushSubscriptionWrites,
+} from "@/features/notifications/application/notification-writes";
+import {
+  createNoticeCursorWrites,
+  createNotificationPreferenceWrites,
+  createPushSubscriptionWrites,
+} from "@/features/notifications/infrastructure/notification-writes";
 import type { OrderWrites } from "@/features/orders/application/order-writes";
 import { createOrderWrites } from "@/features/orders/infrastructure/order-writes";
 import type {
@@ -69,6 +79,9 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly setupLinks: SetupLinkWrites;
   readonly ceremonies: CeremonyWrites;
   readonly accessEvents: AccessEventWrites;
+  readonly pushSubscriptions: PushSubscriptionWrites;
+  readonly notificationPreferences: NotificationPreferenceWrites;
+  readonly noticeCursor: NoticeCursorWrites;
 }>;
 
 // Every feature's writes go into one batch, so whatever a use case touches commits as one D1 transaction
@@ -92,6 +105,9 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     setupLinks: createSetupLinkWrites(db, batch),
     ceremonies: createCeremonyWrites(db, batch),
     accessEvents: createAccessEventWrites(db, batch),
+    pushSubscriptions: createPushSubscriptionWrites(db, batch),
+    notificationPreferences: createNotificationPreferenceWrites(db, batch),
+    noticeCursor: createNoticeCursorWrites(db, batch),
     commit: () => batch.commit(),
   };
 }

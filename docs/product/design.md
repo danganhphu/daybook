@@ -82,9 +82,19 @@ One box takes everything; the bot sorts it:
 
 What it cannot sort is kept as a note, with [Ghi thành đơn] [Đặt nhắc nhở] [Để vậy].
 
-The app speaks first: a morning list (follow-ups due, customers not contacted in a while) and a Friday summary
-(orders, revenue, top customers, who has gone quiet), sent through the channels each person chooses. The morning time
-and the "gone quiet" threshold are guesses - three weeks for now - and both are settings.
+The app speaks first: a morning list (follow-ups due, and customers who went quiet that day) and a Friday summary
+(orders, revenue, money in, what is owed, who has gone quiet), sent as notifications to every phone or browser where
+the person turned them on - and to Telegram once the bot exists. Each person picks their own times in Settings, in
+quarter hours, or turns either off; 07:30 and Friday 17:00 are guesses until she says otherwise. A morning with nothing
+to say sends nothing, and a customer is named the day they go quiet rather than every morning after: a notification
+that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks for now - and stays a
+constant until real use says what it should be.
+
+Changes to how someone signs in - a passkey added, a recovery link made, devices signed out - are told to that person
+the same way, always: these cannot be turned off.
+
+Notifications are offered where their value is plain: on Hôm nay, the first time something is due, once, and always in
+Settings. Never on the first visit.
 
 Typing a customer's name shows their card: contact, last order, totals, notes.
 
@@ -101,7 +111,7 @@ Telegram's menu lists the commands, which answers the empty chat box's question 
 | `/reminders` | open follow-ups |
 | `/edit` | edit the last entry |
 | `/web` | a link to the web app |
-| `/settings` | morning time, "gone quiet" threshold |
+| `/settings` | a link to the app's Settings, where the times are set |
 | `/help` | examples |
 
 Names are English: Telegram allows only Latin letters, digits and `_` in command names. Their menu descriptions are
@@ -157,8 +167,10 @@ Everything, on its own (see "Two equal doors"):
 - what was deleted in the last thirty days, after the Undo toast is gone, to restore
 - two customers, or two products, that turn out to be one: merged, with what moves said first, since a merge has no
   Undo. The merged one's name becomes the kept one's other name, so a message calling it by that name is understood
+- notifications: the morning list, the Friday summary and sign-in notices, on every browser where they are turned on
 
-Installed to the home screen as a PWA; no app store.
+Installed to the home screen as a PWA; no app store. On Android, Chrome shows notifications whether or not the app is
+installed; an iPhone needs the app on its home screen (iOS 16.4 or later).
 
 ## Sign-in
 

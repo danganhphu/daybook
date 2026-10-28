@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AfterSignIn } from "./_shell/after-sign-in";
 import { TabBar } from "./_shell/tab-bar";
 
 import styles from "./_shell/app-shell.module.scss";
@@ -12,6 +13,7 @@ export default function AppLayout({ children }: { readonly children: ReactNode }
       <div className={styles.tabs}>
         <TabBar />
       </div>
+      <AfterSignIn />
     </div>
   );
 }

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2025",
+    "lib": ["es2025", "webworker"],
+    "module": "esnext",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "types": [],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "files": ["public/sw.js"]
+}

@@ -39,6 +39,10 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Due | đến hạn | A reminder still open whose day is today or earlier |
 | Reading | đọc tin | What a message says, in its own words: an order, a reminder or a note, the customer as written, each line's product, quantity and price as written, the day it names |
 | Interpretation | | One reading of a capture: by which model and prompt, or by a person answering, what came of it, and what it cost. Never changed; reading again adds one |
+| Push subscription | thiết bị nhận thông báo | Where one browser receives notifications: the push service's address and the browser's keys, under the session that turned it on |
+| Digest | nhắc việc buổi sáng, tổng kết thứ Sáu | What the app says on its own at a person's time: the morning list, the Friday summary |
+| Notice | | A change to someone's sign-in told to them on every channel: a passkey added, a recovery link, devices signed out |
+| Delivery | | One digest or notice to one person on one channel, recorded so it is never sent twice |
 
 Planned, not built:
 
@@ -240,6 +244,30 @@ not a product, so under a product filter they are not told; the units sold are, 
 - **Breakdowns** - by kind, the top five products and customers, the quiet ones - leave out what the report is
   filtered to: no breakdown by kind under a kind or customer filter, no top customers for one customer.
 
+## Notifications
+
+`src/features/notifications/`. The app speaks first: each person's morning list and Friday summary, and notices about
+their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
+
+- **Times are quarter hours**, `HH:MM` in Vietnam, or off (`time-of-day.ts`). Each person sets their own; until they
+  do, the defaults hold (07:30, and Friday 17:00) and nothing is stored. A change carries the version it was made from.
+- **A digest is due in a slot** when the person's time is the slot's time - on a Friday, for the summary. The slot is
+  worked out from the cron run's scheduled time, not the clock, so a late run serves its own slot.
+- **The morning list** is the reminders due that day or earlier, and the customers who went quiet that very day (their
+  last order exactly 21 days old). A morning with neither sends nothing. **The Friday summary** is the week's orders
+  and sales, money in, what is owed, and how many customers are quiet.
+- **A notice** is one of a closed list of access events (`notice.ts`): a passkey added or removed, a password set,
+  changed or locked, the username changed, a recovery link made or used, devices signed out by the other person, a new
+  browser receiving notifications. It goes to the account it concerns, whoever made the change, and cannot be turned
+  off. The access log is read in order behind a cursor; an event is relayed once it is a minute old.
+- **A subscription belongs to a session.** It is sent to only while that session runs. When the session ends it stays,
+  asleep, so the same browser signing in again hands it over and wakes it without counting as a new device; a browser
+  new to the account is recorded as `push_subscribed`. Only known push services' addresses are kept (`googleapis.com`,
+  `google.com`, `mozilla.com`), matched by domain: the Worker posts to whatever is stored.
+- **A delivery is claimed before it is sent**, in one statement: a first claim or a retry of an unfinished one takes
+  it; a finished one is never sent again. A browser that dropped its subscription (404 or 410) loses it; a busy push
+  service (429, 5xx) means a retry, after its `Retry-After` if it gave one.
+
 ## Access
 
 Two people share one book; `src/features/access/` decides who is signing in. The decisions and their sources are in
@@ -363,6 +391,12 @@ through `createApp` in `src/composition/create-app.ts`.
 | `issueRecoveryLink` | A recovery link for the other account | `step_up_required`, `not_found` |
 | `nameInvitedAccount` | Makes the invited account from the newcomer's name and username | `setup_link_unusable`, `username_taken` |
 | `resumeSetup` | Where a setup stands, from its ceremony cookie, after a reload | `setup_link_unusable` |
+| `subscribeDevice` | This browser receives this session's notifications; a hand-over after a sign-in moves it to the new session | `push_unavailable`, `push_service_unknown` |
+| `unsubscribeDevice` | One of the person's browsers receives nothing more | `not_found` |
+| `changeNotificationTimes` | The morning and Friday times, or off | `times_changed_elsewhere` |
+| `notificationSettings` | The person's times and the browsers receiving under a running session | - |
+| `scheduleSlot` | The scheduler: queues the digests due in a slot and the notices new in the access log | - |
+| `deliverNotification` | The consumer: claims a delivery, reads what to say, sends it on each channel | - |
 
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
 order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
@@ -372,7 +406,8 @@ what it is filtered to.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts`, `ReadingError` in
-`src/features/reading/application/reading-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
+`src/features/reading/application/reading-errors.ts`, `NotificationError` in
+`src/features/notifications/application/notification-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
 
 ## Tables
 
@@ -438,8 +473,17 @@ into the statement by `src/shared/infrastructure/d1/sql-literals.ts`, so the two
 | `setup_link` | purpose, account, author, token hash, expiry, redemption | an unredeemed invite names no account; a first-setup link has no author; trigger `setup_link_redeemed_once` |
 | `password` | one fallback password per account: salt, Argon2id cost, verifier, pepper version, failures, lock, change time | the cost never below OWASP's minimum; salt and verifier of their exact lengths |
 | `ceremony` | kind, browser binding, account, setup link, the challenge waiting for an answer, the salt handed out, expiry | a setup ceremony names its link; challenge and salt of their exact lengths; deleted when finished |
-| `access_event` | kind, whose account, who acted, session, passkey, IP, device, small JSON detail | known kinds only; triggers `access_event_no_update` and `access_event_no_delete` |
+| `access_event` | kind, whose account, who acted, session, passkey, IP, device, small JSON detail | known kinds only (the bot's three among them, ahead of it); triggers `access_event_no_update` and `access_event_no_delete` |
 | `rate_limit` | attempts per key and fixed window | windows long over are dropped on the next hit |
+
+The notifications' tables, all `STRICT`:
+
+| Table | Holds | Rules the database keeps |
+| --- | --- | --- |
+| `push_subscription` | account, session, the push service's address, the browser's two keys, the device label, when made, when last sent | session unique, set null when the session is deleted; address unique and `https`, at most 2,048; keys of their exact lengths |
+| `notification_preference` | per account, the morning and Friday times or null | quarter hours only; audited and versioned, with both triggers |
+| `notification_delivery` | account, subject, ref (a day or an event id), channel, status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
+| `notice_cursor` | where the relay of notices has read the access log to | a single row |
 
 ## Consistency
 

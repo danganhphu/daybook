@@ -18,7 +18,9 @@ The web app works locally, whole: today's notes as a chat, read into orders and 
 search; customers, products (with the other names each is known by, and merging two that are one), orders with
 delivery, payments and history; reminders, open and finished; reports; what was deleted lately, to restore; and
 sign-in with passkeys, a password as the fallback, and Settings for the account, its devices and the people. It
-installs to a phone's home screen (no service worker yet). Nothing is deployed; the deploy is next, then the bot.
+installs to a phone's home screen, and speaks first: a morning list and a Friday summary at each person's times, and
+notices about their sign-in, by Web Push (its service worker shows notifications and caches nothing). The Telegram bot
+comes next.
 
 ## Hard constraint: $0, no card
 
@@ -36,7 +38,8 @@ The free-plan limits that shape the code:
 | 100,000 Worker requests a day | Static asset requests are free and do not count |
 | D1: 5M rows read, 100k rows written a day | Index every lookup. An unindexed scan counts every row it touches as read |
 | Workers AI: 10,000 Neurons a day | It errors once used up. Local dev calls the real service, so dev runs spend the same budget |
-| 5 Cron Triggers per account, UTC only | 07:30 in Vietnam is `30 0 * * *`. Write day names (`FRI`): in Cloudflare's numbering 1 is Sunday |
+| 5 Cron Triggers per account, UTC only | 07:30 in Vietnam is `30 0 * * *`. Write day names (`FRI`): in Cloudflare's numbering 1 is Sunday. One is used: the notifications' scheduler, every 15 minutes |
+| Queues: 10,000 operations a day, 24 hours' retention | A message is three operations. Jobs carry ids, never words |
 
 ## Stack
 
@@ -72,10 +75,16 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 
 - **No logic in an adapter.** The Telegram adapter and the web pages call the core; the core never imports from
   them. A third entrance - Zalo, Messenger - has to be a thin layer, not a rewrite.
-- **The Worker entry routes the bot before vinext.** The Telegram webhook path is handled in the custom Worker
-  entry, so a bot message never pays for React rendering. Everything else is handed to vinext's fetch handler.
-  The same entry exports `scheduled` for the morning digest and the Friday summary.
-- **The webhook answers fast.** Long work - the LLM call - goes into `ctx.waitUntil`, which allows 30 seconds.
+- **The Worker's entry is `src/worker.ts`**, with `fetch` (vinext's handler, imported statically: vinext 1.2's build
+  cannot split it out), `scheduled` and `queue`. The scheduler and the consumer load their code with `import()` on
+  first use, from `src/composition/jobs.ts`, never `createApp`. The bot's webhook will be routed there, before vinext.
+- **Slow work goes through the `jobs` queue**, with an idempotent consumer: a job carries ids, the consumer claims a
+  ledger row before it sends, and a failure is retried with backoff, then dead-lettered (ADR 0013, ADR 0015). Not
+  `ctx.waitUntil`: a reply lost there is lost for good.
+- **Web Push goes through the `PushSender` port**; only `web-push-sender.ts` imports `@block65/webcrypto-web-push`, and
+  only the consumer loads it. A subscription's address is kept only on a known push service's domain, since the Worker
+  posts to it, and never logged. `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are secrets outside development, set
+  together; development has a pair of its own, refused anywhere but localhost. No test calls a push service.
 - **Never lose the user's words.** Every message is stored verbatim in `capture` before anything else happens, including
   when parsing fails or the LLM quota has run out. Re-parsing later is what makes a free LLM tier safe to rely on.
 - **Nothing polls.** Work happens on a request or on a cron trigger.
@@ -99,12 +108,15 @@ src/
     reading/      a message read into an order or a reminder: the Interpretation, the Workers AI reader, the answers
     reports/      a period's figures: the period and its buckets, the aggregate reads (no writes)
     merging/      two customers or two products that are one: everything moved to one, in one batch, and recorded
+    notifications/  the app speaking first: times, push subscriptions, the scheduler, the delivery ledger, Web Push
+  jobs/           the scheduler's and the queue consumer's adapters: what `src/worker.ts` hands a cron run and a message
   shared/
     domain/       Result, Content, the Vietnamese day
     application/  Clock, the UnitOfWork type
     infrastructure/  the D1 client and batch, the system clock, the schema tests
     ui/           the design system: components and styles/
-  composition/    createApp and the unit of work: the one place that wires everything together
+  composition/    createApp, the jobs' own root (jobs.ts) and the unit of work: where everything is wired together
+  worker.ts       the Worker's entry: fetch, scheduled, queue
   testing/        test setup and helpers
 ```
 
@@ -392,6 +404,7 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:revoke` | Ends every session of an account: `--username`, then one of `--local`, `--remote`, `--dry-run` |
+| `pnpm notifications:keys` | A new Web Push key pair as JSON, for a deploy's `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` secrets. Only when asked |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
 | `pnpm run deploy` | Deploy to Cloudflare. Only when asked. `pnpm deploy` is pnpm's own command, not this script |
