@@ -38,9 +38,10 @@ import type {
 } from "./report-view";
 import {
   comparedWith,
-  daysSince,
+  dayCount,
   emptyPeriod,
   orderCount,
+  quietFooter,
   reportsCopy,
   restOf,
   timesOver,
@@ -314,15 +315,18 @@ function bodyOf(
             customers.rest > 0 ? restOf("customers", moneyText(customers.rest)) : undefined,
           ),
     quiet:
-      quiet === undefined || quiet.length === 0
+      quiet === undefined || quiet.customers.length === 0
         ? undefined
-        : quiet.map((each) => ({
-            id: each.customerId,
-            name: each.name,
-            area: each.area,
-            days: daysSince(each.lastOrderedOn.until(today, { largestUnit: "days" }).days),
-            href: customerPath(each.customerId),
-          })),
+        : {
+            rows: quiet.customers.map((each) => ({
+              id: each.customerId,
+              name: each.name,
+              area: each.area,
+              days: dayCount(each.lastOrderedOn.until(today, { largestUnit: "days" }).days),
+              href: customerPath(each.customerId),
+            })),
+            footer: quietFooter(quiet.afterDays),
+          },
   };
 }
 

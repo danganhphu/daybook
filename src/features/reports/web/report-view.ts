@@ -74,6 +74,11 @@ export type QuietRowView = {
   readonly href: string;
 };
 
+export type QuietListView = {
+  readonly rows: ReadonlyArray<QuietRowView>;
+  readonly footer: string;
+};
+
 export type ReportBodyView = {
   // Said instead of the figures when the period has no orders
   readonly empty: string | undefined;
@@ -83,7 +88,7 @@ export type ReportBodyView = {
   readonly byKind: BarListView | undefined;
   readonly products: BarListView | undefined;
   readonly customers: BarListView | undefined;
-  readonly quiet: ReadonlyArray<QuietRowView> | undefined;
+  readonly quiet: QuietListView | undefined;
 };
 
 export type RangeFormView = {

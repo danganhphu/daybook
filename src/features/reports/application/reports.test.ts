@@ -136,9 +136,10 @@ describe("a month's report", () => {
 
     const { quiet } = await app.readReport({ period: october });
 
-    expect(quiet?.map((each) => [each.customerId, each.lastOrderedOn.toString()])).toEqual([
-      [lagoon.id, "2026-09-20"],
-    ]);
+    expect(quiet?.afterDays).toBe(21);
+    expect(
+      quiet?.customers.map((each) => [each.customerId, each.lastOrderedOn.toString()]),
+    ).toEqual([[lagoon.id, "2026-09-20"]]);
   });
 });
 
@@ -182,7 +183,7 @@ describe("a filtered report", () => {
 
     expect(report.sales.sales).toBe(50_000);
     expect(report.byKind).toBeUndefined();
-    expect(report.quiet).toEqual([]);
+    expect(report.quiet?.customers).toEqual([]);
   });
 });
 
@@ -218,7 +219,7 @@ describe("other periods", () => {
 
     const report = await app.readReport({ period: october });
 
-    expect(report.quiet?.map((each) => each.customerId)).toEqual([quiet.id]);
+    expect(report.quiet?.customers.map((each) => each.customerId)).toEqual([quiet.id]);
   });
 
   it("given a removed payment, when read, then it is not money in and the debt stands", async () => {

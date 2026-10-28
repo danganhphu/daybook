@@ -23,8 +23,13 @@ export type EditableRowProps = {
   // What the value is, e.g. "Tên"; the row shows the value large and this beneath, as the phone's settings do
   readonly label: string;
   readonly value: string;
+  // What the row shows when it is more than the value typed: "21 ngày" for 21
+  readonly display?: string;
   readonly description?: string;
-  readonly field?: Pick<TextFieldProps, "autoComplete" | "autoCapitalize" | "spellCheck">;
+  readonly field?: Pick<
+    TextFieldProps,
+    "autoComplete" | "autoCapitalize" | "spellCheck" | "inputMode"
+  >;
   // The server action; step-up, when it needs one, is already wrapped around it
   readonly save: (value: string) => Promise<SettingsResult<null>>;
   // The toast once saved, e.g. "Đã đổi tên"
@@ -40,7 +45,7 @@ export function EditableRow(props: EditableRowProps) {
   }
 
   return (
-    <ListRow title={props.value} detail={props.label}>
+    <ListRow title={props.display ?? props.value} detail={props.label}>
       <Button
         ref={opener}
         variant="quiet"

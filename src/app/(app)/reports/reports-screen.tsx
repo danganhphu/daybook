@@ -112,8 +112,8 @@ export function ReportsScreen({ view }: { readonly view: ReportsView }) {
           <Ranking list={report.customers} />
 
           {report.quiet === undefined ? null : (
-            <List heading={reportsCopy.quiet} footer={reportsCopy.quietFooter}>
-              {report.quiet.map((row) => (
+            <List heading={reportsCopy.quiet} footer={report.quiet.footer}>
+              {report.quiet.rows.map((row) => (
                 <ListLink
                   key={row.id}
                   href={row.href}

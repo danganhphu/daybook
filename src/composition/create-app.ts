@@ -62,6 +62,11 @@ import { createSessionRepository } from "@/features/access/infrastructure/sessio
 import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import {
+  changeQuietAfterDays,
+  type ChangeQuietAfterDaysInput,
+} from "@/features/book-settings/application/change-quiet-after-days";
+import { createBookSettingRepository } from "@/features/book-settings/infrastructure/book-setting-repository";
+import {
   recordCapture,
   type RecordCaptureInput,
 } from "@/features/capture/application/record-capture";
@@ -227,6 +232,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const setupLinks = createSetupLinkRepository(db);
   const rateLimiter = createRateLimiter(db);
   const accessEvents = createAccessEventRepository(db);
+  const bookSettings = createBookSettingRepository(db);
   const verifier = createLazyPasskeyVerifier(bindings.relyingParty);
   const secrets = webCryptoSecrets;
   const startUnitOfWork = () => createUnitOfWork(db);
@@ -252,7 +258,11 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const merging: MergingDeps = { clock, customers, products, orders, reminders, startUnitOfWork };
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
-  const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
+  const reports = {
+    queries: reportQueries,
+    settings: bookSettings,
+    today: () => vietnamDate(clock()),
+  };
   const notifications = {
     clock,
     pushAvailable: bindings.pushAvailable ?? false,
@@ -345,6 +355,9 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     listDeletedNotes: (since: Temporal.Instant, limit: number) => notes.listDeleted(since, limit),
 
     readReport: (request: ReportRequest) => readReport(reports, request),
+    bookSetting: () => bookSettings.get(),
+    changeQuietAfterDays: (input: ChangeQuietAfterDaysInput) =>
+      changeQuietAfterDays({ clock, settings: bookSettings, startUnitOfWork }, input),
 
     getReminder: (id: ReminderId) => reminders.get(id),
     listOpenReminders: (filter: OpenReminderFilter, limit: number) =>

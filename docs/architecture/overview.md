@@ -26,7 +26,8 @@ their code on first use, from `src/composition/jobs.ts`, so web requests never l
 `src/features/` holds one folder per thing the product does - `access` (who is signing in), `capture` (words coming
 in), `notes` (the notes kept), `customers`, `products`, `orders`, `reminders`, `reading` (a message read into an
 order or a reminder), `reports` (a period's figures, reads only), `merging` (two customers or two products that
-are one), and `notifications` (the app speaking first) - each in four layers:
+are one), `notifications` (the app speaking first), and `book-settings` (what the book is set to, shared by both
+people) - each in four layers:
 
 | Layer | Holds | Depends on |
 | --- | --- | --- |

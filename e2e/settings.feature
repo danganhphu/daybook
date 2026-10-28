@@ -22,6 +22,17 @@ Feature: Cài đặt
     When tôi sửa "Tên" thành "Lan"
     Then tôi thấy "Lan"
 
+  Scenario: Đổi số ngày tính là khách lâu không đặt
+    Given tôi đã đăng nhập
+    When tôi mở Cài đặt
+    And tôi mở "Khách lâu không đặt" trong Cài đặt
+    Then trang không có lỗi trợ năng
+    When tôi sửa "Số ngày không đặt" thành "30"
+    Then tôi thấy thông báo "Đã lưu số ngày"
+    And tôi thấy "30 ngày"
+    When tôi sửa "Số ngày không đặt" thành "21"
+    Then tôi thấy "21 ngày"
+
   Scenario: Nhấn Esc thì thôi sửa, con trỏ về lại nút Sửa
     Given tôi đã đăng nhập
     When tôi mở Cài đặt

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { createAccessEventRepository } from "@/features/access/infrastructure/access-event-repository";
 import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
+import { createBookSettingRepository } from "@/features/book-settings/infrastructure/book-setting-repository";
 import { createCustomerRepository } from "@/features/customers/infrastructure/customer-repository";
 import { deliverNotification } from "@/features/notifications/application/deliver-notification";
 import type {
@@ -90,6 +91,7 @@ export function createJobs(bindings: JobBindings, clock: Clock = systemClock) {
           reminders: createReminderRepository(db),
           customers: createCustomerRepository(db),
           reports: createReportQueries(db),
+          settings: createBookSettingRepository(db),
           accessEvents,
           accounts: createAccountRepository(db),
         },
