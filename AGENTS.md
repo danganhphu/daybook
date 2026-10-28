@@ -109,6 +109,7 @@ src/
     reports/      a period's figures: the period and its buckets, the aggregate reads (no writes)
     merging/      two customers or two products that are one: everything moved to one, in one batch, and recorded
     notifications/  the app speaking first: times, push subscriptions, the scheduler, the delivery ledger, Web Push
+    book-settings/  what the book is set to, shared by both people: the days after which a customer has gone quiet
   jobs/           the scheduler's and the queue consumer's adapters: what `src/worker.ts` hands a cron run and a message
   shared/
     domain/       Result, Content, the Vietnamese day

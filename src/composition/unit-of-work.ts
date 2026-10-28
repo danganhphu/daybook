@@ -16,6 +16,8 @@ import {
   createSessionWrites,
   createSetupLinkWrites,
 } from "@/features/access/infrastructure/access-writes";
+import type { BookSettingWrites } from "@/features/book-settings/application/book-setting-writes";
+import { createBookSettingWrites } from "@/features/book-settings/infrastructure/book-setting-writes";
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import { createCaptureWrites } from "@/features/capture/infrastructure/capture-writes";
 import type {
@@ -82,6 +84,7 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly pushSubscriptions: PushSubscriptionWrites;
   readonly notificationPreferences: NotificationPreferenceWrites;
   readonly noticeCursor: NoticeCursorWrites;
+  readonly bookSettings: BookSettingWrites;
 }>;
 
 // Every feature's writes go into one batch, so whatever a use case touches commits as one D1 transaction
@@ -108,6 +111,7 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     pushSubscriptions: createPushSubscriptionWrites(db, batch),
     notificationPreferences: createNotificationPreferenceWrites(db, batch),
     noticeCursor: createNoticeCursorWrites(db, batch),
+    bookSettings: createBookSettingWrites(db, batch),
     commit: () => batch.commit(),
   };
 }

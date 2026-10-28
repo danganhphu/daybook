@@ -87,8 +87,9 @@ The app speaks first: a morning list (follow-ups due, and customers who went qui
 the person turned them on - and to Telegram once the bot exists. Each person picks their own times in Settings, in
 quarter hours, or turns either off; 07:30 and Friday 17:00 are guesses until she says otherwise. A morning with nothing
 to say sends nothing, and a customer is named the day they go quiet rather than every morning after: a notification
-that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks for now - and stays a
-constant until real use says what it should be.
+that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks to start - and a setting
+of the book's, from 7 to 180 days: one number both people share, so a notification and Báo cáo always name the same
+customers.
 
 Changes to how someone signs in - a passkey added, a recovery link made, devices signed out - are told to that person
 the same way, always: these cannot be turned off.
@@ -111,7 +112,7 @@ Telegram's menu lists the commands, which answers the empty chat box's question 
 | `/reminders` | open follow-ups |
 | `/edit` | edit the last entry |
 | `/web` | a link to the web app |
-| `/settings` | a link to the app's Settings, where the times are set |
+| `/settings` | a link to the app's Settings, where the times and the "gone quiet" days are set |
 | `/help` | examples |
 
 Names are English: Telegram allows only Latin letters, digits and `_` in command names. Their menu descriptions are

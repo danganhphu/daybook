@@ -239,10 +239,17 @@ not a product, so under a product filter they are not told; the units sold are, 
   compared with the period before of the same kind.
 - **A chart's columns** are days (a week, a month, a range of up to 31 days), weeks from Monday (a quarter, a range of
   up to 92 days) or months. Every column of the period is there; a day without sales is zero.
-- **A customer has gone quiet** when their last live order is 21 days old or more (`gone-quiet.ts`), and they are not
-  hidden. A constant for now, not a setting.
+- **A customer has gone quiet** when their last live order is as many days old as the book's setting or more
+  (`gone-quiet.ts`), and they are not hidden. The setting is 7 to 180 days, 21 until someone changes it (below).
 - **Breakdowns** - by kind, the top five products and customers, the quiet ones - leave out what the report is
   filtered to: no breakdown by kind under a kind or customer filter, no top customers for one customer.
+
+## Book settings
+
+`src/features/book-settings/`. What the book is set to, shared by both people: a change by one is a change for the
+other. One setting so far, the days after which a customer has gone quiet; Báo cáo, the morning list and the Friday
+summary all read it, so they never disagree. Until someone changes it the defaults hold and nothing is stored; the
+first change writes the book's one row, and every change carries the version it was made from.
 
 ## Notifications
 
@@ -254,7 +261,7 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
 - **A digest is due in a slot** when the person's time is the slot's time - on a Friday, for the summary. The slot is
   worked out from the cron run's scheduled time, not the clock, so a late run serves its own slot.
 - **The morning list** is the reminders due that day or earlier, and the customers who went quiet that very day (their
-  last order exactly 21 days old). A morning with neither sends nothing. **The Friday summary** is the week's orders
+  last order exactly the book's number of days old). A morning with neither sends nothing. **The Friday summary** is the week's orders
   and sales, money in, what is owed, and how many customers are quiet.
 - **A notice** is one of a closed list of access events (`notice.ts`): a passkey added or removed, a password set,
   changed or locked, the username changed, a recovery link made or used, devices signed out by the other person, a new
@@ -397,17 +404,19 @@ through `createApp` in `src/composition/create-app.ts`.
 | `notificationSettings` | The person's times and the browsers receiving under a running session | - |
 | `scheduleSlot` | The scheduler: queues the digests due in a slot and the notices new in the access log | - |
 | `deliverNotification` | The consumer: claims a delivery, reads what to say, sends it on each channel | - |
+| `changeQuietAfterDays` | The book's days after which a customer has gone quiet | `setting_changed_elsewhere` |
 
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
 order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
 the free plan. Open reminders are one indexed read (`reminder_open_by_due_on`), with one more for the customers'
-names. A report is nine aggregate statements run together (`report-queries.ts`), plus the kinds and the names of
-what it is filtered to.
+names. A report is nine aggregate statements run together (`report-queries.ts`), plus the book's setting, the kinds
+and the names of what it is filtered to.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts`, `ReadingError` in
 `src/features/reading/application/reading-errors.ts`, `NotificationError` in
-`src/features/notifications/application/notification-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
+`src/features/notifications/application/notification-errors.ts`, `BookSettingError` in
+`src/features/book-settings/application/book-setting-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
 
 ## Tables
 
@@ -484,6 +493,16 @@ The notifications' tables, all `STRICT`:
 | `notification_preference` | per account, the morning and Friday times or null | quarter hours only; audited and versioned, with both triggers |
 | `notification_delivery` | account, subject, ref (a day or an event id), channel, status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
 | `notice_cursor` | where the relay of notices has read the access log to | a single row |
+
+`book_setting`, `STRICT`, a single row (`id` 1), written by the first change:
+
+| Column | Type | Rule |
+|---|---|---|
+| `id` | integer | primary key, always 1 |
+| `quiet_after_days` | integer | 7 to 180 |
+| `created_at`, `updated_at` | integer | epoch milliseconds; updated never before created |
+| `created_by`, `updated_by` | text | foreign keys to `account.id` |
+| `version` | integer | 1 or more; triggers `book_setting_version_moves_by_one` and `book_setting_creation_is_fixed` |
 
 ## Consistency
 

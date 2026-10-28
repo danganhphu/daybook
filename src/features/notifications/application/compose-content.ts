@@ -2,6 +2,7 @@ import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
+import type { BookSettingRepository } from "@/features/book-settings/domain/book-setting-repository";
 import type { CustomerRepository } from "@/features/customers/domain/customer-repository";
 import { isNotice } from "@/features/notifications/domain/notice";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
@@ -21,6 +22,7 @@ export type ContentSources = {
   readonly reminders: ReminderRepository;
   readonly customers: CustomerRepository;
   readonly reports: ReportQueries;
+  readonly settings: BookSettingRepository;
   readonly accessEvents: AccessEventRepository;
   readonly accounts: AccountRepository;
 };
@@ -33,13 +35,19 @@ export const contentLimits = {
   weeklyQuiet: 100,
 } as const;
 
+// By the book's setting, as the reports find them; the cutoff is the last order day that makes one quiet
+async function quietOn(sources: ContentSources, day: Temporal.PlainDate, limit: number) {
+  const cutoff = quietCutoff(day, (await sources.settings.get()).quietAfterDays);
+
+  return { cutoff, customers: await sources.reports.quietCustomers(cutoff, undefined, limit) };
+}
+
 // A customer goes in the morning list on the day they go quiet, not every morning after: the reports keep the whole
 // list, and a notification that repeats itself is soon ignored
 async function newlyQuiet(sources: ContentSources, day: Temporal.PlainDate) {
-  const cutoff = quietCutoff(day);
-  const quiet = await sources.reports.quietCustomers(cutoff, undefined, contentLimits.quiet);
+  const { cutoff, customers } = await quietOn(sources, day, contentLimits.quiet);
 
-  return quiet.filter((customer) => customer.lastOrderedOn.equals(cutoff));
+  return customers.filter((customer) => customer.lastOrderedOn.equals(cutoff));
 }
 
 async function morning(
@@ -78,7 +86,7 @@ async function weekly(sources: ContentSources, day: Temporal.PlainDate): Promise
     sources.reports.sales(range),
     sources.reports.received(range),
     sources.reports.owedAt(day, {}),
-    sources.reports.quietCustomers(quietCutoff(day), undefined, contentLimits.weeklyQuiet),
+    quietOn(sources, day, contentLimits.weeklyQuiet),
   ]);
 
   return {
@@ -88,7 +96,7 @@ async function weekly(sources: ContentSources, day: Temporal.PlainDate): Promise
     sales: sales.sales,
     received,
     owed,
-    quiet: quiet.length,
+    quiet: quiet.customers.length,
   };
 }
 

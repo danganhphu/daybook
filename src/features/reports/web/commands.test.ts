@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { testApp, testClock } from "@/testing/support/app";
+import { quietAfterDaysSchema } from "@/features/book-settings/domain/book-setting";
+import { testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer, aKind, anOrder, line } from "@/testing/support/orders";
+import { expectOk } from "@/testing/support/result";
 
 import { reportsScreen } from "./commands";
 
@@ -241,14 +243,30 @@ describe("the reports screen", () => {
 
     const quiet = (await reportsScreen(app, {})).report?.quiet;
 
-    expect(quiet).toEqual([
-      {
-        id: lagoon.id,
-        name: "Ánh Dương",
-        area: undefined,
-        days: "28 ngày",
-        href: `/customers/${lagoon.id}`,
-      },
-    ]);
+    expect(quiet).toEqual({
+      rows: [
+        {
+          id: lagoon.id,
+          name: "Ánh Dương",
+          area: undefined,
+          days: "28 ngày",
+          href: `/customers/${lagoon.id}`,
+        },
+      ],
+      footer: "Không có đơn nào trong 21 ngày qua",
+    });
+  });
+
+  it("given the book counts 30 days, when shown, then a customer four weeks quiet is not listed", async () => {
+    const { app } = await aBook();
+    expectOk(
+      await app.changeQuietAfterDays({
+        by: await theAuthor(),
+        days: quietAfterDaysSchema.parse(30),
+        shown: undefined,
+      }),
+    );
+
+    expect((await reportsScreen(app, {})).report?.quiet).toBeUndefined();
   });
 });

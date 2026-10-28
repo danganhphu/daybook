@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { createUnitOfWork } from "@/composition/unit-of-work";
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { Account } from "@/features/access/domain/account";
+import { quietAfterDaysSchema } from "@/features/book-settings/domain/book-setting";
 import type { NotificationJob } from "@/features/notifications/application/notification-job";
 import type { PushOutcome } from "@/features/notifications/application/push-sender";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
@@ -15,11 +16,18 @@ import {
   recordingPushSender,
   testJobs,
 } from "@/testing/support/notifications";
+import { aCustomer, anOrder, line } from "@/testing/support/orders";
+import { expectOk } from "@/testing/support/result";
 
 const thursday = "2026-10-29";
 
-function morningOf(account: Account): NotificationJob {
-  return { kind: "digest", digest: "morning", accountId: account.id, day: thursday };
+function morningOf(account: Account, day = thursday): NotificationJob {
+  return { kind: "digest", digest: "morning", accountId: account.id, day };
+}
+
+async function lastOrderOn(time: ReturnType<typeof testClock>, name: string, day: string) {
+  const app = testApp(time.clock);
+  await anOrder(app, await aCustomer(app, name), [line("Găng tay", 1, 100_000)], day);
 }
 
 async function lanWithAPhone(time: ReturnType<typeof testClock>) {
@@ -75,6 +83,40 @@ describe("deliverNotification", () => {
 
     expect(push.sent).toEqual([]);
     expect(await ledger()).toEqual([{ subject: "morning", status: "skipped", attempts: 1 }]);
+  });
+
+  it("given a customer whose last order is three weeks old today, when the morning job runs, then they are named, and not the morning after", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    await lastOrderOn(time, "Nha khoa Lan Anh", "2026-10-08");
+    const push = recordingPushSender();
+
+    await testJobs(time.clock, push.sender).deliver(morningOf(lan));
+    time.setTo("2026-10-30T00:30:00Z");
+    await testJobs(time.clock, push.sender).deliver(morningOf(lan, "2026-10-30"));
+
+    expect(push.sent.map(({ message }) => [message.title, message.body])).toEqual([
+      ["1 khách lâu không đặt", "Nha khoa Lan Anh"],
+    ]);
+  });
+
+  it("given the book counts 30 days, when the morning job runs, then the customer reaching 30 is named and the one at 21 is not", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    await lastOrderOn(time, "Nha khoa Lan Anh", "2026-10-08");
+    await lastOrderOn(time, "Hướng Dương", "2026-09-29");
+    expectOk(
+      await testApp(time.clock).changeQuietAfterDays({
+        by: lan.id,
+        days: quietAfterDaysSchema.parse(30),
+        shown: undefined,
+      }),
+    );
+    const push = recordingPushSender();
+
+    await testJobs(time.clock, push.sender).deliver(morningOf(lan));
+
+    expect(push.sent.map(({ message }) => message.body)).toEqual(["Hướng Dương"]);
   });
 
   it("given a push service that is busy, when the job runs, then it asks to be retried after the service's wait, and the retry sends", async () => {

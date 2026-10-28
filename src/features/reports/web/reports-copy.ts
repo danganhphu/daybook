@@ -1,4 +1,3 @@
-import { quietAfterDays } from "@/features/reports/domain/gone-quiet";
 import type { BucketKind, PeriodError, PeriodKind } from "@/features/reports/domain/report-period";
 
 export const reportsCopy = {
@@ -42,7 +41,6 @@ export const reportsCopy = {
   products: "Sản phẩm bán chạy",
   customers: "Khách mua nhiều",
   quiet: "Khách lâu không đặt",
-  quietFooter: `Không có đơn nào trong ${quietAfterDays} ngày qua`,
   allKinds: "Tất cả loại",
   filtering: "Đang lọc",
   from: "Từ ngày",
@@ -81,8 +79,13 @@ export function orderCount(count: number): string {
   return `${count} đơn`;
 }
 
-export function daysSince(days: number): string {
+// "28 ngày"
+export function dayCount(days: number): string {
   return `${days} ngày`;
+}
+
+export function quietFooter(afterDays: number): string {
+  return `Không có đơn nào trong ${afterDays} ngày qua`;
 }
 
 export function restOf(what: "products" | "customers", amount: string): string {
