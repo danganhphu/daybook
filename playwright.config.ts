@@ -29,7 +29,7 @@ export default defineConfig({
     timezoneId: "Asia/Ho_Chi_Minh",
     trace: "retain-on-failure",
   },
-  // The user may carry an iPhone or an Android phone; both are covered, and a desktop for the web app at a desk.
+  // The user's phone is a Samsung Galaxy S with Chrome, so Android comes first; an iPhone and a desk are covered too.
   // Chromium is real Chrome (new headless): the default headless shell passes an install check with no manifest.
   projects: [
     {
@@ -40,7 +40,7 @@ export default defineConfig({
     },
     {
       name: "android",
-      use: { ...devices["Pixel 7"], channel: "chromium" },
+      use: { ...devices["Galaxy S24"], channel: "chromium" },
       grepInvert: /@desktop-only/,
     },
     {

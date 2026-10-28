@@ -32,8 +32,9 @@ pnpm test:e2e
 
 - Scenarios are Gherkin in `e2e/*.feature`, English keywords and Vietnamese steps, turned into Playwright specs by
   playwright-bdd. Steps live in `e2e/*.steps.ts`.
-- Three devices: an iPhone 15 (WebKit), a Pixel 7 and a desktop, the last two in real Chrome
-  (`channel: "chromium"`).
+- Three devices: a Samsung Galaxy S24, the phone the app is for, an iPhone 15 (WebKit) and a desktop; the Galaxy
+  and the desktop in real Chrome (`channel: "chromium"`). Tags: `@chromium-only` skips the iPhone, `@phone-only` the
+  desktop, `@desktop-only` both phones, `@iphone-later` the iPhone for now.
 - They test **the production build** over HTTPS on port 4173, on a database of their own in `.cloudflare/e2e-state`,
   made fresh by `e2e/serve.ts` for every run. Nothing else may hold the port.
 - **The build is made with `--mode e2e`**: the same code, without the Workers AI binding, which has no local stand-in.
