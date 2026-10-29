@@ -4,6 +4,7 @@ import { DayScreen } from "@/app/(app)/_day/day-screen";
 import { daybook, pushPublicKey } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { todaysNotes } from "@/features/notes/web/commands";
+import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
 import { dayReadings } from "@/features/reading/web/commands";
 import { dueReminders } from "@/features/reminders/web/commands";
 
@@ -15,13 +16,22 @@ export const viewport: Viewport = { interactiveWidget: "resizes-content" };
 
 export default async function TodayPage() {
   const app = daybook();
-  await requireSession(app);
+  const session = await requireSession(app);
 
-  const [view, due, readings] = await Promise.all([
+  const [view, due, readings, unread] = await Promise.all([
     todaysNotes(app),
     dueReminders(app),
     dayReadings(app, app.today()),
+    unreadNotifications(app, session),
   ]);
 
-  return <DayScreen view={view} due={due} readings={readings} pushPublicKey={pushPublicKey()} />;
+  return (
+    <DayScreen
+      view={view}
+      due={due}
+      readings={readings}
+      pushPublicKey={pushPublicKey()}
+      unread={unread}
+    />
+  );
 }

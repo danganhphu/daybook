@@ -20,7 +20,9 @@ import { FilterChips } from "@/shared/ui/filter-chips/filter-chips";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
   AddIcon,
+  AnalyticsIcon,
   ArrowBackIcon,
+  ChecklistIcon,
   CloseIcon,
   DeleteIcon,
   EditIcon,
@@ -28,6 +30,7 @@ import {
   LocalShippingIcon,
   LogoutIcon,
   MoreHorizIcon,
+  NotificationsIcon,
   PaymentsIcon,
   PersonIcon,
   ReceiptLongIcon,
@@ -238,6 +241,20 @@ export function Gallery() {
           <IconLink icon={ArrowBackIcon} label={actionLabels.back} href={routes.componentGallery} />
           <IconLink icon={SearchIcon} label="Tìm ghi chú" href={routes.componentGallery} />
         </Sample>
+        <Sample caption="IconLink with a badge: Material 3's large badge, the count also in the label; 99+ past two digits">
+          <IconLink
+            icon={NotificationsIcon}
+            label="Thông báo, 3 chưa đọc"
+            badge="3"
+            href={routes.componentGallery}
+          />
+          <IconLink
+            icon={NotificationsIcon}
+            label="Thông báo, 120 chưa đọc"
+            badge="99+"
+            href={routes.componentGallery}
+          />
+        </Sample>
         <Sample caption="FabLink: fixed over the foot of the screen, so it is the blue circle at the bottom right">
           <FabLink icon={AddIcon} label="Tạo đơn" href={routes.componentGallery} />
         </Sample>
@@ -379,6 +396,31 @@ export function Gallery() {
                 valueTone="danger"
               />
               <ListLink href={routes.componentGallery} title="Sao Mai" value="900.000đ" />
+            </List>
+          </div>
+        </Sample>
+        <Sample caption="unread rows: tinted, a heavier title, and 'Chưa đọc' read out first; the detail keeps its lines">
+          <div className={styles.block}>
+            <List footer="Thông báo được giữ 30 ngày.">
+              <ListLink
+                href={routes.componentGallery}
+                title="Hôm nay có 2 việc"
+                detail={
+                  "Gọi lại Nha khoa Minh Châu (quá hạn 2 ngày)\nGiao 2 hộp thuốc tê, Hướng Dương"
+                }
+                value="07:30"
+                icon={ChecklistIcon}
+                iconTone={iconTones.note}
+                unread="Chưa đọc"
+              />
+              <ListLink
+                href={routes.componentGallery}
+                title="Tuần này: 12 đơn, 8.450.000đ"
+                detail="Thu về 5.200.000đ. Còn nợ 3.100.000đ."
+                value="Hôm qua"
+                icon={AnalyticsIcon}
+                iconTone={iconTones.money}
+              />
             </List>
           </div>
         </Sample>

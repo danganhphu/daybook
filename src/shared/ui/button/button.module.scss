@@ -99,3 +99,32 @@
     }
   }
 }
+
+// A count over an icon: Material 3's large badge, placed and sized as material-web's (labs/gb/components/badge),
+// whose offsets from the icon's centre and top are these
+$badge-offset-inline: 2px;
+$badge-offset-block: 1px;
+
+.badged {
+  position: relative;
+  display: inline-flex;
+}
+
+.badge {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  box-sizing: border-box;
+  min-inline-size: size(badge);
+  block-size: size(badge);
+  padding-inline: space(1);
+  margin-block-start: $badge-offset-block;
+  margin-inline-start: $badge-offset-inline;
+  color: color(on-danger);
+  text-align: center;
+  background: color(danger);
+  border-radius: radius(full);
+
+  @include text(badge);
+  @include tabular-nums;
+}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useId, useMemo, useOptimistic, useState } from "react";
 
 import { DueBar } from "@/app/(app)/_reminders/due-bar";
-import { AccountMenu } from "@/app/(app)/_shell/account-menu";
+import { TabActions } from "@/app/(app)/_shell/tab-actions";
 import { deleteOrder } from "@/app/(app)/orders/actions";
 import { deleteReminder } from "@/app/(app)/reminders/actions";
 import {
@@ -33,9 +33,9 @@ import { IconLink } from "@/shared/ui/button/icon-link";
 import { DayPicker } from "@/shared/ui/day-picker/day-picker";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import {
+  ChecklistIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  NotificationsIcon,
   SearchIcon,
 } from "@/shared/ui/icon/icons";
 import { useToast } from "@/shared/ui/toast/use-toast";
@@ -64,6 +64,8 @@ export type DayScreenProps = {
   readonly readings?: DayReadings | undefined;
   // Today's, where push is set up: what a browser subscribes with, for the offer to turn notifications on
   readonly pushPublicKey?: string | undefined;
+  // How many notifications the bell counts
+  readonly unread: number;
 };
 
 const nothingPending: ReadonlyMap<string, ReadingPending> = new Map();
@@ -84,7 +86,7 @@ function without(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
 // A day as a chat: the notes above, oldest first. Today also has the box at the bottom, where the thumb is; an
 // earlier day is read, corrected and tidied, but nothing new is written into it. Each note is read once saved: what
 // its message became shows under it, with Undo in a toast.
-export function DayScreen({ view, due, readings, pushPublicKey }: DayScreenProps) {
+export function DayScreen({ view, due, readings, pushPublicKey, unread }: DayScreenProps) {
   const toast = useToast();
   const canRead = readings?.canRead ?? false;
   const [saving, markSaving] = useOptimistic(nothingPending, withPending);
@@ -262,7 +264,7 @@ export function DayScreen({ view, due, readings, pushPublicKey }: DayScreenProps
           {/* No prefetch here or below: each is a Worker request and D1 reads that most visits never use */}
           <div className={styles.actions}>
             <IconLink
-              icon={NotificationsIcon}
+              icon={ChecklistIcon}
               label={remindersCopy.title}
               href={routes.reminders}
               prefetch={false}
@@ -273,7 +275,7 @@ export function DayScreen({ view, due, readings, pushPublicKey }: DayScreenProps
               href={routes.history}
               prefetch={false}
             />
-            <AccountMenu />
+            <TabActions unread={unread} />
           </div>
         </div>
         <nav className={styles.days} aria-label={notesCopy.otherDays}>

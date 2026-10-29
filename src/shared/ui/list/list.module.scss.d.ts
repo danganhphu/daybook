@@ -16,6 +16,7 @@ declare const text: string;
 declare const title: string;
 declare const detail: string;
 declare const link: string;
+declare const unread: string;
 declare const value: string;
 declare const bar: string;
 declare const chevron: string;
@@ -33,6 +34,7 @@ declare const __default_export__: {
 	title: typeof title;
 	detail: typeof detail;
 	link: typeof link;
+	unread: typeof unread;
 	value: typeof value;
 	bar: typeof bar;
 	chevron: typeof chevron;
@@ -40,4 +42,4 @@ declare const __default_export__: {
 	action: typeof action;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBSUE7Y0F3QlE7Y0FLUjtjQTRDQTtjQU1BO2NBSUE7Y0FPQTtjQTBCQTtjQWFBO2NBV0E7Y0FRQTtjQU9BOzs7Q0FyS0E7Q0FLQTtDQUNBO0NBSUE7Q0F3QlE7Q0FLUjtDQTRDQTtDQU1BO0NBSUE7Q0FPQTtDQTBCQTtDQWFBO0NBV0E7Q0FRQTtDQU9BOzsifQ==
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibGlzdC5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJsaXN0Lm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBR0E7Y0FLQTtjQUNBO2NBSUE7Y0F3QlE7Y0FLUjtjQTRDQTtjQU1BO2NBS0E7Y0FRQTtjQW9DQTtjQUlBO2NBYUE7Y0FXQTtjQVFBO2NBT0E7OztDQXJMQTtDQUtBO0NBQ0E7Q0FJQTtDQXdCUTtDQUtSO0NBNENBO0NBTUE7Q0FLQTtDQVFBO0NBb0NBO0NBSUE7Q0FhQTtDQVdBO0NBUUE7Q0FPQTs7In0=

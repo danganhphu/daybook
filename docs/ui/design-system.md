@@ -91,9 +91,10 @@ unknown name fails the build.
 | `accent` | `#0866ff` | The fill under white: the primary button, the send button | white on it 4.82:1 |
 | `accent-hover` | `#0756d6` | The primary button hovered or pressed | white on it 6.34:1 |
 | `accent-text` | `#0064d1` | Blue words: links, the current tab, an action row; the focus ring and a focused field's edge | 5.00:1 or more |
-| `accent-wash` | `#ebf3ff` | Behind a choice that is made: a filter chip, a pressed toggle | accent text 5.02:1 on it |
+| `accent-wash` | `#ebf3ff` | Behind a choice that is made: a filter chip, a pressed toggle; an unread row | accent text 5.02:1, muted 5.07:1 on it |
 | `on-accent` | `#ffffff` | Text on the accent | 4.82:1 |
-| `danger` | `#c2181d` | Destructive actions, errors | 4.75:1 or more |
+| `danger` | `#c2181d` | Destructive actions, errors; a badge | 4.75:1 or more |
+| `on-danger` | `#ffffff` | A badge's number | 4.75:1 |
 | `scrim` | `text` at 40% | Dims the page behind a dialog | not read on |
 | `icon-*` | see Icon tones | An icon's colour by what it is about | 3:1 or more on white |
 
@@ -133,10 +134,12 @@ weight.
 
 | Style | Material 3 style | Size / line height, weight | Use |
 |---|---|---|---|
-| `caption` | body-small | 12 / 16, 400 | The smallest anything gets: small print, a time |
+| `badge` | label-small | 11 / 16, 500 | A badge's number, and nothing else |
+| `caption` | body-small | 12 / 16, 400 | The smallest words get: small print, a time |
 | `caption-strong` | label-medium | 12 / 16, 500 | Tab labels |
 | `body-sm` | body-medium | 14 / 20, 400 | Secondary lines, a row's second line |
 | `body` | body-large | 16 / 24, 400 | Default, and every input: under 16px iOS zooms into the field |
+| `body-strong` | title-medium | 16 / 24, 500 | An unread row's title |
 | `label` | label-large | 14 / 20, 500 | A field's label, a group's name |
 | `label-strong` | label-large | 14 / 20, 500 | A button's words |
 | `title` | title-large | 22 / 28, 400 | A page's title in the bar, a dialog's |
@@ -260,14 +263,14 @@ change.
 |---|---|---|
 | `Button` | An action with a text label | A pill, its words `label-strong`. `variant` primary (filled blue), secondary (default, light grey) or quiet. `tone="danger"` exists only on secondary and quiet, so the type refuses a filled red button. `size` md is 40px, lg 44px for the main action |
 | `IconButton` | An action shown as an icon alone | A circle; quiet and muted unless it is the one action the screen exists for, such as send, which takes `variant="primary"` (never with the danger tone). `label` is required: it is the accessible name, the only one there is |
-| `IconLink` | Going to another page, shown as an icon alone | Looks exactly like a quiet `IconButton` but is a real link over `next/link`, so a screen reader says "link" and it opens in a new tab. A Base UI button rendered as a link would be announced as a button |
+| `IconLink` | Going to another page, shown as an icon alone | Looks exactly like a quiet `IconButton` but is a real link over `next/link`, so a screen reader says "link" and it opens in a new tab. A Base UI button rendered as a link would be announced as a button. An optional `badge` puts a count over the icon: Material 3's large badge as material-web sizes and places it (16px, `danger` under `on-danger`, `badge` type), "99+" past two digits; it is hidden from screen readers, so the `label` says the count too |
 | `SearchField` | The box at the top of a search screen | A grey pill with a magnifier, its input one character wide of its own (`size="1"`) so it never holds the page wider than the screen; `type="search"`, so the browser adds a clear button and the phone keyboard's Enter says search. `label` is the accessible name. Wrapped by the screen in `<search>` and a `next/form` GET form, so a search is a URL that back and reload keep |
 | `DayPicker` | Jumping to a date | An icon button that opens the phone's own date picker through `showPicker()`. The input stays rendered under the button, unseen, since `showPicker()` refuses an input that is not rendered and the popover anchors to it |
 | `ButtonLink` | Going somewhere, shown as a button with words: "Tạo đơn", "Gọi" | A `Button`'s look over `next/link`, read as a link; a `tel:` link dials. No prefetch unless asked |
 | `SelectField` | One choice from a short list | The browser's own `<select>`, labelled like `TextField`: a phone opens its own picker. `emptyLabel` adds a first "none" choice |
 | `SuggestField` | Free text with suggestions from the server: a customer, a product | Base UI's Autocomplete, async. The server is asked once the typing pauses for 250ms, not at every key (it was two or three requests a field), and outside any transition; a newer answer replaces an older one. The popup opens only with something in it, since an open popup hides the rest of the form from a screen reader; "nothing matches" is said under the field. Built after hydration: its hidden input carries a style attribute the CSP refuses in server HTML |
 | `ChipLinks` | One filter at a time: a status, a kind | A grey pill track with the current chip white on it; scrolls sideways when it does not fit. Links, so the filter is in the URL and works before scripts load |
-| `ListLink` | A row that opens a page of its own | The whole row is the link, with a chevron, an optional `icon` and `iconTone` leading it, an optional value at the end (`valueTone="danger"` for what is owed). No prefetch |
+| `ListLink` | A row that opens a page of its own | The whole row is the link, with a chevron, an optional `icon` and `iconTone` leading it, an optional value at the end (`valueTone="danger"` for what is owed). No prefetch. `unread` marks a row new to the person: `accent-wash` behind it, a heavier title, and its words ("Chưa đọc") read out first, so colour is not all that says so. A detail keeps its line breaks |
 | `PageHeader` | The top of a screen, drawn by `Screen` from its `title`, `subtitle`, `back` and `actions` | Material's small top app bar, 64px, that sticks while the page scrolls under it, back on the left and actions at the end; a hairline under it once the page has scrolled. Without `back` it is a tab's own screen: the title is large (`display`) under the bar, and moves into the bar (a fade, nothing else) once it has scrolled under it |
 | `FabLink` | What a list screen adds: an order, a customer | Material's floating action button: 56px, blue, 16px corners, over the foot of the screen above the tab bar, its accessible name in `label`. One per screen; the column keeps room for it so the last row comes clear |
 | `Stats` | A few numbers in one card | A `<dl>`: a small label over a large value, side by side while they fit; a number that does not fit moves to the next line whole, never into its neighbour. `hero` puts the screen's one big number above the rest, larger, in the text colour. A stat's `change` says how it moved against an earlier one, with a sign and an arrow as well as the colour |

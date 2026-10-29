@@ -94,8 +94,10 @@
   overflow-wrap: anywhere;
 }
 
+// A notification's lines stay lines
 .detail {
   color: color(text-muted);
+  white-space: pre-line;
 
   @include text(body-sm);
 }
@@ -125,6 +127,20 @@
       background: color(surface-subtle);
     }
   }
+
+  // New to the person: a tint, and a heavier title, so the colour is not all that says so
+  &[data-unread] {
+    background: color(accent-wash);
+
+    .title {
+      @include text(body-strong);
+    }
+  }
+}
+
+// What a screen reader says before an unread row's title
+.unread {
+  @include visually-hidden;
 }
 
 .value {

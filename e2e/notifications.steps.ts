@@ -1,8 +1,62 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+
 import { expect, type Page } from "@playwright/test";
+import { v7 as uuidv7 } from "uuid";
 
 import { Given, Then, When } from "./fixtures";
+import { databaseFolder } from "./paths";
 
 const serviceWorker = "/sw.js";
+const bell = /^Thông báo(, \d+ chưa đọc)?$/;
+
+// What the queue's consumer would keep for Lan, written straight into the run's database: no cron runs here. Each
+// scenario's own, so a run on another device finds one of its own unread.
+function tellLan(title: string) {
+  const file = readdirSync(databaseFolder).find(
+    (name) => name.endsWith(".sqlite") && name !== "metadata.sqlite",
+  );
+  // The server has the file open too: wait for its lock rather than fail on it
+  const db = new DatabaseSync(join(databaseFolder, file ?? ""), { timeout: 5000 });
+  try {
+    db.prepare(
+      "insert into inbox_item (id, account_id, subject, ref, title, body, path, created_at, read_at) select ?, id, 'notice', ?, ?, '', '/settings/notifications', ?, null from account where username = 'lan'",
+    ).run(uuidv7(), uuidv7(), title, Date.now());
+  } finally {
+    db.close();
+  }
+}
+
+Given("tôi có một thông báo mới {string}", async ({ page }, title: string) => {
+  tellLan(title);
+  await page.goto("/");
+});
+
+Then("cái chuông báo có thông báo chưa đọc", async ({ page }) => {
+  await expect(page.getByRole("link", { name: /^Thông báo, \d+ chưa đọc$/ })).toBeVisible();
+});
+
+When("tôi mở cái chuông", async ({ page }) => {
+  await page.getByRole("link", { name: bell }).click();
+  await expect(page.getByRole("heading", { name: "Thông báo", level: 1 })).toBeVisible();
+});
+
+Then("thông báo {string} đang tô là chưa đọc", async ({ page }, title: string) => {
+  await expect(page.getByRole("link", { name: new RegExp(`^Chưa đọc: ${title}`) })).toBeVisible();
+});
+
+// The list is marked read by a request of its own once on screen, so the bell may need a moment. Back on a tab first:
+// reloading before the way back has finished would reload the list itself.
+Then("cái chuông không còn số chưa đọc", async ({ page }) => {
+  await expect(page.getByRole("link", { name: bell })).toBeVisible();
+  await expect
+    .poll(async () => {
+      await page.reload();
+      return page.getByRole("link", { name: bell }).getAttribute("aria-label");
+    })
+    .toBe("Thông báo");
+});
 
 When("tôi chọn {string} cho {string}", async ({ page }, choice: string, label: string) => {
   const field = page.getByLabel(label, { exact: true });

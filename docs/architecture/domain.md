@@ -258,8 +258,17 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
 
 - **Times are quarter hours**, `HH:MM` in Vietnam, or off (`time-of-day.ts`). Each person sets their own; until they
   do, the defaults hold (07:30, and Friday 17:00) and nothing is stored. A change carries the version it was made from.
-- **A digest is due in a slot** when the person's time is the slot's time - on a Friday, for the summary. The slot is
-  worked out from the cron run's scheduled time, not the clock, so a late run serves its own slot.
+- **A digest is due in a slot** when the person's time is the slot's time - on a Friday, for the summary - whether or
+  not a browser of theirs receives push. The slot is worked out from the cron run's scheduled time, not the clock, so a
+  late run serves its own slot.
+- **Channels**: every notification goes to the list behind the bell (`inbox`), always, and by push to each browser
+  receiving. The ledger claims each channel apart, so one that fails is retried while the others stay done.
+- **The list behind the bell** keeps each notification in the words it was sent with, once per person and subject and
+  day or event, newest first, the last 50 shown, for 30 days. A tap opens where the notification opens. The bell on
+  every tab counts what is unread; opening the list marks read everything up to its newest item, by a request of its
+  own once the list is on screen, and what was unread stays highlighted for that visit. Like every change, that
+  request clears the browser's copies of the screens, so each tab's bell counts again. Each person sees only their
+  own.
 - **The morning list** is the reminders due that day or earlier, and the customers who went quiet that very day (their
   last order exactly the book's number of days old). A morning with neither sends nothing. **The Friday summary** is the week's orders
   and sales, money in, what is owed, and how many customers are quiet.
@@ -273,7 +282,8 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
   `google.com`, `mozilla.com`), matched by domain: the Worker posts to whatever is stored.
 - **A delivery is claimed before it is sent**, in one statement: a first claim or a retry of an unfinished one takes
   it; a finished one is never sent again. A browser that dropped its subscription (404 or 410) loses it; a busy push
-  service (429, 5xx) means a retry, after its `Retry-After` if it gave one.
+  service (429, 5xx) means a retry, after its `Retry-After` if it gave one. Every push says `Urgency: high`: each is
+  one the person sees, which is what Android's high priority is for.
 
 ## Access
 
@@ -404,6 +414,8 @@ through `createApp` in `src/composition/create-app.ts`.
 | `notificationSettings` | The person's times and the browsers receiving under a running session | - |
 | `scheduleSlot` | The scheduler: queues the digests due in a slot and the notices new in the access log | - |
 | `deliverNotification` | The consumer: claims a delivery, reads what to say, sends it on each channel | - |
+| `notificationInbox` | The person's list behind the bell, newest first | - |
+| `markInboxRead` | Marks the person's unread items read, up to the newest one shown | - |
 | `changeQuietAfterDays` | The book's days after which a customer has gone quiet | `setting_changed_elsewhere` |
 
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
@@ -491,8 +503,9 @@ The notifications' tables, all `STRICT`:
 | --- | --- | --- |
 | `push_subscription` | account, session, the push service's address, the browser's two keys, the device label, when made, when last sent | session unique, set null when the session is deleted; address unique and `https`, at most 2,048; keys of their exact lengths |
 | `notification_preference` | per account, the morning and Friday times or null | quarter hours only; audited and versioned, with both triggers |
-| `notification_delivery` | account, subject, ref (a day or an event id), channel, status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
+| `notification_delivery` | account, subject, ref (a day or an event id), channel (`inbox` or `push`), status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
 | `notice_cursor` | where the relay of notices has read the access log to | a single row |
+| `inbox_item` | account, subject, ref, title, body, path, when made, when read | unique (account, subject, ref); a path in the app (`/`, never `//`); title not blank, at most 200; body at most 2,000; read never before made. No audit columns: the system writes it, its person only reads it. Indexes: by account and time for the list, and a partial one on unread items for the bell's count |
 
 `book_setting`, `STRICT`, a single row (`id` 1), written by the first change:
 

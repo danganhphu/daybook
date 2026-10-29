@@ -17,6 +17,9 @@ export type ListLinkProps = {
   // Leading the row, in the colour of what it is about
   readonly icon?: Icon | undefined;
   readonly iconTone?: IconTone;
+  // A row new to the person, such as an unread notification: tinted, its title heavier, and these words read out
+  // before it, so it is never told by colour alone
+  readonly unread?: string | undefined;
 };
 
 // A row that opens a page of its own: the whole row is the link, with a chevron to say so. No prefetch: a list of
@@ -29,13 +32,22 @@ export function ListLink({
   valueTone = "neutral",
   icon,
   iconTone = "neutral",
+  unread,
 }: ListLinkProps) {
   return (
     <li>
-      <AppLink href={href} prefetch={false} className={styles.link}>
+      <AppLink
+        href={href}
+        prefetch={false}
+        className={styles.link}
+        data-unread={unread === undefined ? undefined : ""}
+      >
         {icon === undefined ? null : <RowIcon icon={icon} tone={iconTone} />}
         <span className={styles.text}>
-          <span className={styles.title}>{title}</span>
+          <span className={styles.title}>
+            {unread === undefined ? null : <span className={styles.unread}>{unread}: </span>}
+            {title}
+          </span>
           {detail === undefined ? null : <span className={styles.detail}>{detail}</span>}
         </span>
         {value === undefined ? null : (

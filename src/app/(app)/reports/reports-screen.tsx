@@ -1,6 +1,6 @@
 import Form from "next/form";
 
-import { AccountMenu } from "@/app/(app)/_shell/account-menu";
+import { TabActions } from "@/app/(app)/_shell/tab-actions";
 import type { BarListView, ReportsView } from "@/features/reports/web/report-view";
 import { removeFilter, reportsCopy } from "@/features/reports/web/reports-copy";
 import { filtersAnchor } from "@/features/reports/web/reports-path";
@@ -22,8 +22,6 @@ import { TextField } from "@/shared/ui/text-field/text-field";
 import { routes } from "@/shared/web/routes";
 
 import styles from "./reports.module.scss";
-
-const accountMenu = <AccountMenu />;
 
 function Ranking({ list }: { readonly list: BarListView | undefined }) {
   if (list === undefined) {
@@ -48,11 +46,19 @@ function Ranking({ list }: { readonly list: BarListView | undefined }) {
 
 // A period's figures: what was sold, what came in, what is owed, over time and by kind, product and customer, and
 // who has gone quiet. The period and every filter are links, so they live in the URL.
-export function ReportsScreen({ view }: { readonly view: ReportsView }) {
+export function ReportsScreen({
+  view,
+  unread,
+}: {
+  readonly view: ReportsView;
+  readonly unread: number;
+}) {
   const { report, range } = view;
+  // oxlint-disable-next-line react-perf/jsx-no-jsx-as-prop -- a server component renders once a request: nothing to memoize for
+  const actions = <TabActions unread={unread} />;
 
   return (
-    <Screen title={reportsCopy.title} actions={accountMenu}>
+    <Screen title={reportsCopy.title} actions={actions}>
       <div className={styles.filters} id={filtersAnchor}>
         <ChipLinks label={reportsCopy.periodChoice} chips={view.periods} />
         {range === undefined ? null : (

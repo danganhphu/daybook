@@ -14,6 +14,7 @@ const names = [
   "calendar-month",
   "call",
   "check-circle",
+  "checklist",
   "chevron-left",
   "chevron-right",
   "close",

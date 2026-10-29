@@ -23,6 +23,8 @@ const secondsPerHour = 3600;
 // Kept by the push service for a phone that is off: the morning's list is stale by evening, the rest within a day
 const morningTtl = 12 * secondsPerHour;
 const dayTtl = 24 * secondsPerHour;
+// Every one is shown to the person, so each may wake the phone
+const urgency = "high";
 // How many reminders the body names, and how much of each
 const namedReminders = 3;
 const lineLength = 80;
@@ -127,17 +129,21 @@ export function pushMessageFor(
     case "morning":
       return {
         message: { ...morning(content), tag },
-        delivery: { ttlSeconds: morningTtl, topic: digestTopic(content.kind, content.day) },
+        delivery: {
+          ttlSeconds: morningTtl,
+          topic: digestTopic(content.kind, content.day),
+          urgency,
+        },
       };
     case "weekly":
       return {
         message: { ...weekly(content), tag },
-        delivery: { ttlSeconds: dayTtl, topic: digestTopic(content.kind, content.day) },
+        delivery: { ttlSeconds: dayTtl, topic: digestTopic(content.kind, content.day), urgency },
       };
     case "notice":
       return {
         message: { ...notice(content), tag },
-        delivery: { ttlSeconds: dayTtl, topic: undefined },
+        delivery: { ttlSeconds: dayTtl, topic: undefined, urgency },
       };
     default:
       return content satisfies never;

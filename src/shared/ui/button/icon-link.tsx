@@ -13,6 +13,8 @@ export type IconLinkProps = Omit<
   // The accessible name; there is no visible text, so this is all a screen reader has
   readonly label: string;
   readonly size?: ButtonSize;
+  // A count over the icon, such as unread notifications; the label must say it too, since the badge is not read out
+  readonly badge?: string | undefined;
 };
 
 // Looks like a quiet icon button, but goes to another page: a real link, so a screen reader says so and it can open
@@ -23,6 +25,7 @@ export function IconLink({
   label,
   size = "md",
   prefetch = false,
+  badge,
   ...props
 }: IconLinkProps) {
   return (
@@ -36,7 +39,16 @@ export function IconLink({
       data-size={size}
       data-icon-only=""
     >
-      <Icon />
+      {badge === undefined ? (
+        <Icon />
+      ) : (
+        <span className={styles.badged}>
+          <Icon />
+          <span className={styles.badge} aria-hidden>
+            {badge}
+          </span>
+        </span>
+      )}
     </AppLink>
   );
 }

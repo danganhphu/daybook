@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
+import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
 import { reportsScreen } from "@/features/reports/web/commands";
 import { reportsCopy } from "@/features/reports/web/reports-copy";
 
@@ -18,7 +19,11 @@ type ReportsPageProps = {
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const app = daybook();
-  await requireSession(app);
+  const session = await requireSession(app);
+  const [view, unread] = await Promise.all([
+    reportsScreen(app, await searchParams),
+    unreadNotifications(app, session),
+  ]);
 
-  return <ReportsScreen view={await reportsScreen(app, await searchParams)} />;
+  return <ReportsScreen view={view} unread={unread} />;
 }

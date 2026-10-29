@@ -1,6 +1,6 @@
 import Form from "next/form";
 
-import { AccountMenu } from "@/app/(app)/_shell/account-menu";
+import { TabActions } from "@/app/(app)/_shell/tab-actions";
 import type { CustomersView } from "@/features/customers/web/commands";
 import { customersCopy } from "@/features/customers/web/customers-copy";
 import { customersPath } from "@/features/customers/web/customers-path";
@@ -17,8 +17,6 @@ import { Screen } from "@/shared/ui/screen/screen";
 import { SearchField } from "@/shared/ui/search-field/search-field";
 import { moneyText } from "@/shared/web/money-text";
 import { customerPath, routes } from "@/shared/web/routes";
-
-const accountMenu = <AccountMenu />;
 
 // All kinds, then one chip a kind; the search and the hidden view carry over
 function kindChips(view: CustomersView): ReadonlyArray<ChipLink> {
@@ -40,14 +38,22 @@ function kindChips(view: CustomersView): ReadonlyArray<ChipLink> {
 
 // Every customer by name, what kind and where beneath, and what they owe at the end of the row, so the ones to chase
 // stand out. The kind chips and the search narrow it; hidden customers are one link away.
-export function CustomersScreen({ view }: { readonly view: CustomersView }) {
+export function CustomersScreen({
+  view,
+  unread,
+}: {
+  readonly view: CustomersView;
+  readonly unread: number;
+}) {
   const hidden = view.showingHidden ? ("1" as const) : undefined;
+  // oxlint-disable-next-line react-perf/jsx-no-jsx-as-prop -- a server component renders once a request: nothing to memoize for
+  const actions = view.showingHidden ? undefined : <TabActions unread={unread} />;
 
   return (
     <Screen
       title={view.showingHidden ? customersCopy.hidden : customersCopy.title}
       back={view.showingHidden ? routes.customers : undefined}
-      actions={view.showingHidden ? undefined : accountMenu}
+      actions={actions}
     >
       <search>
         <Form action={routes.customers}>

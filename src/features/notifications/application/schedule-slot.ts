@@ -4,33 +4,34 @@ import type {
   AccessEventRepository,
   AccessLogPosition,
 } from "@/features/access/domain/access-event-repository";
-import * as Sessions from "@/features/access/domain/session";
+import type { AccountRepository } from "@/features/access/domain/account-repository";
 import { deliveryRetentionDays } from "@/features/notifications/domain/delivery";
 import { isNotice } from "@/features/notifications/domain/notice";
 import type { NoticeCursorRepository } from "@/features/notifications/domain/notice-cursor-repository";
 import * as NotificationPreferences from "@/features/notifications/domain/notification-preference";
 import { digestKinds } from "@/features/notifications/domain/notification-preference";
 import type { NotificationPreferenceRepository } from "@/features/notifications/domain/notification-preference-repository";
-import type { PushSubscriptionRepository } from "@/features/notifications/domain/push-subscription-repository";
 import { slotAt, type Slot } from "@/features/notifications/domain/slot";
 import { timesOfDay } from "@/features/notifications/domain/time-of-day";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
-import type { AccountId } from "@/shared/domain/account-id";
 
 import type { DeliveryLedger } from "./delivery-ledger";
 import type { JobSender, NotificationJob } from "./notification-job";
-import type { NoticeCursorWrites } from "./notification-writes";
+import type { InboxWrites, NoticeCursorWrites } from "./notification-writes";
 
 export type ScheduleSlotDeps = {
   readonly clock: Clock;
-  readonly subscriptions: PushSubscriptionRepository;
+  readonly accounts: AccountRepository;
   readonly preferences: NotificationPreferenceRepository;
   readonly accessEvents: AccessEventRepository;
   readonly noticeCursor: NoticeCursorRepository;
   readonly ledger: DeliveryLedger;
   readonly jobs: JobSender;
-  readonly startUnitOfWork: () => UnitOfWork<{ readonly noticeCursor: NoticeCursorWrites }>;
+  readonly startUnitOfWork: () => UnitOfWork<{
+    readonly noticeCursor: NoticeCursorWrites;
+    readonly inbox: InboxWrites;
+  }>;
 };
 
 export type SlotPlan = {
@@ -74,30 +75,16 @@ async function relayNotices(deps: ScheduleSlotDeps, upTo: Temporal.Instant): Pro
   };
 }
 
-async function reachableAccounts(
-  deps: ScheduleSlotDeps,
-  now: Temporal.Instant,
-): Promise<ReadonlyArray<AccountId>> {
-  const devices = await deps.subscriptions.listWithSessions();
-
-  return [
-    ...new Set(
-      devices
-        .filter(({ session }) => !Sessions.isExpired(session, now))
-        .map(({ subscription }) => subscription.accountId),
-    ),
-  ];
-}
-
-// The scheduler, every quarter hour: who is due a digest in this slot, and which security events are new. It only
-// queues; the queue's consumer sends, one person and one message at a time (Queue-Based Load Leveling).
+// The scheduler, every quarter hour: who is due a digest in this slot, and which security events are new. Everyone is,
+// with a browser receiving push or not: the list in the app keeps every digest. It only queues; the queue's consumer
+// sends, one person and one message at a time (Queue-Based Load Leveling).
 export async function scheduleSlot(
   deps: ScheduleSlotDeps,
   scheduledTime: Temporal.Instant,
 ): Promise<SlotPlan> {
   const now = deps.clock();
   const slot = slotAt(scheduledTime);
-  const accounts = await reachableAccounts(deps, now);
+  const accounts = (await deps.accounts.list()).map((account) => account.id);
   const stored = await deps.preferences.getMany(accounts);
   const digests = accounts.flatMap((accountId) => {
     const preference = stored.get(accountId) ?? NotificationPreferences.defaults(accountId);
@@ -123,7 +110,11 @@ export async function scheduleSlot(
     await work.commit();
   }
   if (slot.time === timesOfDay[0]) {
-    await deps.ledger.forget(now.subtract({ hours: deliveryRetentionDays * hoursPerDay }));
+    const before = now.subtract({ hours: deliveryRetentionDays * hoursPerDay });
+    await deps.ledger.forget(before);
+    const work = deps.startUnitOfWork();
+    work.inbox.forget(before);
+    await work.commit();
   }
 
   return { slot, digests: digests.length, notices: relay.jobs.length };

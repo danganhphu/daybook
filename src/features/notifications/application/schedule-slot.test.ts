@@ -109,16 +109,19 @@ describe("scheduleSlot, digests", () => {
     expect(jobs.queued.filter((job) => job.kind === "digest")).toEqual([]);
   });
 
-  it("given someone with no device on, or a device whose sign-in ran out, when 07:30 comes, then nothing is queued for them", async () => {
+  it("given someone with no device on, or a device whose sign-in ran out, when 07:30 comes, then their morning list is queued all the same, for the list in the app", async () => {
     const time = testClock("2026-10-01T01:00:00Z");
-    await lanWithAPhone(time);
-    await seedSession(time.clock, await seedAccount(time.clock, "minh", "Minh"));
+    const { lan } = await lanWithAPhone(time);
+    const minh = await seedAccount(time.clock, "minh", "Minh");
+    await seedSession(time.clock, minh);
     time.setTo(thursdayMorning);
     const jobs = testJobs(time.clock, recordingPushSender().sender);
 
     await jobs.scheduleSlot(scheduledAt(thursdayMorning));
 
-    expect(jobs.queued.filter((job) => job.kind === "digest")).toEqual([]);
+    expect(
+      jobs.queued.flatMap((job) => (job.kind === "digest" ? [job.accountId] : [])).toSorted(),
+    ).toEqual([lan.id, minh.id].toSorted());
   });
 });
 

@@ -10,3 +10,6 @@ export const staleSessionsUsedFile = `${persistTo}/stale-sessions-used`;
 export const hoaStaleSessionsUsedFile = `${persistTo}/hoa-stale-sessions-used`;
 
 export const seedMigrations = `${persistTo}/seed`;
+
+// The database's own SQLite file is in here, under a name miniflare picks
+export const databaseFolder = `${persistTo}/v3/d1/miniflare-D1DatabaseObject`;

@@ -7,8 +7,8 @@ export const deliverySubjects = [...digestKinds, "notice"] as const;
 
 export type DeliverySubject = (typeof deliverySubjects)[number];
 
-// Where it goes. The bot adds Telegram.
-export const deliveryChannels = ["push"] as const;
+// Where it goes: the list in the app, always, and the browsers with push on. The bot adds Telegram.
+export const deliveryChannels = ["inbox", "push"] as const;
 
 export type DeliveryChannel = (typeof deliveryChannels)[number];
 
@@ -28,5 +28,6 @@ export type DeliveryKey = {
   readonly channel: DeliveryChannel;
 };
 
-// How long the ledger remembers: long past any retry
+// How long the ledger remembers, long past any retry, and the list keeps what it was told (Microsoft Teams keeps its
+// activity feed 30 days)
 export const deliveryRetentionDays = 30;

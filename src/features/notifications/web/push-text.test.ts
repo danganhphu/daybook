@@ -67,10 +67,11 @@ describe("pushMessageFor, the morning list", () => {
     expect(message.body.endsWith("...")).toBe(true);
   });
 
-  it("given a digest, when sent, then its topic fits RFC 8030's 32 base64url characters", () => {
+  it("given a digest, when sent, then its topic fits RFC 8030's 32 base64url characters, and it is urgent enough to wake the phone", () => {
     const { delivery } = pushMessageFor(morning({ due: [], quiet: ["A"] }), "2026-10-29");
 
     expect(delivery.topic).toMatch(/^[A-Za-z0-9_-]{1,32}$/);
+    expect(delivery.urgency).toBe("high");
   });
 });
 
@@ -118,5 +119,6 @@ describe("pushMessageFor, a notice", () => {
     );
     expect(message.path).toBe("/settings/activity");
     expect(delivery.topic).toBeUndefined();
+    expect(delivery.urgency).toBe("high");
   });
 });

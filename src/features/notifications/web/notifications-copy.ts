@@ -28,10 +28,33 @@ export const notificationsCopy = {
   noDevice: "Chưa bật",
   offer: "Bật thông báo để sáng nào cũng được nhắc việc?",
   later: "Để sau",
+  inboxEmpty: "Chưa có thông báo nào",
+  unread: "Chưa đọc",
+  yesterday: "Hôm qua",
 } as const;
 
 export function devicesOn(count: number): string {
   return count === 0 ? notificationsCopy.noDevice : `Đang bật trên ${count} thiết bị`;
+}
+
+export function keptFor(days: number): string {
+  return `Thông báo được giữ ${days} ngày.`;
+}
+
+// The bell's accessible name, which carries the count its badge shows
+export function bellLabel(unread: number): string {
+  return unread === 0 ? notificationsCopy.title : `${notificationsCopy.title}, ${unread} chưa đọc`;
+}
+
+// Past two digits the badge says "99+", as Windows' badges do
+const badgeMax = 99;
+
+export function badgeText(unread: number): string | undefined {
+  if (unread === 0) {
+    return undefined;
+  }
+
+  return unread > badgeMax ? `${badgeMax}+` : String(unread);
 }
 
 export const notificationErrorMessages = {
