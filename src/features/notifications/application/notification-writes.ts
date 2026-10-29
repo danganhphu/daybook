@@ -1,9 +1,13 @@
+import type { Temporal } from "temporal-polyfill/implementation";
+
 import type { AccessLogPosition } from "@/features/access/domain/access-event-repository";
+import type { InboxItem } from "@/features/notifications/domain/inbox-item";
 import type { NotificationPreference } from "@/features/notifications/domain/notification-preference";
 import type {
   PushSubscription,
   PushSubscriptionId,
 } from "@/features/notifications/domain/push-subscription";
+import type { AccountId } from "@/shared/domain/account-id";
 
 // Queue changes on the current unit of work; nothing is stored until it commits
 
@@ -20,4 +24,12 @@ export type NotificationPreferenceWrites = {
 
 export type NoticeCursorWrites = {
   save(position: AccessLogPosition): void;
+};
+
+export type InboxWrites = {
+  // Kept once: the same person, subject and ref again adds nothing
+  add(item: InboxItem): void;
+  // Every unread item of the person's made up to that moment
+  markRead(accountId: AccountId, upTo: Temporal.Instant, at: Temporal.Instant): void;
+  forget(before: Temporal.Instant): void;
 };

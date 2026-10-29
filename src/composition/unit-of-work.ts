@@ -35,11 +35,13 @@ import { createMergeWrites } from "@/features/merging/infrastructure/merge-write
 import type { NoteWrites } from "@/features/notes/application/note-writes";
 import { createNoteWrites } from "@/features/notes/infrastructure/note-writes";
 import type {
+  InboxWrites,
   NoticeCursorWrites,
   NotificationPreferenceWrites,
   PushSubscriptionWrites,
 } from "@/features/notifications/application/notification-writes";
 import {
+  createInboxWrites,
   createNoticeCursorWrites,
   createNotificationPreferenceWrites,
   createPushSubscriptionWrites,
@@ -84,6 +86,7 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly pushSubscriptions: PushSubscriptionWrites;
   readonly notificationPreferences: NotificationPreferenceWrites;
   readonly noticeCursor: NoticeCursorWrites;
+  readonly inbox: InboxWrites;
   readonly bookSettings: BookSettingWrites;
 }>;
 
@@ -111,6 +114,7 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     pushSubscriptions: createPushSubscriptionWrites(db, batch),
     notificationPreferences: createNotificationPreferenceWrites(db, batch),
     noticeCursor: createNoticeCursorWrites(db, batch),
+    inbox: createInboxWrites(db, batch),
     bookSettings: createBookSettingWrites(db, batch),
     commit: () => batch.commit(),
   };

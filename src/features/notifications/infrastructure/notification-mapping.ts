@@ -1,6 +1,9 @@
 import { Temporal } from "temporal-polyfill/implementation";
+import { z } from "zod";
 
 import { deviceLabelSchema, sessionIdSchema } from "@/features/access/domain/session";
+import { deliverySubjects } from "@/features/notifications/domain/delivery";
+import { inboxItemIdSchema, type InboxItem } from "@/features/notifications/domain/inbox-item";
 import {
   timeOfDaySchema,
   type NotificationPreference,
@@ -14,11 +17,13 @@ import {
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { toAudit, toAuditRow } from "@/shared/infrastructure/d1/audit-mapping";
 
+import type { inboxItemTable } from "./inbox-item.table";
 import type { notificationPreferenceTable } from "./notification-preference.table";
 import type { pushSubscriptionTable } from "./push-subscription.table";
 
 type PushSubscriptionRow = typeof pushSubscriptionTable.$inferSelect;
 type NotificationPreferenceRow = typeof notificationPreferenceTable.$inferSelect;
+type InboxItemRow = typeof inboxItemTable.$inferSelect;
 
 export function toPushSubscription(row: PushSubscriptionRow): PushSubscription {
   return {
@@ -57,6 +62,36 @@ export function toNotificationPreference(row: NotificationPreferenceRow): Notifi
     morningAt: optionalTime(row.morningAt),
     weeklyAt: optionalTime(row.weeklyAt),
     audit: toAudit(row),
+  };
+}
+
+const subjectSchema = z.enum(deliverySubjects);
+
+export function toInboxItem(row: InboxItemRow): InboxItem {
+  return {
+    id: inboxItemIdSchema.parse(row.id),
+    accountId: accountIdSchema.parse(row.accountId),
+    subject: subjectSchema.parse(row.subject),
+    ref: row.ref,
+    title: row.title,
+    body: row.body,
+    path: row.path,
+    createdAt: Temporal.Instant.fromEpochMilliseconds(row.createdAt),
+    readAt: row.readAt === null ? undefined : Temporal.Instant.fromEpochMilliseconds(row.readAt),
+  };
+}
+
+export function toInboxItemRow(item: InboxItem): InboxItemRow {
+  return {
+    id: item.id,
+    accountId: item.accountId,
+    subject: item.subject,
+    ref: item.ref,
+    title: item.title,
+    body: item.body,
+    path: item.path,
+    createdAt: item.createdAt.epochMilliseconds,
+    readAt: item.readAt?.epochMilliseconds ?? null,
   };
 }
 

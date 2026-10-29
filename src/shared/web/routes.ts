@@ -11,6 +11,7 @@ export const routes = {
   products: "/products",
   deleted: "/deleted",
   reports: "/reports",
+  notifications: "/notifications",
   signIn: "/sign-in",
   setup: "/setup",
   signOut: "/sign-out",
@@ -55,12 +56,20 @@ export function editCustomerPath(id: string): string {
   return `${customerPath(id)}/edit`;
 }
 
-// The tab the settings were opened from, where their back arrow returns
+// The tab Settings or the notifications were opened from, where their back arrow returns
 export const settingsFromParameter = "from";
+
+function openedFromTab(page: string, from: string): string {
+  return `${page}?${new URLSearchParams({ [settingsFromParameter]: from })}`;
+}
 
 // Every settings page carries it, so going back from a section, then from Settings, ends on that tab
 export function settingsPath(from: string, page: string = routes.settings): string {
-  return `${page}?${new URLSearchParams({ [settingsFromParameter]: from })}`;
+  return openedFromTab(page, from);
+}
+
+export function notificationsPath(from: string): string {
+  return openedFromTab(routes.notifications, from);
 }
 
 // Today has one address, the home screen, so a day page never shows what the home screen shows. Days are YYYY-MM-DD

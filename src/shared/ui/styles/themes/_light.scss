@@ -21,6 +21,8 @@ $colors: (
   accent-wash: oklch(96.2% 0.018 258deg),
   on-accent: oklch(100% 0 0deg),
   danger: oklch(52% 0.2 27deg),
+  // A badge's number on danger: the same pair as danger on white, the other way round
+  on-danger: oklch(100% 0 0deg),
   // Dims the page behind a dialog; a tint, not a colour anything is read on
   scrim: oklch(11.5% 0 0deg / 40%),
   // Icon tones, each one meaning (docs/ui/design-system.md, "Icon tones"), each at least 3:1 on white

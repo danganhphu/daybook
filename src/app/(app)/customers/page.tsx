@@ -4,6 +4,7 @@ import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { customersScreen } from "@/features/customers/web/commands";
 import { customersCopy } from "@/features/customers/web/customers-copy";
+import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
 
 import { CustomersScreen } from "./customers-screen";
 
@@ -18,8 +19,12 @@ type CustomersPageProps = {
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const app = daybook();
-  await requireSession(app);
+  const session = await requireSession(app);
   const { q, kind, hidden } = await searchParams;
+  const [view, unread] = await Promise.all([
+    customersScreen(app, { q, kind, hidden }),
+    unreadNotifications(app, session),
+  ]);
 
-  return <CustomersScreen view={await customersScreen(app, { q, kind, hidden })} />;
+  return <CustomersScreen view={view} unread={unread} />;
 }

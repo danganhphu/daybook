@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, lt, lte } from "drizzle-orm";
 
 import type {
+  InboxWrites,
   NoticeCursorWrites,
   NotificationPreferenceWrites,
   PushSubscriptionWrites,
@@ -8,8 +9,13 @@ import type {
 import type { Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
+import { inboxItemTable } from "./inbox-item.table";
 import { noticeCursorName, noticeCursorTable } from "./notice-cursor.table";
-import { toNotificationPreferenceRow, toPushSubscriptionRow } from "./notification-mapping";
+import {
+  toInboxItemRow,
+  toNotificationPreferenceRow,
+  toPushSubscriptionRow,
+} from "./notification-mapping";
 import { notificationPreferenceTable } from "./notification-preference.table";
 import { pushSubscriptionTable } from "./push-subscription.table";
 
@@ -77,6 +83,42 @@ export function createNoticeCursorWrites(db: Database, batch: Batch): NoticeCurs
           .insert(noticeCursorTable)
           .values({ name: noticeCursorName, ...row })
           .onConflictDoUpdate({ target: noticeCursorTable.name, set: row }),
+      );
+    },
+  };
+}
+
+export function createInboxWrites(db: Database, batch: Batch): InboxWrites {
+  return {
+    add(item) {
+      batch.enlist(
+        db
+          .insert(inboxItemTable)
+          .values(toInboxItemRow(item))
+          .onConflictDoNothing({
+            target: [inboxItemTable.accountId, inboxItemTable.subject, inboxItemTable.ref],
+          }),
+      );
+    },
+
+    markRead(accountId, upTo, at) {
+      batch.enlist(
+        db
+          .update(inboxItemTable)
+          .set({ readAt: at.epochMilliseconds })
+          .where(
+            and(
+              eq(inboxItemTable.accountId, accountId),
+              isNull(inboxItemTable.readAt),
+              lte(inboxItemTable.createdAt, upTo.epochMilliseconds),
+            ),
+          ),
+      );
+    },
+
+    forget(before) {
+      batch.enlist(
+        db.delete(inboxItemTable).where(lt(inboxItemTable.createdAt, before.epochMilliseconds)),
       );
     },
   };

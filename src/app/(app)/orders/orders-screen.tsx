@@ -1,4 +1,4 @@
-import { AccountMenu } from "@/app/(app)/_shell/account-menu";
+import { TabActions } from "@/app/(app)/_shell/tab-actions";
 import type { OrdersView } from "@/features/orders/web/commands";
 import type { OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
@@ -37,16 +37,18 @@ function rowDetail(row: OrderRowView): string {
     .join(", ");
 }
 
-// The products the orders are made of, named in words rather than a bare icon, then the account
-const headerActions = (
-  <>
-    <ButtonLink href={routes.products} variant="quiet">
-      <Inventory2Icon aria-hidden />
-      {productsCopy.title}
-    </ButtonLink>
-    <AccountMenu />
-  </>
-);
+// The products the orders are made of, named in words rather than a bare icon, then the bell and the account
+function HeaderActions({ unread }: { readonly unread: number }) {
+  return (
+    <>
+      <ButtonLink href={routes.products} variant="quiet">
+        <Inventory2Icon aria-hidden />
+        {productsCopy.title}
+      </ButtonLink>
+      <TabActions unread={unread} />
+    </>
+  );
+}
 
 function heroStat(view: OrdersView): Stat {
   return { label: ordersCopy.revenue, value: moneyText(view.totals.total) };
@@ -100,9 +102,18 @@ function kindChips(view: OrdersView): ReadonlyArray<ChipLink> {
 
 // A month of orders: its numbers at the top, the orders below by day, newest first. The month, the status chips and
 // the kind chips are links, so the filters live in the URL.
-export function OrdersScreen({ view }: { readonly view: OrdersView }) {
+export function OrdersScreen({
+  view,
+  unread,
+}: {
+  readonly view: OrdersView;
+  readonly unread: number;
+}) {
+  // oxlint-disable-next-line react-perf/jsx-no-jsx-as-prop -- a server component renders once a request: nothing to memoize for
+  const actions = <HeaderActions unread={unread} />;
+
   return (
-    <Screen title={ordersCopy.title} actions={headerActions}>
+    <Screen title={ordersCopy.title} actions={actions}>
       <nav className={styles.months} aria-label={view.title}>
         <IconLink
           icon={ChevronLeftIcon}

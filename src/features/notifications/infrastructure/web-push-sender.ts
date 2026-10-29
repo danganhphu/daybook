@@ -47,6 +47,7 @@ export function createWebPushSender(vapid: VapidKeys, fetcher: typeof fetch = fe
           data: message,
           options: {
             ttl: delivery.ttlSeconds,
+            urgency: delivery.urgency,
             ...(delivery.topic === undefined ? {} : { topic: delivery.topic }),
           },
         },

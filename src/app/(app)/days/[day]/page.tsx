@@ -5,6 +5,7 @@ import { DayScreen } from "@/app/(app)/_day/day-screen";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { dayNotes } from "@/features/notes/web/commands";
+import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
 import { dayReadings } from "@/features/reading/web/commands";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { routes } from "@/shared/web/routes";
@@ -18,7 +19,7 @@ type DayPageProps = { readonly params: Promise<{ readonly day: string }> };
 // text that is not a real day is a page that does not exist.
 export default async function DayPage({ params }: DayPageProps) {
   const app = daybook();
-  await requireSession(app);
+  const session = await requireSession(app);
 
   const day = calendarDaySchema.safeParse((await params).day);
   if (!day.success) {
@@ -28,7 +29,11 @@ export default async function DayPage({ params }: DayPageProps) {
     redirect(routes.today);
   }
 
-  const [view, readings] = await Promise.all([dayNotes(app, day.data), dayReadings(app, day.data)]);
+  const [view, readings, unread] = await Promise.all([
+    dayNotes(app, day.data),
+    dayReadings(app, day.data),
+    unreadNotifications(app, session),
+  ]);
 
-  return <DayScreen view={view} readings={readings} />;
+  return <DayScreen view={view} readings={readings} unread={unread} />;
 }

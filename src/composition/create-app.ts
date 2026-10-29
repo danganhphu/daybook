@@ -119,12 +119,17 @@ import {
   changeNotificationTimes,
   type ChangeNotificationTimesInput,
 } from "@/features/notifications/application/change-notification-times";
+import {
+  markInboxRead,
+  notificationInbox,
+} from "@/features/notifications/application/notification-inbox";
 import { notificationSettings } from "@/features/notifications/application/notification-settings";
 import {
   subscribeDevice,
   type SubscribeDeviceInput,
 } from "@/features/notifications/application/subscribe-device";
 import { unsubscribeDevice } from "@/features/notifications/application/unsubscribe-device";
+import { createInboxRepository } from "@/features/notifications/infrastructure/inbox-repository";
 import { createNotificationPreferenceRepository } from "@/features/notifications/infrastructure/notification-preference-repository";
 import { createPushSubscriptionRepository } from "@/features/notifications/infrastructure/push-subscription-repository";
 import { deleteOrder, restoreOrder } from "@/features/orders/application/delete-order";
@@ -270,6 +275,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     preferences: createNotificationPreferenceRepository(db),
     startUnitOfWork,
   };
+  const inbox = { clock, inbox: createInboxRepository(db), startUnitOfWork };
   const reading: ReadingDeps = {
     clock,
     reader: bindings.reader,
@@ -427,5 +433,9 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       unsubscribeDevice(notifications, session, subscriptionId, origin),
     changeNotificationTimes: (session: Session, input: ChangeNotificationTimesInput) =>
       changeNotificationTimes(notifications, session, input),
+    notificationInbox: (session: Session) => notificationInbox(inbox, session),
+    unreadNotifications: (session: Session) => inbox.inbox.unreadCount(session.accountId),
+    markInboxRead: (session: Session, upTo: Temporal.Instant) =>
+      markInboxRead(inbox, session, upTo),
   } as const;
 }

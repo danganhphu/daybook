@@ -18,6 +18,7 @@ $color-roles: (
   accent-wash,
   on-accent,
   danger,
+  on-danger,
   scrim,
   icon-green,
   icon-blue,
@@ -56,6 +57,12 @@ $radius: (
 // Material 3's type scale (material-web md-sys-typescale), named for what each is for here. No input under 16px, or
 // iOS zooms into it.
 $text-styles: (
+  // label-small: the number on a badge
+  badge: (
+    size: 11px,
+    leading: 16px,
+    weight: 500,
+  ),
   // body-small
   caption: (
     size: 12px,
@@ -79,6 +86,12 @@ $text-styles: (
     size: 16px,
     leading: 24px,
     weight: 400,
+  ),
+  // title-medium: an unread row's title
+  body-strong: (
+    size: 16px,
+    leading: 24px,
+    weight: 500,
   ),
   // label-large: a field's label, a group's name
   label: (
@@ -118,6 +131,8 @@ $font-sans: var(--font-sans), system-ui, sans-serif;
 $sizes: (
   control: 40px,
   control-lg: 44px,
+  // Material 3's large badge, a count over an icon
+  badge: 16px,
   icon: 20px,
   icon-row: 24px,
   icon-tab: 24px,

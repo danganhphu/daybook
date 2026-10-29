@@ -66,6 +66,10 @@ describe("STRICT on every notifications table", () => {
       "push_subscription",
       `insert into push_subscription values ('p', 'a', null, 'https://x', '${p256dh}', '${auth}', 'x', 'soon', null)`,
     ],
+    [
+      "inbox_item",
+      "insert into inbox_item values ('i', 'a', 'notice', 'r', 't', '', '/x', 'soon', null)",
+    ],
   ])(
     "given text in an integer column of %s, when inserted, then STRICT refuses it",
     async (_, sql) => {
@@ -123,6 +127,17 @@ describe("notification_preference table", () => {
 });
 
 describe("notification_delivery table", () => {
+  it("given a channel nobody built, when stored, then the check refuses it", async () => {
+    await seedAccountAndSession();
+
+    await expect(
+      run(
+        "insert into notification_delivery values ('d1', ?, 'morning', '2026-10-29', 'email', 'claimed', 1, 1, null)",
+        accountId,
+      ),
+    ).rejects.toThrow(/notification_delivery_channel_known/);
+  });
+
   it("given a delivery already in the ledger, when the same one is inserted again, then the unique index refuses it", async () => {
     await seedAccountAndSession();
     await insertDelivery("d1", "claimed", null);
@@ -143,6 +158,45 @@ describe("notification_delivery table", () => {
       );
     },
   );
+});
+
+function insertInboxItem(
+  id: string,
+  { path = "/reminders", readAt = null }: { path?: string; readAt?: number | null } = {},
+) {
+  return run(
+    "insert into inbox_item values (?, ?, 'morning', '2026-10-29', 'Hôm nay có 2 việc', '', ?, 10, ?)",
+    id,
+    accountId,
+    path,
+    readAt,
+  );
+}
+
+describe("inbox_item table", () => {
+  it.each(["//evil.example", "https://evil.example", "reminders"])(
+    "given the path %s, when stored, then the check refuses it: a tap only opens the app",
+    async (path) => {
+      await seedAccountAndSession();
+
+      await expect(insertInboxItem("i1", { path })).rejects.toThrow(/inbox_item_path_in_app/);
+    },
+  );
+
+  it("given an item already kept, when the same one is kept again, then the unique index refuses it", async () => {
+    await seedAccountAndSession();
+    await insertInboxItem("i1");
+
+    await expect(insertInboxItem("i2")).rejects.toThrow(/UNIQUE constraint failed/);
+  });
+
+  it("given read before it was made, when stored, then the check refuses it", async () => {
+    await seedAccountAndSession();
+
+    await expect(insertInboxItem("i1", { readAt: 5 })).rejects.toThrow(
+      /inbox_item_read_after_created/,
+    );
+  });
 });
 
 describe("notice_cursor table", () => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
+import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
 import { ordersScreen } from "@/features/orders/web/commands";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 
@@ -18,8 +19,12 @@ type OrdersPageProps = {
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const app = daybook();
-  await requireSession(app);
+  const session = await requireSession(app);
   const { month, status, kind } = await searchParams;
+  const [view, unread] = await Promise.all([
+    ordersScreen(app, { month, status, kind }),
+    unreadNotifications(app, session),
+  ]);
 
-  return <OrdersScreen view={await ordersScreen(app, { month, status, kind })} />;
+  return <OrdersScreen view={view} unread={unread} />;
 }

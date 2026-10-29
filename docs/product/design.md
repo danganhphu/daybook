@@ -97,6 +97,10 @@ the same way, always: these cannot be turned off.
 Notifications are offered where their value is plain: on Hôm nay, the first time something is due, once, and always in
 Settings. Never on the first visit.
 
+Every notification also stays behind a bell at the top of each tab, as apps do, with the number unread on it: a phone
+that had push off, or a notification swiped away, loses nothing. Opening the list reads it. It keeps 30 days. Nhắc việc,
+which the bell used to open, has its own checklist icon on Hôm nay.
+
 Typing a customer's name shows their card: contact, last order, totals, notes.
 
 ## Slash commands

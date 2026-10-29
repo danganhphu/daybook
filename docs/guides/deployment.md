@@ -21,6 +21,9 @@ pnpm run deploy
 `pnpm run`, not `pnpm deploy`: pnpm has a `deploy` command of its own, which would run instead of the script. The
 script builds for production and deploys with `cf`.
 
+A release that adds migrations applies them first, with the two commands of the first deploy's step 1; `cf` asks
+before it applies, in a terminal of your own.
+
 ## The first deploy
 
 1. **Migrations** on the remote database (without `--local`, `cf` targets Cloudflare), then check nothing is left:

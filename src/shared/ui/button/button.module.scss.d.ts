@@ -7,9 +7,13 @@
  */
 
 declare const button: string;
+declare const badged: string;
+declare const badge: string;
 
 declare const __default_export__: {
 	button: typeof button;
+	badged: typeof badged;
+	badge: typeof badge;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnV0dG9uLm1vZHVsZS5zY3NzLmQudHMiLCJzb3VyY2VzIjpbImJ1dHRvbi5tb2R1bGUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7OztjQUdBOzs7Q0FBQTs7In0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYnV0dG9uLm1vZHVsZS5zY3NzLmQudHMiLCJzb3VyY2VzIjpbImJ1dHRvbi5tb2R1bGUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7OztjQUdBO2NBd0dBO2NBS0E7OztDQTdHQTtDQXdHQTtDQUtBOzsifQ==

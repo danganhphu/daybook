@@ -9,11 +9,13 @@ export type PushMessage = {
   readonly path: string;
 };
 
-// How the push service treats it (RFC 8030): how long to hold it for a phone that is off, and an optional topic under
-// which a newer message replaces one still waiting
+// How the push service treats it (RFC 8030): how long to hold it for a phone that is off, an optional topic under
+// which a newer message replaces one still waiting, and how urgent it is. Without one it is "normal", which Android
+// may hold while the phone sleeps (Firebase: normal priority waits out Doze; high is for notifications people see).
 export type PushDelivery = {
   readonly ttlSeconds: number;
   readonly topic: string | undefined;
+  readonly urgency: "normal" | "high";
 };
 
 export type PushOutcome =

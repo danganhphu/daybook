@@ -14,9 +14,11 @@ import type {
 import type { PushSender } from "@/features/notifications/application/push-sender";
 import { scheduleSlot } from "@/features/notifications/application/schedule-slot";
 import { createDeliveryLedger } from "@/features/notifications/infrastructure/d1-delivery-ledger";
+import { createInboxChannel } from "@/features/notifications/infrastructure/inbox-channel";
 import { createNoticeCursorRepository } from "@/features/notifications/infrastructure/notice-cursor-repository";
 import { createNotificationPreferenceRepository } from "@/features/notifications/infrastructure/notification-preference-repository";
 import {
+  createInboxWrites,
   createNoticeCursorWrites,
   createPushSubscriptionWrites,
 } from "@/features/notifications/infrastructure/notification-writes";
@@ -41,17 +43,18 @@ import { systemClock } from "@/shared/infrastructure/system-clock";
 export type JobBindings = {
   readonly db: D1Database;
   readonly jobs: JobSender;
-  // None without VAPID keys: the scheduler still plans, and a job finds no channel to send on
+  // None without VAPID keys: the list in the app still gets every job, and nothing goes out by push
   readonly pushSender: PushSender | undefined;
 };
 
-// The two stores these jobs write, on one batch
+// The stores these jobs write, on one batch
 function jobsUnitOfWork(db: Database) {
   const batch = createBatch(db);
 
   return {
     noticeCursor: createNoticeCursorWrites(db, batch),
     pushSubscriptions: createPushSubscriptionWrites(db, batch),
+    inbox: createInboxWrites(db, batch),
     commit: () => batch.commit(),
   };
 }
@@ -60,19 +63,24 @@ export function createJobs(bindings: JobBindings, clock: Clock = systemClock) {
   const db = createDatabase(bindings.db);
   const subscriptions = createPushSubscriptionRepository(db);
   const accessEvents = createAccessEventRepository(db);
+  const accounts = createAccountRepository(db);
   const ledger = createDeliveryLedger(db);
   const startUnitOfWork = () => jobsUnitOfWork(db);
-  const channels =
-    bindings.pushSender === undefined
+  const channels = [
+    createInboxChannel({ clock, startUnitOfWork }),
+    ...(bindings.pushSender === undefined
       ? []
-      : [createPushChannel({ clock, subscriptions, sender: bindings.pushSender, startUnitOfWork })];
+      : [
+          createPushChannel({ clock, subscriptions, sender: bindings.pushSender, startUnitOfWork }),
+        ]),
+  ];
 
   return {
     scheduleSlot: (scheduledTime: Temporal.Instant) =>
       scheduleSlot(
         {
           clock,
-          subscriptions,
+          accounts,
           preferences: createNotificationPreferenceRepository(db),
           accessEvents,
           noticeCursor: createNoticeCursorRepository(db),
@@ -93,7 +101,7 @@ export function createJobs(bindings: JobBindings, clock: Clock = systemClock) {
           reports: createReportQueries(db),
           settings: createBookSettingRepository(db),
           accessEvents,
-          accounts: createAccountRepository(db),
+          accounts,
         },
         job,
       ),

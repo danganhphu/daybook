@@ -51,9 +51,16 @@ async function remind(
   });
 }
 
+// The push channel's rows; the list in the app has tests of its own
 async function ledger() {
   return rows<{ subject: string; status: string; attempts: number }>(
-    "select subject, status, attempts from notification_delivery",
+    "select subject, status, attempts from notification_delivery where channel = 'push'",
+  );
+}
+
+async function inbox() {
+  return rows<{ subject: string; title: string; path: string }>(
+    "select subject, title, path from inbox_item order by created_at",
   );
 }
 
@@ -188,12 +195,53 @@ describe("deliverNotification", () => {
     expect(await ledger()).toEqual([{ subject: "morning", status: "skipped", attempts: 1 }]);
   });
 
-  it("given no push keys configured, when a job runs, then there is no channel and nothing is claimed", async () => {
+  it("given no push keys configured, when a job runs, then nothing goes out by push and the list in the app still gets it", async () => {
     const time = testClock("2026-10-29T00:30:00Z");
     const lan = await lanWithAPhone(time);
     await remind(time, lan, "giao 2 hộp thuốc tê", thursday);
 
     expect(await testJobs(time.clock, undefined).deliver(morningOf(lan))).toEqual({ kind: "done" });
     expect(await ledger()).toEqual([]);
+    expect(await inbox()).toEqual([
+      { subject: "morning", title: "Hôm nay có 1 việc", path: "/reminders" },
+    ]);
+  });
+
+  it("given someone with no browser receiving, when the morning job runs, then the list in the app keeps it", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await seedAccount(time.clock, "lan", "Lan");
+    await remind(time, lan, "giao 2 hộp thuốc tê", thursday);
+    const push = recordingPushSender();
+
+    await testJobs(time.clock, push.sender).deliver(morningOf(lan));
+
+    expect(push.sent).toEqual([]);
+    expect(await inbox()).toEqual([
+      { subject: "morning", title: "Hôm nay có 1 việc", path: "/reminders" },
+    ]);
+  });
+
+  it("given a push service that is busy, when the job is retried, then the list in the app keeps it once", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    await remind(time, lan, "giao 2 hộp thuốc tê", thursday);
+    const jobs = testJobs(
+      time.clock,
+      recordingPushSender(() => ({ kind: "retry", afterSeconds: 60 })).sender,
+    );
+
+    await jobs.deliver(morningOf(lan));
+    await jobs.deliver(morningOf(lan));
+
+    expect(await inbox()).toHaveLength(1);
+  });
+
+  it("given a morning with nothing to say, when the job runs, then the list gets nothing either", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+
+    await testJobs(time.clock, recordingPushSender().sender).deliver(morningOf(lan));
+
+    expect(await inbox()).toEqual([]);
   });
 });

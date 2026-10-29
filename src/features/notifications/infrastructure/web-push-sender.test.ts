@@ -127,6 +127,7 @@ async function sendOnce(answer: Response) {
   const outcome = await sender.send(browser.subscription, message, {
     ttlSeconds: 43_200,
     topic: "morning-20261029",
+    urgency: "high",
   });
 
   return { vapid, browser, request: requests[0], outcome };
@@ -161,6 +162,7 @@ describe("createWebPushSender", () => {
     expect(request?.url).toBe("https://fcm.googleapis.com/fcm/send/abc");
     expect(headers?.get("ttl")).toBe("43200");
     expect(headers?.get("topic")).toBe("morning-20261029");
+    expect(headers?.get("urgency")).toBe("high");
     expect(headers?.get("content-encoding")).toBe("aes128gcm");
     expect(key).toBe(vapid.publicKey);
     expect(
