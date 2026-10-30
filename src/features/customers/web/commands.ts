@@ -111,6 +111,8 @@ export type CustomerScreenView = CustomerView & {
   readonly lastOrderedOn: string | undefined;
   // The customer it was merged into: hidden for good, its orders are there now
   readonly mergedInto: string | undefined;
+  // In "Đã xoá gần đây", with their orders: they come back from there
+  readonly deleted: boolean;
   readonly otherNames: ReadonlyArray<OtherNameView>;
 };
 
@@ -140,6 +142,7 @@ export async function customerScreen(
     owed: account.owed,
     lastOrderedOn: account.lastOrderedOn?.toString(),
     mergedInto: customer.status === "archived" ? customer.mergedInto : undefined,
+    deleted: customer.status === "archived" && customer.deletion !== undefined,
     otherNames: aliases.map((alias) => ({ id: alias.id, name: alias.name })),
   };
 }
@@ -390,4 +393,17 @@ export async function showKind(
   return change === undefined
     ? err(customerErrorMessages.kind_not_found)
     : toKindResult(await app.restoreCustomerKind(change));
+}
+
+export async function deleteKind(
+  app: App,
+  by: AccountId,
+  id: unknown,
+  version: unknown,
+): Promise<KindResult> {
+  const change = parseKindChange(by, id, version);
+
+  return change === undefined
+    ? err(customerErrorMessages.kind_not_found)
+    : toKindResult(await app.deleteCustomerKind(change));
 }

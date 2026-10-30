@@ -1,18 +1,38 @@
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, or } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
-import type { DeletedReminder, LiveReminder } from "@/features/reminders/domain/reminder";
+import type { DeletedReminder, LiveReminder, Reminder } from "@/features/reminders/domain/reminder";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { d1MaxBoundParameters } from "@/shared/infrastructure/d1/limits";
 
 import { toReminder } from "./reminder-mapping";
 import { reminderTable } from "./reminder.table";
 
 export function createReminderRepository(db: Database): ReminderRepository {
+  async function whereIn(column: SQLiteColumn, values: ReadonlyArray<string>) {
+    const reminders: Reminder[] = [];
+    for (let start = 0; start < values.length; start += d1MaxBoundParameters) {
+      // oxlint-disable-next-line no-await-in-loop -- one chunk per query, under D1's bound-parameter limit
+      const rows = await db
+        .select()
+        .from(reminderTable)
+        .where(inArray(column, values.slice(start, start + d1MaxBoundParameters)));
+      reminders.push(...rows.map(toReminder));
+    }
+
+    return reminders;
+  }
+
   return {
     async get(id) {
       const [row] = await db.select().from(reminderTable).where(eq(reminderTable.id, id)).limit(1);
 
       return row === undefined ? undefined : toReminder(row);
+    },
+
+    getMany(ids) {
+      return whereIn(reminderTable.id, ids);
     },
 
     async listOpen(filter, limit) {
@@ -76,6 +96,7 @@ export function createReminderRepository(db: Database): ReminderRepository {
           and(
             isNotNull(reminderTable.deletedAt),
             gte(reminderTable.deletedAt, since.epochMilliseconds),
+            isNull(reminderTable.deletedWith),
           ),
         )
         .orderBy(desc(reminderTable.deletedAt), desc(reminderTable.id))
@@ -93,6 +114,10 @@ export function createReminderRepository(db: Database): ReminderRepository {
         .where(eq(reminderTable.customerId, customerId));
 
       return rows.map(toReminder);
+    },
+
+    forCustomers(customerIds) {
+      return whereIn(reminderTable.customerId, customerIds);
     },
 
     async madeFrom(captureIds) {

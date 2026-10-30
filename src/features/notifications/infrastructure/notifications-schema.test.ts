@@ -60,7 +60,7 @@ describe("STRICT on every notifications table", () => {
     ],
     [
       "notification_preference",
-      "insert into notification_preference values ('a', null, null, 'soon', 'a', 1, 'a', 1)",
+      "insert into notification_preference values ('a', null, null, 21, 'soon', 'a', 1, 'a', 1)",
     ],
     [
       "push_subscription",
@@ -115,13 +115,30 @@ describe("notification_preference table", () => {
 
       await expect(
         run(
-          "insert into notification_preference values (?, ?, null, 1, ?, 1, ?, 1)",
+          "insert into notification_preference values (?, ?, null, 21, 1, ?, 1, ?, 1)",
           accountId,
           morningAt,
           accountId,
           accountId,
         ),
       ).rejects.toThrow(/notification_preference_morning_quarter_hour/);
+    },
+  );
+
+  it.each([6, 181])(
+    "given %i days without an order, when stored, then the range check refuses them",
+    async (days) => {
+      await seedAccountAndSession();
+
+      await expect(
+        run(
+          "insert into notification_preference values (?, null, null, ?, 1, ?, 1, ?, 1)",
+          accountId,
+          days,
+          accountId,
+          accountId,
+        ),
+      ).rejects.toThrow(/notification_preference_quiet_after_days_range/);
     },
   );
 });

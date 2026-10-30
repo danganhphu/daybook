@@ -5,6 +5,8 @@ export const otherNamesCopy = {
   name: "Tên khác",
   added: "Đã thêm tên",
   removed: "Đã bỏ tên",
+  // One of them, mid-sentence: "Xoá tên khác này?"
+  one: "tên khác",
 } as const;
 
 export function removeName(name: string): string {

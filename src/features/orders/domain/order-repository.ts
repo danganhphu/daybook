@@ -7,8 +7,11 @@ import type { Order, OrderId } from "./order";
 export type OrderRepository = {
   // With its lines in order and every payment, removed ones included
   get(id: OrderId): Promise<Order | undefined>;
+  getMany(ids: ReadonlyArray<OrderId>): Promise<ReadonlyArray<Order>>;
   // Every order of the customer, deleted ones included, whole
   forCustomer(customerId: CustomerId): Promise<ReadonlyArray<Order>>;
+  // The same, for several customers
+  forCustomers(customerIds: ReadonlyArray<CustomerId>): Promise<ReadonlyArray<Order>>;
   // Every order with a line of the product, deleted ones included, whole
   withProduct(productId: ProductId): Promise<ReadonlyArray<Order>>;
 };

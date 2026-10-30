@@ -1,5 +1,6 @@
-import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
+import type { ArchivedCustomer } from "@/features/customers/domain/customer";
 import type { CustomerAlias } from "@/features/customers/domain/customer-alias";
 import type { CustomerRepository } from "@/features/customers/domain/customer-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -47,7 +48,7 @@ export function createCustomerRepository(db: Database): CustomerRepository {
           and(
             filter.status === "active"
               ? isNull(customerTable.archivedAt)
-              : isNotNull(customerTable.archivedAt),
+              : and(isNotNull(customerTable.archivedAt), isNull(customerTable.deletedAt)),
             filter.kindId === undefined ? undefined : eq(customerTable.kindId, filter.kindId),
             found,
           ),
@@ -56,6 +57,24 @@ export function createCustomerRepository(db: Database): CustomerRepository {
         .limit(limit);
 
       return rows.map(toCustomer);
+    },
+
+    async listDeleted(since, limit) {
+      const rows = await db
+        .select()
+        .from(customerTable)
+        .where(
+          and(
+            isNotNull(customerTable.deletedAt),
+            gte(customerTable.deletedAt, since.epochMilliseconds),
+          ),
+        )
+        .orderBy(desc(customerTable.deletedAt), desc(customerTable.id))
+        .limit(limit);
+
+      return rows
+        .map(toCustomer)
+        .filter((customer): customer is ArchivedCustomer => customer.status === "archived");
     },
 
     async aliasesOf(ids) {

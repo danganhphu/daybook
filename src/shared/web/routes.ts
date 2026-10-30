@@ -23,7 +23,6 @@ export const routes = {
   settingsPeople: "/settings/people",
   settingsKinds: "/settings/customer-kinds",
   settingsNotifications: "/settings/notifications",
-  settingsQuiet: "/settings/quiet-customers",
   componentGallery: "/dev/ui",
   // Static files in public/, written by `pnpm icons`
   manifest: "/manifest.webmanifest",

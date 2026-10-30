@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
 import { changeOf, testApp, testClock, theAuthor } from "@/testing/support/app";
@@ -26,6 +27,7 @@ describe("deletedOrders", () => {
         version: 2,
         title: "Hướng Dương",
         detail: "Đơn 22/10, 40.000đ, Xoá 23/10 (Người ghi)",
+        deletedAt: Temporal.Instant.from("2026-10-23T03:00:00Z").epochMilliseconds,
       },
     ]);
   });

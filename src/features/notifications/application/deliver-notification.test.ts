@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 import { createUnitOfWork } from "@/composition/unit-of-work";
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { Account } from "@/features/access/domain/account";
-import { quietAfterDaysSchema } from "@/features/book-settings/domain/book-setting";
 import type { NotificationJob } from "@/features/notifications/application/notification-job";
 import type { PushOutcome } from "@/features/notifications/application/push-sender";
+import { quietAfterDaysSchema } from "@/features/notifications/domain/notification-preference";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import { origin, rows, seedAccount, seedSession } from "@/testing/support/access";
 import { content, testApp, testClock } from "@/testing/support/app";
@@ -107,14 +107,14 @@ describe("deliverNotification", () => {
     ]);
   });
 
-  it("given the book counts 30 days, when the morning job runs, then the customer reaching 30 is named and the one at 21 is not", async () => {
+  it("given she counts 30 days, when her morning job runs, then the customer reaching 30 is named and the one at 21 is not", async () => {
     const time = testClock("2026-10-29T00:30:00Z");
     const lan = await lanWithAPhone(time);
+    const { session } = await seedSession(time.clock, lan);
     await lastOrderOn(time, "Nha khoa Lan Anh", "2026-10-08");
     await lastOrderOn(time, "Hướng Dương", "2026-09-29");
     expectOk(
-      await testApp(time.clock).changeQuietAfterDays({
-        by: lan.id,
+      await testApp(time.clock).changeNotificationQuietDays(session, {
         days: quietAfterDaysSchema.parse(30),
         shown: undefined,
       }),
@@ -124,6 +124,24 @@ describe("deliverNotification", () => {
     await testJobs(time.clock, push.sender).deliver(morningOf(lan));
 
     expect(push.sent.map(({ message }) => message.body)).toEqual(["Hướng Dương"]);
+  });
+
+  it("given the other person counts 30 days, when her morning job runs, then hers still counts 21", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    const minh = await seedAccount(time.clock, "minh", "Minh");
+    await lastOrderOn(time, "Nha khoa Lan Anh", "2026-10-08");
+    expectOk(
+      await testApp(time.clock).changeNotificationQuietDays(
+        (await seedSession(time.clock, minh)).session,
+        { days: quietAfterDaysSchema.parse(30), shown: undefined },
+      ),
+    );
+    const push = recordingPushSender();
+
+    await testJobs(time.clock, push.sender).deliver(morningOf(lan));
+
+    expect(push.sent.map(({ message }) => message.body)).toEqual(["Nha khoa Lan Anh"]);
   });
 
   it("given a push service that is busy, when the job runs, then it asks to be retried after the service's wait, and the retry sends", async () => {

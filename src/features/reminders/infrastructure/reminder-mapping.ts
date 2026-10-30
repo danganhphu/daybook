@@ -46,7 +46,12 @@ export function toReminder(row: ReminderRow): Reminder {
 
   return deletion === undefined
     ? { ...fields, status: "live" }
-    : { ...fields, status: "deleted", deletion };
+    : {
+        ...fields,
+        status: "deleted",
+        deletion,
+        deletedWith: row.deletedWith === null ? undefined : customerIdSchema.parse(row.deletedWith),
+      };
 }
 
 export function toReminderRow(reminder: Reminder): ReminderRow {
@@ -60,5 +65,6 @@ export function toReminderRow(reminder: Reminder): ReminderRow {
     doneBy: reminder.completion?.doneBy ?? null,
     ...toAuditRow(reminder.audit),
     ...toDeletionRow(reminder.status === "deleted" ? reminder.deletion : undefined),
+    deletedWith: reminder.status === "deleted" ? (reminder.deletedWith ?? null) : null,
   };
 }

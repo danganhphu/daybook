@@ -8,6 +8,9 @@ import {
   archivalColumns,
   auditChecks,
   auditColumns,
+  deletedOnlyArchivedChecks,
+  deletionChecks,
+  deletionColumns,
 } from "@/shared/infrastructure/d1/audit-columns";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
@@ -21,6 +24,7 @@ export const customerKindTable = sqliteTable(
     position: integer("position").notNull(),
     ...auditColumns(() => accountTable.id),
     ...archivalColumns(() => accountTable.id),
+    ...deletionColumns(() => accountTable.id),
   },
   (table) => [
     check(
@@ -30,6 +34,8 @@ export const customerKindTable = sqliteTable(
     check("customer_kind_position_positive", sql`${table.position} >= 0`),
     ...auditChecks("customer_kind", table),
     ...archivalChecks("customer_kind", table),
+    ...deletionChecks("customer_kind", table),
+    ...deletedOnlyArchivedChecks("customer_kind", table),
     uniqueIndex("customer_kind_active_name")
       .on(table.searchName)
       .where(sql`${table.archivedAt} is null`),

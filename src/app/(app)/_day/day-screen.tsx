@@ -31,6 +31,7 @@ import { actionLabels } from "@/shared/ui/action-labels";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { IconLink } from "@/shared/ui/button/icon-link";
 import { DayPicker } from "@/shared/ui/day-picker/day-picker";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import {
   ChecklistIcon,
@@ -40,6 +41,7 @@ import {
 } from "@/shared/ui/icon/icons";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
+import { deleteQuestion, recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { dayPath, routes } from "@/shared/web/routes";
 
 import styles from "./day-screen.module.scss";
@@ -128,26 +130,37 @@ export function DayScreen({ view, due, readings, pushPublicKey, unread }: DayScr
     [applyOptimistic, toast],
   );
 
-  // One tap, no confirmation: the toast's Undo is the safety net
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  // Asks first, then the toast's Undo is there too
   const remove = useCallback(
     (note: NoteView) => {
-      startTransition(async () => {
-        applyOptimistic({ kind: "remove", id: note.id });
-        const result = await attempt(() => deleteNote(note.id, note.version));
-        if (!result.ok) {
-          toast.show({ title: result.error });
+      void (async () => {
+        const sure = await confirm({
+          title: deleteQuestion(notesCopy.one),
+          description: recentlyDeletedCopy.canRestore,
+          confirmLabel: actionLabels.remove,
+        });
+        if (!sure) {
           return;
         }
+        startTransition(async () => {
+          applyOptimistic({ kind: "remove", id: note.id });
+          const result = await attempt(() => deleteNote(note.id, note.version));
+          if (!result.ok) {
+            toast.show({ title: result.error });
+            return;
+          }
 
-        const deleted = result.value;
-        toast.show({
-          title: notesCopy.deleted,
-          description: note.content,
-          action: { label: actionLabels.undo, onAction: () => restore(deleted) },
+          const deleted = result.value;
+          toast.show({
+            title: notesCopy.deleted,
+            description: note.content,
+            action: { label: actionLabels.undo, onAction: () => restore(deleted) },
+          });
         });
-      });
+      })();
     },
-    [applyOptimistic, restore, toast],
+    [applyOptimistic, confirm, restore, toast],
   );
 
   const undoMade = useCallback(
@@ -355,6 +368,7 @@ export function DayScreen({ view, due, readings, pushPublicKey, unread }: DayScr
           onClose={stopPicking}
         />
       )}
+      {confirmDialog}
     </div>
   );
 }

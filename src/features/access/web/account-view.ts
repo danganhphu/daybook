@@ -27,7 +27,14 @@ export type DeviceRow = {
   readonly current: boolean;
 };
 
-export type ActivityRow = { readonly id: string; readonly title: string; readonly detail: string };
+export type ActivityRow = {
+  readonly id: string;
+  readonly title: string;
+  // The time and the device; the day is the row's group
+  readonly detail: string;
+  // YYYY-MM-DD in Vietnam
+  readonly day: string;
+};
 
 export type PasswordRow =
   | { readonly kind: "none" }
@@ -49,6 +56,7 @@ export type AccountView = {
   readonly password: PasswordRow;
   readonly devices: ReadonlyArray<DeviceRow>;
   readonly activity: ReadonlyArray<ActivityRow>;
+  readonly moreActivity: boolean;
   readonly people: ReadonlyArray<PersonRow>;
 };
 
@@ -196,11 +204,17 @@ export function toAccountView(overview: AccountOverview, current: SessionId): Ac
       detail: session.id === current ? accessCopy.thisDevice : lastUsed(session.lastSeenAt),
       current: session.id === current,
     })),
-    activity: overview.activity.map((event) => ({
-      id: event.id,
-      title: eventTitle(event, viewer, nameOf),
-      detail: `${formatMoment(event.occurredAt)}, ${event.deviceLabel}`,
-    })),
+    activity: overview.activity.map((event) => {
+      const moment = event.occurredAt.toZonedDateTimeISO(vietnamTimeZone);
+
+      return {
+        id: event.id,
+        title: eventTitle(event, viewer, nameOf),
+        detail: `${twoDigits(moment.hour)}:${twoDigits(moment.minute)}, ${event.deviceLabel}`,
+        day: moment.toPlainDate().toString(),
+      };
+    }),
+    moreActivity: overview.moreActivity,
     people: overview.people.map((person) => {
       const isYou = person.account.id === viewer;
 

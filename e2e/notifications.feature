@@ -31,6 +31,14 @@ Feature: Thông báo
     When tôi bấm quay lại
     Then cái chuông không còn số chưa đọc
 
+  Scenario: Xoá một thông báo ở cái chuông
+    Given tôi đã đăng nhập
+    And tôi có một thông báo mới riêng "Đã gỡ một thiết bị"
+    When tôi mở cái chuông
+    And tôi xoá thông báo riêng "Đã gỡ một thiết bị"
+    Then tôi thấy thông báo "Đã xoá 1 thông báo"
+    And cái chuông không còn thông báo riêng "Đã gỡ một thiết bị"
+
   # The app's service worker, served with its own headers by the production build, shows what a push carries. The
   # push is handed to it over the DevTools protocol: no push service is ever called.
   @chromium-only @desktop-only

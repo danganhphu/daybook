@@ -6,6 +6,7 @@ import type { Session } from "@/features/access/domain/session";
 import { deliveryRetentionDays } from "@/features/notifications/domain/delivery";
 import * as InboxItems from "@/features/notifications/domain/inbox-item";
 import type { InboxItem } from "@/features/notifications/domain/inbox-item";
+import { err, ok, type Result } from "@/shared/domain/result";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
 
 import type { InboxRowView, InboxView } from "./inbox-view";
@@ -75,4 +76,31 @@ export async function markRead(app: App, session: Session, upTo: unknown): Promi
   }
 
   await app.markInboxRead(session, Temporal.Instant.fromEpochMilliseconds(parsed.data));
+}
+
+// No more than the list shows
+const idsSchema = z.array(InboxItems.inboxItemIdSchema).min(1).max(InboxItems.inboxLimits.listed);
+
+export async function deleteNotifications(
+  app: App,
+  session: Session,
+  ids: unknown,
+): Promise<Result<null, string>> {
+  const parsed = idsSchema.safeParse(ids);
+  if (!parsed.success) {
+    return err(notificationsCopy.notFoundInbox);
+  }
+
+  await app.deleteInboxItems(session, parsed.data);
+
+  return ok(null);
+}
+
+export async function deleteAllNotifications(
+  app: App,
+  session: Session,
+): Promise<Result<null, string>> {
+  await app.clearInbox(session);
+
+  return ok(null);
 }

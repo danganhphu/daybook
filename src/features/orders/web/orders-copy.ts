@@ -10,6 +10,8 @@ export const ordersCopy = {
   edit: "Sửa đơn",
   remove: "Xoá đơn",
   deleted: "Đã xoá đơn",
+  // One of them, mid-sentence: "Xoá đơn này?"
+  one: "đơn",
   previousMonth: "Tháng trước",
   nextMonth: "Tháng sau",
   noNextMonth: "Tháng sau chưa tới",

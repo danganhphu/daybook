@@ -32,8 +32,10 @@ One D1 database, `daybook`, accessed through Drizzle ORM. The model, its vocabul
 
 - `CHECK` constraints for known values, lengths and non-blank text, written from the domain's own constants through
   `src/shared/infrastructure/d1/sql-literals.ts`, so code and database cannot disagree.
-- Foreign keys, and `capture` is never updated or deleted: corrections go to the note.
-- Times are epoch-millisecond integers; ids are UUIDv7; deletes are soft (`deleted_at`).
+- Foreign keys, and `capture` is never updated: corrections go to the note. It is deleted only with the last thing
+  made from it, by trigger.
+- Times are epoch-millisecond integers; ids are UUIDv7. A delete is soft (`deleted_at`) for 30 days, the trash; then,
+  or when deleted for good sooner, the rows are deleted (ADR 0017, `src/features/trash/infrastructure/trash-writes.ts`).
 - D1 has no interactive transactions; a batch is atomic. A use case queues its writes on a unit of work and commits
   them as one batch.
 

@@ -26,6 +26,8 @@ One line: **type as if texting a person, not filling in a form for a machine.**
   worst thing this tool can do.
 - **Save first, fix later.** No confirmation step - see below.
 - **Undo is always there.** People type fast only when a mistake is cheap.
+- **Deleting asks first, then keeps its Undo.** Saving never asks; deleting always does, saying what goes with it, as
+  the apps she uses do (the owner, 2026-10-29: "chức năng xóa -> luôn phải có 1 popup hỏi có muốn xóa").
 - **Nothing to set up first.** No product catalogue to fill in; products are learned as they are typed.
 - **The app speaks first.**
 
@@ -87,9 +89,10 @@ The app speaks first: a morning list (follow-ups due, and customers who went qui
 the person turned them on - and to Telegram once the bot exists. Each person picks their own times in Settings, in
 quarter hours, or turns either off; 07:30 and Friday 17:00 are guesses until she says otherwise. A morning with nothing
 to say sends nothing, and a customer is named the day they go quiet rather than every morning after: a notification
-that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks to start - and a setting
-of the book's, from 7 to 180 days: one number both people share, so a notification and Báo cáo always name the same
-customers.
+that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks to start, 7 to 180 days -
+and each use has its own: each person's for their morning list, beside its time in Settings, and Báo cáo's typed beside
+its list. One number for the whole book, under the book's settings, was tried first (2026-10-28): the owner found it
+in the wrong place, away from what it drives.
 
 Changes to how someone signs in - a passkey added, a recovery link made, devices signed out - are told to that person
 the same way, always: these cannot be turned off.
@@ -133,7 +136,7 @@ Nothing in the model is tied to one trade; another business needs only different
 | `order`, `order_line` | orders and their lines |
 | `interaction` | calls, visits, messages |
 | `reminder` | what, when, done |
-| `capture` | **every message word for word**, never edited or deleted |
+| `capture` | **every message word for word**, never edited; deleted only with the last thing made from it |
 | `note` | an entry in the list, made from a capture; editable, deletable, restorable |
 | `interpretation` | how a capture was read, by which model, and what came of it; reading again adds a row |
 
@@ -169,7 +172,10 @@ Everything, on its own (see "Two equal doors"):
   known by
 - reminders, open and finished, each one tap from done or open again
 - numbers for any period, with charts
-- what was deleted in the last thirty days, after the Undo toast is gone, to restore
+- a trash, as a phone's own apps keep one: everything deleted - orders, notes, reminders, customers with their orders,
+  products no order names, kinds - for thirty days, to restore or delete for good, one at a time or many chosen at
+  once; then it goes by itself. Deleted for good means gone from the database (the owner, 2026-10-29: "data xóa rồi
+  thì không cần lưu trên db nữa"), so that question says it cannot be undone
 - two customers, or two products, that turn out to be one: merged, with what moves said first, since a merge has no
   Undo. The merged one's name becomes the kept one's other name, so a message calling it by that name is understood
 - notifications: the morning list, the Friday summary and sign-in notices, on every browser where they are turned on

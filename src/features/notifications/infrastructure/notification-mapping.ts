@@ -5,6 +5,7 @@ import { deviceLabelSchema, sessionIdSchema } from "@/features/access/domain/ses
 import { deliverySubjects } from "@/features/notifications/domain/delivery";
 import { inboxItemIdSchema, type InboxItem } from "@/features/notifications/domain/inbox-item";
 import {
+  quietAfterDaysSchema,
   timeOfDaySchema,
   type NotificationPreference,
 } from "@/features/notifications/domain/notification-preference";
@@ -61,6 +62,7 @@ export function toNotificationPreference(row: NotificationPreferenceRow): Notifi
     accountId: accountIdSchema.parse(row.accountId),
     morningAt: optionalTime(row.morningAt),
     weeklyAt: optionalTime(row.weeklyAt),
+    quietAfterDays: quietAfterDaysSchema.parse(row.quietAfterDays),
     audit: toAudit(row),
   };
 }
@@ -107,6 +109,7 @@ export function toNotificationPreferenceRow(
     accountId: preference.accountId,
     morningAt: preference.morningAt ?? null,
     weeklyAt: preference.weeklyAt ?? null,
+    quietAfterDays: preference.quietAfterDays,
     ...toAuditRow(preference.audit),
   };
 }

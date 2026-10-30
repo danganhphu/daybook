@@ -46,12 +46,18 @@ export type AccountOverview = {
   readonly passkeys: ReadonlyArray<Passkey>;
   readonly password: PasswordStatus;
   readonly sessions: ReadonlyArray<SessionSummary>;
+  // The log's latest, of the last 30 days
   readonly activity: ReadonlyArray<AccessEvent>;
+  // Older ones within the 30 days, past those shown
+  readonly moreActivity: boolean;
   readonly people: ReadonlyArray<PersonSummary>;
 };
 
-// Enough to recognise what happened lately without scrolling through months
-const activityShown = 20;
+// The sign-in log shows the last 30 days, a page at a time: enough to recognise what happened lately without scrolling
+// through months
+export const activityLimits = { days: 30, page: 30, most: 300 } as const;
+
+const hoursPerDay = 24;
 
 // Field by field, so a field added to Session later stays out until someone chooses to show it
 function summarize(session: Session): SessionSummary {
@@ -73,16 +79,20 @@ function hasWayIn(passkeys: ReadonlyArray<Passkey>, password: Password | undefin
 
 // Everyone's passkeys and passwords are read once, and each person's taken from them: a query per person grew the
 // page's reads with every account
+// `activityShown`: how many of the log's latest the screen shows; it asks for one more to know whether there are more
 export async function accountOverview(
   deps: AccountOverviewDeps,
   accountId: AccountId,
+  activityShown: number = activityLimits.page,
 ): Promise<AccountOverview> {
+  const since = deps.clock().subtract({ hours: activityLimits.days * hoursPerDay });
+  const shown = Math.min(activityShown, activityLimits.most);
   const [accounts, allPasskeys, allPasswords, sessions, activity, lastSignIns] = await Promise.all([
     deps.accounts.list(),
     deps.passkeys.list(),
     deps.passwords.list(),
     listSessions(deps, accountId),
-    deps.accessEvents.listForAccount(accountId, activityShown),
+    deps.accessEvents.listForAccount(accountId, shown + 1, since),
     deps.accessEvents.lastSignIns(),
   ]);
   const account = accounts.find((each) => each.id === accountId);
@@ -101,7 +111,9 @@ export async function accountOverview(
         ? { kind: "none" }
         : { kind: "set", locked: Passwords.isLocked(password), changedAt: password.changedAt },
     sessions: sessions.map(summarize),
-    activity,
+    activity: activity.slice(0, shown),
+    // At the most a screen lists, asking for more would bring the same rows
+    moreActivity: activity.length > shown && shown < activityLimits.most,
     people: accounts.map((each) => ({
       account: each,
       lastSignInAt: lastSignIns.get(each.id),

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNotNull, lte, max, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, lte, max, or } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
@@ -20,12 +20,15 @@ export function createAccessEventRepository(db: Database): AccessEventRepository
       return row === undefined ? undefined : toAccessEvent(row);
     },
 
-    async listForAccount(accountId, limit) {
+    async listForAccount(accountId, limit, since) {
       const rows = await db
         .select()
         .from(accessEventTable)
         .where(
-          or(eq(accessEventTable.accountId, accountId), eq(accessEventTable.actorId, accountId)),
+          and(
+            or(eq(accessEventTable.accountId, accountId), eq(accessEventTable.actorId, accountId)),
+            gte(accessEventTable.occurredAt, since.epochMilliseconds),
+          ),
         )
         .orderBy(desc(accessEventTable.occurredAt), desc(accessEventTable.id))
         .limit(limit);

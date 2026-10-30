@@ -56,6 +56,10 @@ When("tôi hiện lại sản phẩm này", async ({ page }) => {
   await pick(page, "Hiện lại");
 });
 
+When("tôi xoá sản phẩm này", async ({ page }) => {
+  await pick(page, "Xoá sản phẩm");
+});
+
 When("tôi mở đơn của {string} giá {string}", async ({ page }, customer: string, total: string) => {
   await page.goto("/orders");
   await mainLink(page, customer).filter({ hasText: total }).first().click();

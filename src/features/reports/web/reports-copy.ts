@@ -41,6 +41,7 @@ export const reportsCopy = {
   products: "Sản phẩm bán chạy",
   customers: "Khách mua nhiều",
   quiet: "Khách lâu không đặt",
+  quietDays: "Số ngày không đặt",
   allKinds: "Tất cả loại",
   filtering: "Đang lọc",
   from: "Từ ngày",
@@ -84,8 +85,8 @@ export function dayCount(days: number): string {
   return `${days} ngày`;
 }
 
-export function quietFooter(afterDays: number): string {
-  return `Không có đơn nào trong ${afterDays} ngày qua`;
+export function noneQuiet(afterDays: number): string {
+  return `Không khách nào quá ${afterDays} ngày chưa đặt`;
 }
 
 export function restOf(what: "products" | "customers", amount: string): string {

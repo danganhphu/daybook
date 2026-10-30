@@ -27,8 +27,9 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Access event | hoạt động đăng nhập | A record of who signed in, what changed, and from where. Never edited |
 
 | Customer kind | loại khách | The owner's own grouping of customers, typed into Settings. The code names none of them |
-| Customer | khách | Someone orders are for: a name, and optionally a kind, an area, a phone, an address, a note. Hidden, never deleted |
-| Product | sản phẩm | Something sold, made the first time an order names it, or added on the products screen. "Thuốc tê" and "thuoc te" are one product. Never "món", which reads as food |
+| Customer | khách | Someone orders are for: a name, and optionally a kind, an area, a phone, an address, a note. Hidden, or deleted with their orders and reminders |
+| Product | sản phẩm | Something sold, made the first time an order names it, or added on the products screen. "Thuốc tê" and "thuoc te" are one product. Never "món", which reads as food. Deleted only while no order names it |
+| Trash | Đã xoá gần đây | What was deleted, kept 30 days to be restored; then, or sooner when asked, gone from the database for good |
 | Other name | tên khác | Another name a customer or a product is known by: "chị Lan" for Nha khoa Lan Anh. Matched as the name is |
 | Merge | gộp | Two customers, or two products, that are one: everything of one moves to the other, which keeps its names as other names. Recorded; no Undo |
 | Order | đơn | A customer's order on a day: its lines, its delivery day, its payments. Its total is the sum of its lines |
@@ -63,8 +64,11 @@ its capture made - an order, a reminder - shows beneath it.
 
 - Made by `receive(content, source, authorId, receivedAt)` in `src/features/capture/domain/capture.ts`. There is no other
   operation.
-- Never updated, never deleted. The type is readonly and has no function that changes it; in the database, two
-  triggers abort any `UPDATE` or `DELETE` on `capture`, so a hand-written query cannot break the rule either.
+- Never updated. The type is readonly and has no function that changes it; in the database a trigger aborts any
+  `UPDATE` on `capture`, so a hand-written query cannot break the rule either.
+- Deleted only with the last thing made from it (ADR 0017): when the last note, order or reminder pointing at it
+  leaves the trash for good, a trigger takes the capture and its interpretations too. Another trigger refuses deleting
+  one while anything still points at it.
 - `source` is a known value and `content` is not blank, checked by the type and again by `CHECK` constraints.
 
 ## Note
@@ -98,8 +102,15 @@ own (decision 10). A note does not: its capture keeps the words as first sent.
 
 ## Customers and kinds
 
-`src/features/customers/`. Both are hidden (`archived_at`, `archived_by`) rather than deleted: old orders still show
-who they were for.
+`src/features/customers/`. Both are hidden (`archived_at`, `archived_by`) when no longer in use: old orders still show
+who they were for. Both can also be deleted, into the trash (see Trash): a deleted one is hidden by the same act and
+leaves the hidden list.
+
+- **A customer goes into the trash with every live order and reminder of theirs** (`deleteCustomer`, in the trash
+  slice since it reaches orders), each marked as deleted with them (`deleted_with`); they come back with the customer
+  and go for good with them. An order deleted before stays deleted on its own. A merged customer cannot be deleted.
+- **A deleted kind** leaves its customers' `kind_id` as it is; every screen and report reads them as having no kind
+  until it comes back. Gone for good, the customers are set to no kind, a change by whoever deleted it.
 
 - A kind's name is unique among the shown ones, ignoring case and diacritics; a hidden kind frees its name, and comes
   back only if the name is still free. New kinds go last.
@@ -110,7 +121,9 @@ who they were for.
 
 ## Products
 
-`src/features/products/`. A product is hidden (`archived_at`), never deleted: old orders still show what they sold.
+`src/features/products/`. A product is hidden (`archived_at`) when no longer sold: old orders still show what they
+sold. **One that any order names, deleted ones included, is never deleted** (`product_in_orders`; the owner,
+2026-10-29): the question offers to hide it instead. One no order names goes into the trash.
 
 - **One name, one product.** A name - a product's own or one of its other names - means one shown product, ignoring
   case and diacritics. Adding or renaming onto a name that already means another shown product is refused
@@ -152,7 +165,7 @@ version, so "paid never exceeds the total" is kept in one place and two people c
 | `deliver`, `undeliver` | `order_deleted`, `delivered_before_ordered` |
 | `addPayment` | `order_deleted`, `payment_exceeds_owed` |
 | `removePayment` | `order_deleted`, `payment_not_found` |
-| `markDeleted`, `restore` | `order_not_deleted` (restore) |
+| `markDeleted`, `restore` | `order_not_deleted` (restore); `order_deleted_with_customer` (restore of one deleted with its customer, unless with them) |
 
 - **Money is a whole number of đồng** (`src/shared/domain/money.ts`), at most a trillion. The total is computed from
   the lines every time and never stored.
@@ -177,7 +190,7 @@ and deleted are independent states, so each Undo is one update.
 |---|---|
 | `revise` | `reminder_deleted` |
 | `complete`, `reopen` | `reminder_deleted`; `reminder_done` (complete), `reminder_open` (reopen) |
-| `markDeleted`, `restore` | `reminder_not_deleted` (restore); deleting twice returns it as it is |
+| `markDeleted`, `restore` | `reminder_not_deleted` (restore); `reminder_deleted_with_customer` (as for orders); deleting twice returns it as it is |
 
 - **Open** means live and not done. Lists come soonest due first, so an overdue one never drops out of sight.
 - **A new customer must be shown**, not hidden; the one a reminder already has may stay.
@@ -239,17 +252,32 @@ not a product, so under a product filter they are not told; the units sold are, 
   compared with the period before of the same kind.
 - **A chart's columns** are days (a week, a month, a range of up to 31 days), weeks from Monday (a quarter, a range of
   up to 92 days) or months. Every column of the period is there; a day without sales is zero.
-- **A customer has gone quiet** when their last live order is as many days old as the book's setting or more
-  (`gone-quiet.ts`), and they are not hidden. The setting is 7 to 180 days, 21 until someone changes it (below).
+- **A customer has gone quiet** when their last live order is as many days old as the number asked or more
+  (`gone-quiet.ts`), and they are not hidden. Each use has its own number, 7 to 180 days, 21 until changed: the
+  report's is typed beside its list and kept in the address (`?quiet=30`), the notifications' is each person's.
 - **Breakdowns** - by kind, the top five products and customers, the quiet ones - leave out what the report is
   filtered to: no breakdown by kind under a kind or customer filter, no top customers for one customer.
 
-## Book settings
+## Trash
 
-`src/features/book-settings/`. What the book is set to, shared by both people: a change by one is a change for the
-other. One setting so far, the days after which a customer has gone quiet; Báo cáo, the morning list and the Friday
-summary all read it, so they never disagree. Until someone changes it the defaults hold and nothing is stored; the
-first change writes the book's one row, and every change carries the version it was made from.
+`src/features/trash/`, ADR 0017. "Đã xoá gần đây" holds every kind of thing that can be deleted - orders, notes,
+reminders, customers, products, kinds - in one list, newest first. A thing deleted with its customer shows under the
+customer ("kèm 2 đơn"), not on its own.
+
+- **Restore** brings each back where it was, many in one batch; what cannot come back is said and the rest still does:
+  an order or reminder whose customer is still deleted (`trash_customer_deleted`), a product or kind whose name a
+  shown one took meanwhile, or another restored in the same batch (`trash_name_taken`).
+- **Delete for good** is a `DELETE`, after a question that says it cannot be undone: an order with its lines,
+  payments and log; a customer with every order and reminder of theirs still in the trash, their other names, the
+  customers merged into them (a recursive CTE on `merged_into_id`) and the merge records; a product with its other
+  names and the products merged into it, never while an order line names it; a kind after its customers are set to
+  none. Each statement picks only rows still deleted, so one restored meanwhile stays whole.
+- **Thirty days** after it was deleted, a thing goes for good by itself: the scheduler's first run of each day
+  (`emptyExpiredTrash`).
+- **About a dozen reads**, whatever is chosen, and one batch: inside D1's 50 queries per request.
+- Known gap: a restore and a delete for good of the same thing at the same moment from two devices can leave the
+  restore answered as done with nothing restored (an update of a row already gone changes nothing). The window is the
+  time between two requests' batches.
 
 ## Notifications
 
@@ -268,10 +296,11 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
   every tab counts what is unread; opening the list marks read everything up to its newest item, by a request of its
   own once the list is on screen, and what was unread stays highlighted for that visit. Like every change, that
   request clears the browser's copies of the screens, so each tab's bell counts again. Each person sees only their
-  own.
+  own, and deletes from it one, some or all, after a question: for good, with no trash, since a notification is what
+  the app said, not what anyone wrote in the book.
 - **The morning list** is the reminders due that day or earlier, and the customers who went quiet that very day (their
-  last order exactly the book's number of days old). A morning with neither sends nothing. **The Friday summary** is the week's orders
-  and sales, money in, what is owed, and how many customers are quiet.
+  last order exactly the person's own number of days old, `quiet_after_days`). A morning with neither sends nothing.
+  **The Friday summary** is the week's orders and sales, money in, what is owed, and how many customers are quiet.
 - **A notice** is one of a closed list of access events (`notice.ts`): a passkey added or removed, a password set,
   changed or locked, the username changed, a recovery link made or used, devices signed out by the other person, a new
   browser receiving notifications. It goes to the account it concerns, whoever made the change, and cannot be turned
@@ -358,26 +387,33 @@ through `createApp` in `src/composition/create-app.ts`.
 | `listNotesForDay` | A day's live notes, newest first | - |
 | `searchNotes` | Live notes holding every word typed, newest first, 50 at most and whether there are more | - |
 | `addCustomerKind`, `renameCustomerKind` | A kind, last in the list; a new name | `kind_name_taken`, `kind_not_found`, `kind_changed_elsewhere` |
-| `archiveCustomerKind`, `restoreCustomerKind` | Hides a kind from the form; shows it again | `kind_archived`, `kind_not_archived`, `kind_name_taken` |
+| `archiveCustomerKind`, `restoreCustomerKind` | Hides a kind from the form; shows it again | `kind_archived`, `kind_not_archived`, `kind_deleted`, `kind_name_taken` |
+| `deleteCustomerKind` | Into the trash; its customers read as having none | `kind_not_found`, `kind_changed_elsewhere`, `kind_deleted` |
 | `addCustomer`, `reviseCustomer` | A customer, with a shown kind | `kind_not_found`, `kind_archived`, `customer_changed_elsewhere` |
-| `archiveCustomer`, `restoreCustomer` | Hides a customer from the lists; shows them again, unless merged | `customer_archived`, `customer_not_archived`, `customer_merged` |
+| `archiveCustomer`, `restoreCustomer` | Hides a customer from the lists; shows them again, unless merged or deleted | `customer_archived`, `customer_not_archived`, `customer_merged`, `customer_deleted` |
+| `customerDeletePreview`, `deleteCustomer` | How many live orders and reminders go with them; into the trash with those, one batch | `customer_not_found`, `customer_changed_elsewhere`, `customer_merged`, `customer_deleted` |
 | `listCustomers` | By name, filtered by words (of the name or of another name), kind and shown or hidden; 200 at most | - |
 | `addCustomerAlias`, `removeCustomerAlias` | Another name for a shown customer; removes one | `customer_not_found`, `customer_archived`, `alias_taken`, `alias_not_found` |
 | `listProducts`, `productUsage` | By name, filtered by words and shown or hidden, 200 at most; each product's live orders and latest price | - |
 | `addProduct`, `renameProduct` | A product before any order names it; a new name | `product_name_taken`, `product_not_found`, `product_changed_elsewhere` |
-| `archiveProduct`, `restoreProduct` | Hides a product from the suggestions; shows it again if its name is free and it was not merged | `product_archived`, `product_not_archived`, `product_merged`, `product_name_taken` |
+| `archiveProduct`, `restoreProduct` | Hides a product from the suggestions; shows it again if its name is free and it was neither merged nor deleted | `product_archived`, `product_not_archived`, `product_merged`, `product_deleted`, `product_name_taken` |
+| `productOrderCount`, `deleteProduct` | How many orders name it; into the trash when none does | `product_not_found`, `product_changed_elsewhere`, `product_merged`, `product_deleted`, `product_in_orders` |
 | `addProductAlias`, `removeProductAlias` | Another name for a shown product; removes one | `product_not_found`, `product_archived`, `alias_taken`, `alias_not_found` |
 | `mergeCustomers`, `mergeProducts` | Everything of one moved to the other, the one hidden for good, its names kept, recorded; one batch | `merge_into_itself`, `*_not_found`, `*_changed_elsewhere`, `*_merged`, `*_kept_unavailable` |
 | `customerMergePreview`, `productMergePreview` | How many live orders and reminders a merge would move | - |
 | `placeOrder`, `reviseOrder` | An order, making the products it names first | `customer_unavailable`, `product_not_found`, the order's own refusals |
 | `deliverOrder`, `undeliverOrder`, `addPayment`, `removePayment` | One change, logged | `order_not_found`, `order_changed_elsewhere`, the order's own refusals |
-| `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere` |
+| `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere`, `order_deleted_with_customer` |
 | `addReminder` | A reminder, from the form or from a live note | `customer_unavailable`, `note_unavailable` |
 | `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
 | `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
-| `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted` |
+| `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted`, `reminder_deleted_with_customer` |
 | `listDoneReminders` | Finished ones, latest first, a page after a cursor of (done at, id) rather than an offset, so a reminder reopened between pages shifts nothing | - |
-| `listDeletedNotes`, `listDeletedOrders`, `listDeletedReminders` | Deleted since a moment (the screen asks for 30 days), latest first, 50 at most | - |
+| `listDeletedNotes`, `listDeletedOrders`, `listDeletedReminders`, `listDeletedCustomers`, `listDeletedProducts`, `listDeletedCustomerKinds` | Deleted since a moment (the screen asks for 30 days), latest first, 50 at most each; orders and reminders deleted with a customer left out | - |
+| `deletedWithCounts` | How many orders and reminders each deleted customer took with them | - |
+| `restoreFromTrash` | Many things back at once, a customer with what went with them; says each that could not | `trash_changed_elsewhere` for the batch; per thing `trash_not_found`, `trash_changed_elsewhere`, `trash_not_deleted`, `trash_customer_deleted`, `trash_name_taken` |
+| `purgeFromTrash` | Many things gone from the database for good; says each that was restored meanwhile | per thing `trash_changed_elsewhere`, `trash_not_deleted` |
+| `emptyExpiredTrash` | The daily run: everything deleted more than 30 days ago goes for good | - |
 | `readNote` | Reads a note's message and makes the order or reminder it describes, or asks, or keeps the failure | `note_unavailable`, `reader_unavailable`, `already_read` |
 | `answerReading` | Settles an unsure reading with a customer, a new customer, or as a note | `note_unavailable`, `not_asked`, `customer_unavailable`, `customer_unnamed` |
 | `readingStates` | What each of a day's notes shows about its message, in four queries | - |
@@ -395,7 +431,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `endOtherSessions` | Ends every other session of the account | `step_up_required` |
 | `endPersonSessions` | Ends every session of the other account, its passkeys left alone | `step_up_required`, `not_found` |
 | `listSessions` | The account's sessions still running, most recently used first | - |
-| `accountOverview` | What Settings and its account sections show: account, passkeys, password status, sessions, activity, people | - |
+| `accountOverview` | What Settings and its account sections show: account, passkeys, password status, sessions, the sign-in history of the last 30 days 30 rows at a time, people | - |
 | `changeDisplayName` | Renames the account | - |
 | `changeUsername` | Changes the username | `step_up_required`, `username_taken` |
 | `beginPasswordChange` | A new salt for a new fallback password | `step_up_required` |
@@ -416,19 +452,20 @@ through `createApp` in `src/composition/create-app.ts`.
 | `deliverNotification` | The consumer: claims a delivery, reads what to say, sends it on each channel | - |
 | `notificationInbox` | The person's list behind the bell, newest first | - |
 | `markInboxRead` | Marks the person's unread items read, up to the newest one shown | - |
-| `changeQuietAfterDays` | The book's days after which a customer has gone quiet | `setting_changed_elsewhere` |
+| `deleteInboxItems`, `clearInbox` | Some of the person's items, or all, gone for good; another's ids change nothing | - |
+| `changeNotificationQuietDays` | The person's days after which the morning list names a customer as gone quiet | `days_changed_elsewhere` |
 
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
 order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
 the free plan. Open reminders are one indexed read (`reminder_open_by_due_on`), with one more for the customers'
-names. A report is nine aggregate statements run together (`report-queries.ts`), plus the book's setting, the kinds
-and the names of what it is filtered to.
+names. A report is nine aggregate statements run together (`report-queries.ts`), plus the kinds and the names of
+what it is filtered to.
 
 Each feature's codes form one closed set - `NoteError` in `src/features/notes/application/note-errors.ts`,
 `AccessError` in `src/features/access/application/access-errors.ts`, `ReadingError` in
 `src/features/reading/application/reading-errors.ts`, `NotificationError` in
-`src/features/notifications/application/notification-errors.ts`, `BookSettingError` in
-`src/features/book-settings/application/book-setting-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
+`src/features/notifications/application/notification-errors.ts`, `TrashError` in
+`src/features/trash/application/trash-errors.ts` - each with the Vietnamese sentence the user sees. "Can refuse" is an expected outcome, returned as a `Result`; a database that is down is a fault and throws.
 
 ## Tables
 
@@ -442,7 +479,9 @@ Each feature's codes form one closed set - `NoteError` in `src/features/notes/ap
 | `author_id` | text | foreign key to `account.id`: who typed it |
 | `received_at` | integer | epoch milliseconds |
 
-Triggers `capture_no_update` and `capture_no_delete` abort with "capture is append-only".
+Trigger `capture_no_update` aborts with "capture is append-only"; `capture_goes_only_when_unused` refuses a delete
+while a note, order or reminder points at it. `note_takes_its_capture`, `sales_order_takes_its_capture` and
+`reminder_takes_its_capture` delete the capture and its interpretations after the last row pointing at it goes.
 
 `note`, `STRICT`:
 
@@ -469,18 +508,18 @@ The book's tables, all `STRICT`, every one but the lines and the log with the au
 
 | Table | Holds | Rules the database keeps |
 |---|---|---|
-| `customer_kind` | name, search name, position | name 1-40; shown names unique by search name |
-| `customer` | name, search name, kind, area, phone, address, note, merged into | lengths; optional details null, never ""; triggers `customer_merged_only_hidden_on_insert` and `_on_update`: merged into another only while hidden, never itself |
+| `customer_kind` | name, search name, position, deleted at and by | name 1-40; shown names unique by search name; deleted only while hidden, at and by both or neither |
+| `customer` | name, search name, kind, area, phone, address, note, merged into, deleted at and by | lengths; optional details null, never ""; deleted only while hidden; triggers `customer_merged_only_hidden_on_insert` and `_on_update`: merged into another only while hidden, never itself |
 | `customer_alias` | customer, name, search name, who and when | no audit: removed outright; unique (customer, search name) |
-| `product` | name, search name, merged into | shown names unique by search name; triggers `product_merged_only_hidden_on_insert` and `_on_update` |
+| `product` | name, search name, merged into, deleted at and by | shown names unique by search name; deleted only while hidden; triggers `product_merged_only_hidden_on_insert` and `_on_update` |
 | `product_alias` | product, name, search name, who and when | no audit: removed outright; search name unique across all |
-| `customer_merge`, `product_merge` | from, into, the ids moved as JSON, who and when | not itself; valid JSON; append-only triggers `*_merge_no_update`, `*_merge_no_delete` |
-| `sales_order` | customer, ordered on, delivered on, note, capture | days are `YYYY-MM-DD`; delivered on or after ordered |
+| `customer_merge`, `product_merge` | from, into, the ids moved as JSON, who and when | not itself; valid JSON; trigger `*_merge_no_update`; `customer_merge_goes_only_with_its_customers` and `product_merge_goes_only_with_its_products` refuse a delete while the one kept is neither deleted nor merged away |
+| `sales_order` | customer, ordered on, delivered on, note, capture, deleted with | days are `YYYY-MM-DD`; delivered on or after ordered; deleted with a customer only while deleted |
 | `order_line` | order, position, product, quantity, unit price | quantity 1-100,000; price 0 to a trillion; no audit, replaced whole on a revision |
-| `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`, `payment_no_delete` |
-| `order_change` | order, kind, who and when, before and after as JSON | known kinds, `customer_merged` and `product_merged` among them; valid JSON; triggers `order_change_no_update`, `order_change_no_delete` |
-| `reminder` | text, due on, customer, capture, done at and by | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither |
-| `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_no_delete`, and `interpretation_once_settled`, which refuses a row after an `order`, `reminder` or `note` one of the same capture with `stale_version` |
+| `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`; `payment_goes_only_with_its_order` refuses a delete while the order is not deleted |
+| `order_change` | order, kind, who and when, before and after as JSON | known kinds, `customer_merged` and `product_merged` among them; valid JSON; trigger `order_change_no_update`; `order_change_goes_only_with_its_order` refuses a delete while the order is not deleted |
+| `reminder` | text, due on, customer, capture, done at and by, deleted with | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither; deleted with a customer only while deleted |
+| `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_goes_only_with_its_capture` (no delete while a note, order or reminder points at the capture), and `interpretation_once_settled`, which refuses a row after an `order`, `reminder` or `note` one of the same capture with `stale_version` |
 
 The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets as the base64url of their SHA-256.
 Every number a `CHECK` holds - lengths, the Argon2id floor, the algorithms - is the domain's own constant, written
@@ -502,20 +541,10 @@ The notifications' tables, all `STRICT`:
 | Table | Holds | Rules the database keeps |
 | --- | --- | --- |
 | `push_subscription` | account, session, the push service's address, the browser's two keys, the device label, when made, when last sent | session unique, set null when the session is deleted; address unique and `https`, at most 2,048; keys of their exact lengths |
-| `notification_preference` | per account, the morning and Friday times or null | quarter hours only; audited and versioned, with both triggers |
+| `notification_preference` | per account, the morning and Friday times or null, the days after which a customer has gone quiet | quarter hours only; days 7 to 180, 21 by default; audited and versioned, with both triggers |
 | `notification_delivery` | account, subject, ref (a day or an event id), channel (`inbox` or `push`), status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
 | `notice_cursor` | where the relay of notices has read the access log to | a single row |
 | `inbox_item` | account, subject, ref, title, body, path, when made, when read | unique (account, subject, ref); a path in the app (`/`, never `//`); title not blank, at most 200; body at most 2,000; read never before made. No audit columns: the system writes it, its person only reads it. Indexes: by account and time for the list, and a partial one on unread items for the bell's count |
-
-`book_setting`, `STRICT`, a single row (`id` 1), written by the first change:
-
-| Column | Type | Rule |
-|---|---|---|
-| `id` | integer | primary key, always 1 |
-| `quiet_after_days` | integer | 7 to 180 |
-| `created_at`, `updated_at` | integer | epoch milliseconds; updated never before created |
-| `created_by`, `updated_by` | text | foreign keys to `account.id` |
-| `version` | integer | 1 or more; triggers `book_setting_version_moves_by_one` and `book_setting_creation_is_fixed` |
 
 ## Consistency
 

@@ -8,6 +8,9 @@ import {
   archivalColumns,
   auditChecks,
   auditColumns,
+  deletedOnlyArchivedChecks,
+  deletionChecks,
+  deletionColumns,
 } from "@/shared/infrastructure/d1/audit-columns";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 
@@ -30,6 +33,7 @@ export const customerTable = sqliteTable(
     mergedIntoId: text("merged_into_id").references((): AnySQLiteColumn => customerTable.id),
     ...auditColumns(() => accountTable.id),
     ...archivalColumns(() => accountTable.id),
+    ...deletionColumns(() => accountTable.id),
   },
   (table) => [
     check(
@@ -45,6 +49,8 @@ export const customerTable = sqliteTable(
     ),
     ...auditChecks("customer", table),
     ...archivalChecks("customer", table),
+    ...deletionChecks("customer", table),
+    ...deletedOnlyArchivedChecks("customer", table),
     index("customer_active_by_name")
       .on(table.searchName)
       .where(sql`${table.archivedAt} is null`),

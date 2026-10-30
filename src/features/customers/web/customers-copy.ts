@@ -1,3 +1,5 @@
+import { customersListLimit } from "@/features/customers/application/list-customers";
+
 // What the customer screens say, in one place
 export const customersCopy = {
   title: "Khách hàng",
@@ -12,6 +14,11 @@ export const customersCopy = {
   show: "Hiện lại",
   hiddenToast: "Đã ẩn khách",
   shownToast: "Đã hiện lại khách",
+  // One of them, mid-sentence: "Xoá khách này?"
+  one: "khách",
+  remove: "Xoá khách",
+  deleted: "Đã xoá khách",
+  isDeleted: "Khách này đang ở Đã xoá gần đây, cùng các đơn của họ.",
   call: "Gọi",
   newOrder: "Tạo đơn",
   owes: "Còn nợ",
@@ -22,6 +29,8 @@ export const customersCopy = {
   empty: "Chưa có khách nào",
   emptyHint: "Thêm khách đầu tiên để bắt đầu ghi đơn.",
   notFound: "Không tìm thấy khách nào",
+  // Under a list cut at its limit, so it never just stops
+  more: `Chỉ hiện ${customersListLimit} khách đầu. Tìm tên hoặc khu vực để thấy khách khác.`,
   otherNamesFooter: "Tin nhắn gọi bằng tên nào ở đây cũng là khách này.",
   fields: {
     name: "Tên khách",
@@ -38,5 +47,9 @@ export const customersCopy = {
     hidden: "Đã ẩn",
     hide: "Ẩn loại này",
     footer: "Loại đã ẩn không hiện khi thêm khách, khách cũ vẫn giữ.",
+    one: "loại khách",
+    remove: "Xoá loại này",
+    deleted: "Đã xoá loại khách",
+    removeMeans: "Khách thuộc loại này sẽ thành không có loại.",
   },
 } as const;

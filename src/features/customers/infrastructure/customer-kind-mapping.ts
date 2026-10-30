@@ -10,6 +10,8 @@ import {
   toArchivalRow,
   toAudit,
   toAuditRow,
+  toDeletion,
+  toDeletionRow,
 } from "@/shared/infrastructure/d1/audit-mapping";
 
 import type { customerKindTable } from "./customer-kind.table";
@@ -27,7 +29,7 @@ export function toCustomerKind(row: CustomerKindRow): CustomerKind {
 
   return archival === undefined
     ? { ...fields, status: "active" }
-    : { ...fields, status: "archived", archival };
+    : { ...fields, status: "archived", archival, deletion: toDeletion(row) };
 }
 
 export function toCustomerKindRow(kind: CustomerKind): CustomerKindRow {
@@ -38,5 +40,6 @@ export function toCustomerKindRow(kind: CustomerKind): CustomerKindRow {
     position: kind.position,
     ...toAuditRow(kind.audit),
     ...toArchivalRow(kind.status === "archived" ? kind.archival : undefined),
+    ...toDeletionRow(kind.status === "archived" ? kind.deletion : undefined),
   };
 }

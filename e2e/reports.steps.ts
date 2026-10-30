@@ -34,7 +34,12 @@ async function showRange(page: Page, from: Temporal.PlainDate, to: Temporal.Plai
     .click();
   await page.getByLabel("Từ ngày").fill(from.toString());
   await page.getByLabel("Đến ngày").fill(to.toString());
-  await page.getByRole("button", { name: "Xem", exact: true }).click();
+  // The range's own form: the quiet customers' days have a Xem of their own
+  await page
+    .locator("form")
+    .filter({ has: page.getByLabel("Từ ngày") })
+    .getByRole("button", { name: "Xem", exact: true })
+    .click();
   await expect(page).toHaveURL(new RegExp(`from=${from.toString()}&to=${to.toString()}`));
 }
 

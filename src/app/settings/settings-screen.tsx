@@ -8,7 +8,6 @@ import type { AccountView } from "@/features/access/web/account-view";
 import type { KindView } from "@/features/customers/web/customer-view";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
-  CalendarMonthIcon,
   DevicesIcon,
   GroupIcon,
   HistoryIcon,
@@ -104,11 +103,6 @@ export function SettingsScreen({
           detail={`${kinds.filter((kind) => !kind.hidden).length} loại`}
           icon={LabelIcon}
           iconTone={iconTones.item}
-        />
-        <ListLink
-          href={settingsPath(from, routes.settingsQuiet)}
-          title={settingsCopy.quiet}
-          icon={CalendarMonthIcon}
         />
         <ListLink
           href={routes.deleted}

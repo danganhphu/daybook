@@ -1,3 +1,4 @@
+import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
 import { reminderIdSchema } from "@/features/reminders/domain/reminder";
@@ -196,7 +197,13 @@ describe("finished and deleted reminders", () => {
     const rows = await deletedReminders(app, await app.displayNames());
 
     expect(rows).toEqual([
-      { id: recent, version: 2, title: "Vừa xoá", detail: "Xoá 23/10 (Người ghi)" },
+      {
+        id: recent,
+        version: 2,
+        title: "Vừa xoá",
+        detail: "Xoá 23/10 (Người ghi)",
+        deletedAt: Temporal.Instant.from("2026-10-23T03:00:00Z").epochMilliseconds,
+      },
     ]);
   });
 });

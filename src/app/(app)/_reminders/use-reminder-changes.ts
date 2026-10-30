@@ -10,14 +10,18 @@ import type { ReminderChangeResult } from "@/features/reminders/web/commands";
 import type { ReminderView } from "@/features/reminders/web/reminder-view";
 import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
+import { deleteQuestion, recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 
 type Change = (id: string, version: number) => Promise<ReminderChangeResult>;
 
-// Done and delete are one tap each, with Undo in the toast. `hide` takes the row away before the server answers.
+// Done is one tap; delete asks first. Both have Undo in the toast. `hide` takes the row away before the server
+// answers. The screen renders `dialog`, where delete asks.
 export function useReminderChanges(hide: (id: string) => void) {
   const toast = useToast();
+  const { confirm, dialog } = useConfirm();
 
   const run = useCallback(
     (reminder: ReminderView, change: Change, undo: Change, title: string) => {
@@ -55,10 +59,20 @@ export function useReminderChanges(hide: (id: string) => void) {
     [run],
   );
   const remove = useCallback(
-    (reminder: ReminderView) =>
-      run(reminder, deleteReminder, restoreReminder, remindersCopy.deleted),
-    [run],
+    (reminder: ReminderView) => {
+      void (async () => {
+        const sure = await confirm({
+          title: deleteQuestion(remindersCopy.one),
+          description: recentlyDeletedCopy.canRestore,
+          confirmLabel: actionLabels.remove,
+        });
+        if (sure) {
+          run(reminder, deleteReminder, restoreReminder, remindersCopy.deleted);
+        }
+      })();
+    },
+    [confirm, run],
   );
 
-  return { complete, remove };
+  return { complete, remove, dialog };
 }

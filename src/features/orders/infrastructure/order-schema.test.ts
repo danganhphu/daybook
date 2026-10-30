@@ -40,26 +40,33 @@ describe("payment table", () => {
     },
   );
 
-  it("given a payment, when deleted outright, then the trigger refuses", async () => {
+  it("given a payment of a live order, when deleted outright, then the trigger refuses", async () => {
     const { paymentId } = await anOrderWithAPayment();
 
     await expect(
       env.DB.prepare("delete from payment where id = ?").bind(paymentId).run(),
-    ).rejects.toThrow(/a payment is only ever removed/);
+    ).rejects.toThrow(/a payment goes only with its deleted order/);
   });
 });
 
 describe("order_change table", () => {
-  it.each(["update order_change set kind = 'revised'", "delete from order_change"])(
-    "given the log, when %s, then the trigger refuses",
-    async (statement) => {
-      const { orderId } = await anOrderWithAPayment();
+  it("given the log, when rewritten, then the trigger refuses", async () => {
+    const { orderId } = await anOrderWithAPayment();
 
-      await expect(
-        env.DB.prepare(`${statement} where order_id = ?`).bind(orderId).run(),
-      ).rejects.toThrow(/order_change is append-only/);
-    },
-  );
+    await expect(
+      env.DB.prepare("update order_change set kind = 'revised' where order_id = ?")
+        .bind(orderId)
+        .run(),
+    ).rejects.toThrow(/order_change is append-only/);
+  });
+
+  it("given the log of a live order, when deleted, then the trigger refuses", async () => {
+    const { orderId } = await anOrderWithAPayment();
+
+    await expect(
+      env.DB.prepare("delete from order_change where order_id = ?").bind(orderId).run(),
+    ).rejects.toThrow(/order_change goes only with its deleted order/);
+  });
 });
 
 describe("sales_order table", () => {

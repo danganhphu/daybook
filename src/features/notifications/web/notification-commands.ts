@@ -10,6 +10,7 @@ import {
   pushEndpointSchema,
   pushKeysSchema,
 } from "@/features/notifications/domain/push-subscription";
+import { parseQuietAfterDays, typedDays } from "@/features/reports/domain/gone-quiet";
 import { versionSchema } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
 
@@ -43,6 +44,7 @@ export async function notificationsView(
 
   return {
     ...timesView(settings.preference),
+    quietAfterDays: settings.preference.quietAfterDays,
     available: settings.pushAvailable && publicKey !== undefined,
     publicKey,
     thisDevice: settings.devices.find((device) => device.current)?.subscription.id,
@@ -116,4 +118,28 @@ export async function saveTimes(
   });
 
   return changed.ok ? ok(timesView(changed.value)) : err(notificationErrorMessages[changed.error]);
+}
+
+// The days the person typed, against the version the screen showed
+export async function saveQuietDays(
+  app: App,
+  session: Session,
+  days: unknown,
+  version: unknown,
+): Promise<Result<null, string>> {
+  const parsed = parseQuietAfterDays(typedDays(days));
+  if (!parsed.ok) {
+    return err(parsed.error);
+  }
+  // The screen sends back the version it was given; anything else cannot be what it showed
+  const shown = versionSchema.nullable().safeParse(version);
+  if (!shown.success) {
+    return err(notificationErrorMessages.days_changed_elsewhere);
+  }
+  const changed = await app.changeNotificationQuietDays(session, {
+    days: parsed.value,
+    shown: shown.data ?? undefined,
+  });
+
+  return changed.ok ? ok(null) : err(notificationErrorMessages[changed.error]);
 }

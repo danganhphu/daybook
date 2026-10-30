@@ -1,4 +1,5 @@
 import type { NotificationError } from "@/features/notifications/application/notification-errors";
+import { quietAfterDaysLimits } from "@/features/reports/domain/gone-quiet";
 
 export const notificationsCopy = {
   title: "Thông báo",
@@ -24,14 +25,33 @@ export const notificationsCopy = {
   neverSent: "Chưa gửi lần nào",
   remove: "Gỡ",
   removed: "Đã gỡ",
+  removeMeans: "Máy đó sẽ không nhận thông báo nữa, cho tới khi bật lại trên chính nó.",
   securityAlwaysOn: "Thay đổi về đăng nhập luôn được báo.",
   noDevice: "Chưa bật",
   offer: "Bật thông báo để sáng nào cũng được nhắc việc?",
   later: "Để sau",
+  quiet: "Khách lâu không đặt",
+  quietDays: "Số ngày không đặt",
+  quietRange: `Từ ${quietAfterDaysLimits.min} đến ${quietAfterDaysLimits.max} ngày`,
+  quietUse: "Tin buổi sáng nhắc tên khách vào ngày họ chạm số này; tổng kết thứ Sáu đếm cả.",
+  quietSaved: "Đã lưu số ngày",
   inboxEmpty: "Chưa có thông báo nào",
   unread: "Chưa đọc",
   yesterday: "Hôm qua",
+  deleteAll: "Xoá tất cả",
+  deleteAllQuestion: "Xoá tất cả thông báo?",
+  deletedAll: "Đã xoá hết thông báo",
+  notFoundInbox: "Không tìm thấy thông báo này nữa.",
 } as const;
+
+// "Xoá 3 thông báo?"
+export function deleteNotificationsQuestion(count: number): string {
+  return count === 1 ? "Xoá thông báo này?" : `Xoá ${count} thông báo?`;
+}
+
+export function deletedNotificationsText(count: number): string {
+  return `Đã xoá ${count} thông báo`;
+}
 
 export function devicesOn(count: number): string {
   return count === 0 ? notificationsCopy.noDevice : `Đang bật trên ${count} thiết bị`;
@@ -62,4 +82,5 @@ export const notificationErrorMessages = {
   push_service_unknown: "Trình duyệt này chưa được hỗ trợ.",
   not_found: "Không tìm thấy thiết bị này.",
   times_changed_elsewhere: "Giờ nhắc vừa được đổi ở nơi khác. Hãy xem lại.",
+  days_changed_elsewhere: "Số ngày vừa được đổi ở nơi khác. Hãy xem lại.",
 } as const satisfies Record<NotificationError, string>;

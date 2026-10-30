@@ -17,7 +17,11 @@ export async function restoreCustomerKind(
     ActiveKind,
     Extract<
       CustomerError,
-      "kind_not_found" | "kind_changed_elsewhere" | "kind_not_archived" | "kind_name_taken"
+      | "kind_not_found"
+      | "kind_changed_elsewhere"
+      | "kind_not_archived"
+      | "kind_deleted"
+      | "kind_name_taken"
     >
   >
 > {

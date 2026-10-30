@@ -45,6 +45,16 @@ export async function turnOffPush(subscriptionId: unknown): Promise<Result<null,
   );
 }
 
+export async function saveNotificationQuietDays(
+  days: unknown,
+  version: unknown,
+): Promise<Result<null, string>> {
+  const app = daybook();
+  const session = await requireSession(app);
+
+  return refreshed(await Notifications.saveQuietDays(app, session, days, version));
+}
+
 export async function saveNotificationTimes(
   times: unknown,
 ): Promise<Result<NotificationTimesView, string>> {

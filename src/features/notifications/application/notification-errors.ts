@@ -5,4 +5,5 @@ export type NotificationError =
   // A browser handed over an address that is not a known push service's
   | "push_service_unknown"
   | "not_found"
-  | "times_changed_elsewhere";
+  | "times_changed_elsewhere"
+  | "days_changed_elsewhere";

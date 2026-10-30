@@ -16,6 +16,8 @@ export type NotificationTimesView = {
 };
 
 export type NotificationsView = NotificationTimesView & {
+  // After how many days without an order the morning list names a customer
+  readonly quietAfterDays: number;
   // Whether this deploy can send at all; the browser decides the rest
   readonly available: boolean;
   // What a browser subscribes with

@@ -15,7 +15,11 @@ export async function openedFrom({ searchParams }: SettingsPageProps): Promise<s
   return knownTab(typeof from === "string" ? from : undefined);
 }
 
-// What the account's sections show, read the same way for each
-export async function accountView(app: App, session: Session): Promise<AccountView> {
-  return toAccountView(await app.accountOverview(session.accountId), session.id);
+// What the account's sections show, read the same way for each; the sign-in log asks for more of its rows
+export async function accountView(
+  app: App,
+  session: Session,
+  activityShown?: number,
+): Promise<AccountView> {
+  return toAccountView(await app.accountOverview(session.accountId, activityShown), session.id);
 }

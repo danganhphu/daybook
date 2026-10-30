@@ -5,7 +5,9 @@ import { DatabaseSync } from "node:sqlite";
 import { expect, type Page } from "@playwright/test";
 import { v7 as uuidv7 } from "uuid";
 
+import { answer } from "./confirm";
 import { Given, Then, When } from "./fixtures";
+import { ownName } from "./own-names";
 import { databaseFolder } from "./paths";
 
 const serviceWorker = "/sw.js";
@@ -32,6 +34,27 @@ Given("tôi có một thông báo mới {string}", async ({ page }, title: strin
   tellLan(title);
   await page.goto("/");
 });
+
+Given("tôi có một thông báo mới riêng {string}", async ({ page, remembered }, title: string) => {
+  tellLan(ownName(remembered, title));
+  await page.goto("/");
+});
+
+When("tôi xoá thông báo riêng {string}", async ({ page, remembered }, title: string) => {
+  await page.getByRole("button", { name: "Chọn", exact: true }).click();
+  await page.getByRole("checkbox", { name: new RegExp(ownName(remembered, title)) }).check();
+  await page.getByRole("button", { name: "Xoá", exact: true }).click();
+  await answer(page, "Xoá thông báo này?", "Xoá");
+});
+
+Then(
+  "cái chuông không còn thông báo riêng {string}",
+  async ({ page, remembered }, title: string) => {
+    await expect(
+      page.getByRole("main").getByText(ownName(remembered, title), { exact: true }),
+    ).toHaveCount(0);
+  },
+);
 
 Then("cái chuông báo có thông báo chưa đọc", async ({ page }) => {
   await expect(page.getByRole("link", { name: /^Thông báo, \d+ chưa đọc$/ })).toBeVisible();

@@ -97,6 +97,21 @@ Once, before the first `pnpm run deploy` with notifications in it:
    person then turns notifications on again.
 4. `pnpm run deploy`. A cron trigger takes up to 15 minutes to reach Cloudflare's network.
 
+## The deploy that brings the trash
+
+Two migrations, applied as above before `pnpm run deploy`:
+
+- `per_use_quiet_days` rebuilds `notification_preference` with its rows, each person getting 21 days, and drops
+  `book_setting`: a number set there before is not carried over, since the days are now each use's own.
+- `trash_for_customers_products_kinds` adds the delete columns to `customer`, `product`, `customer_kind` and
+  `deleted_with` to `sales_order` and `reminder`, without rebuilding them, and replaces the triggers that refused any
+  delete of a log, a payment, a merge record, a capture or an interpretation (ADR 0017). From this deploy, deleting for
+  good removes rows; D1's Time Travel can still bring the whole database back to a moment within the last 7 days on
+  the free plan (https://developers.cloudflare.com/d1/reference/time-travel/).
+
+Note the bookmark `cf` prints before applying, as for every migration. After the deploy the first cron run of a day
+in Vietnam empties the trash of what is older than 30 days.
+
 ## Changing a secret
 
 The Worker exists now, so Wrangler sets one secret and deploys a new version at once. Pipe the value in, so it never

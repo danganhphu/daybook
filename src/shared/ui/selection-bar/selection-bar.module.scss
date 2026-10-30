@@ -1,0 +1,20 @@
+@use "abstracts" as *;
+
+// The Screen column's gutter, taken back so the bar runs edge to edge
+$gutter-bleed: calc(#{space(4)} * -1);
+
+// Sticks to the foot of the page while it scrolls, so it sits above the tab bar on a phone and under the column from
+// `md`
+.bar {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: z(sticky);
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: space(3);
+  padding: space(3) space(4);
+  margin-inline: $gutter-bleed;
+  background: color(surface-float);
+  border-block-start: 1px solid color(border);
+}

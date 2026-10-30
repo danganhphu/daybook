@@ -42,7 +42,7 @@ export function ReminderList({
   empty,
 }: ReminderListProps) {
   const [shown, hide] = useOptimistic(reminders, without);
-  const { complete, remove } = useReminderChanges(hide);
+  const { complete, remove, dialog } = useReminderChanges(hide);
   const [editing, setEditing] = useState<ReminderView | "new">();
   const close = useCallback(() => setEditing(undefined), []);
   const add = useCallback(() => setEditing("new"), []);
@@ -74,6 +74,7 @@ export function ReminderList({
           customer={adding?.customer}
         />
       )}
+      {dialog}
     </>
   );
 }

@@ -4,10 +4,12 @@ export type MergeError =
   | "customer_not_found"
   | "customer_changed_elsewhere"
   | "customer_merged"
+  | "customer_deleted"
   | "customer_kept_unavailable"
   | "product_not_found"
   | "product_changed_elsewhere"
   | "product_merged"
+  | "product_deleted"
   | "product_kept_unavailable";
 
 export const mergeErrorMessages = {
@@ -15,9 +17,11 @@ export const mergeErrorMessages = {
   customer_not_found: "Không tìm thấy khách này nữa.",
   customer_changed_elsewhere: "Khách vừa được sửa ở máy khác. Xem bản mới rồi thử lại.",
   customer_merged: "Khách này đã gộp vào khách khác.",
+  customer_deleted: "Khách này đã xoá rồi.",
   customer_kept_unavailable: "Khách giữ lại không còn trong danh sách.",
   product_not_found: "Không tìm thấy sản phẩm này nữa.",
   product_changed_elsewhere: "Sản phẩm vừa được sửa ở máy khác. Xem bản mới rồi thử lại.",
   product_merged: "Sản phẩm này đã gộp vào sản phẩm khác.",
+  product_deleted: "Sản phẩm này đã xoá rồi.",
   product_kept_unavailable: "Sản phẩm giữ lại không còn trong danh sách.",
 } as const satisfies Record<MergeError, string>;

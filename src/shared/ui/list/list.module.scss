@@ -38,6 +38,17 @@
   &:has(.row-icon) > li + li::before {
     inset-inline-start: calc(#{space(4)} + #{size(icon-row)} + #{space(3)});
   }
+
+  // Past the checkboxes too, while choosing
+  &:has(.checkbox) > li + li::before {
+    inset-inline-start: calc(#{space(4)} + #{size(checkbox)} + #{space(3)});
+  }
+
+  &:has(.checkbox):has(.row-icon) > li + li::before {
+    inset-inline-start: calc(
+      #{space(4)} + #{size(checkbox)} + #{space(3)} + #{size(icon-row)} + #{space(3)}
+    );
+  }
 }
 
 .row {
@@ -135,6 +146,63 @@
     .title {
       @include text(body-strong);
     }
+  }
+}
+
+// A row being chosen: the whole row ticks its box, and a chosen one is tinted as a choice made is
+.check {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  min-block-size: size(row);
+  padding: space(3) space(3) space(3) space(4);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+
+  &:has(.checkbox[data-checked]) {
+    background: color(accent-wash);
+  }
+
+  &:active {
+    background: color(surface-subtle);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: color(surface-subtle);
+    }
+  }
+}
+
+// Material 3's checkbox (material-web md-comp-checkbox): an 18px box with 2px corners and a 2px outline; once ticked,
+// filled with the accent and no outline, so the 18px mark fits
+.checkbox {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: size(checkbox);
+  block-size: size(checkbox);
+  color: color(on-accent);
+  border: 2px solid color(border-strong);
+  border-radius: radius(checkbox);
+
+  @include focus-ring;
+
+  &[data-checked],
+  &[data-indeterminate] {
+    background: color(accent);
+    border: 0;
+  }
+}
+
+.check-mark {
+  display: inline-flex;
+
+  svg {
+    inline-size: size(checkbox);
+    block-size: size(checkbox);
   }
 }
 

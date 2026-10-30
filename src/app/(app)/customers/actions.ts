@@ -9,6 +9,8 @@ import * as Customers from "@/features/customers/web/commands";
 import type { CustomerFormState, CustomerResult } from "@/features/customers/web/commands";
 import * as Merging from "@/features/merging/web/commands";
 import type { MergeConfirmView } from "@/features/merging/web/commands";
+import * as Trash from "@/features/trash/web/commands";
+import type { DeleteConfirmView } from "@/features/trash/web/commands";
 import type { Result } from "@/shared/domain/result";
 import { customerPath } from "@/shared/web/routes";
 
@@ -75,6 +77,26 @@ export async function removeCustomerName(aliasId: string): Promise<Result<null, 
   const app = daybook();
   await requireSession(app);
   const result = await Customers.removeCustomerAlias(app, aliasId);
+  refresh();
+
+  return result;
+}
+
+// What deleting takes with the customer, asked before it does
+export async function customerDeleteConfirm(
+  id: string,
+): Promise<Result<DeleteConfirmView, string>> {
+  const app = daybook();
+  await requireSession(app);
+
+  return Trash.customerDeleteConfirm(app, id);
+}
+
+// The version after the delete, for the toast's Undo
+export async function deleteCustomer(id: string, version: number): Promise<Result<number, string>> {
+  const app = daybook();
+  const session = await requireSession(app);
+  const result = await Trash.deleteCustomer(app, session.accountId, id, version);
   refresh();
 
   return result;

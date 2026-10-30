@@ -76,6 +76,7 @@ export async function productScreen(app: App, id: unknown): Promise<ProductScree
     version: product.audit.version,
     hidden: product.status === "archived",
     mergedInto: product.status === "archived" ? product.mergedInto : undefined,
+    deleted: product.status === "archived" && product.deletion !== undefined,
     lastPrice: used?.lastPrice,
     orderCount: used?.orderCount ?? 0,
     otherNames: aliases.map((alias) => ({ id: alias.id, name: alias.name })),
