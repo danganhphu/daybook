@@ -7,6 +7,7 @@
  */
 
 declare const filters: string;
+declare const quiet: string;
 declare const range: string;
 declare const error: string;
 declare const periods: string;
@@ -14,10 +15,11 @@ declare const title: string;
 
 declare const __default_export__: {
 	filters: typeof filters;
+	quiet: typeof quiet;
 	range: typeof range;
 	error: typeof error;
 	periods: typeof periods;
 	title: typeof title;
 };
 export default __default_export__;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVwb3J0cy5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJyZXBvcnRzLm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FNQTtjQVdBO2NBUUE7Y0FPQTs7O0NBaENBO0NBTUE7Q0FXQTtDQVFBO0NBT0E7OyJ9
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVwb3J0cy5tb2R1bGUuc2Nzcy5kLnRzIiwic291cmNlcyI6WyJyZXBvcnRzLm1vZHVsZS5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7O2NBRUE7Y0FPQTtjQU9BO2NBV0E7Y0FRQTtjQU9BOzs7Q0F4Q0E7Q0FPQTtDQU9BO0NBV0E7Q0FRQTtDQU9BOzsifQ==

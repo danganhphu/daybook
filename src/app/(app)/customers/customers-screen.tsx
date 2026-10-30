@@ -80,7 +80,7 @@ export function CustomersScreen({
           description={view.filtered || view.showingHidden ? undefined : customersCopy.emptyHint}
         />
       ) : (
-        <List>
+        <List footer={view.more ? customersCopy.more : undefined}>
           {view.rows.map((row) => (
             <ListLink
               key={row.id}

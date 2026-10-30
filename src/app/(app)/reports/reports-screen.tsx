@@ -15,7 +15,9 @@ import { iconTones } from "@/shared/ui/icon/icon-tone";
 import { ChevronLeftIcon, ChevronRightIcon, PersonIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListBar } from "@/shared/ui/list/list-bar";
+import { ListContent } from "@/shared/ui/list/list-content";
 import { ListLink } from "@/shared/ui/list/list-link";
+import { ListRow } from "@/shared/ui/list/list-row";
 import { Screen } from "@/shared/ui/screen/screen";
 import { Stats } from "@/shared/ui/stats/stats";
 import { TextField } from "@/shared/ui/text-field/text-field";
@@ -118,7 +120,23 @@ export function ReportsScreen({
           <Ranking list={report.customers} />
 
           {report.quiet === undefined ? null : (
-            <List heading={reportsCopy.quiet} footer={report.quiet.footer}>
+            <List heading={reportsCopy.quiet}>
+              <ListContent>
+                <Form action={routes.reports} className={styles.quiet}>
+                  {report.quiet.keep.map((each) => (
+                    <input key={each.name} type="hidden" name={each.name} value={each.value} />
+                  ))}
+                  <TextField
+                    label={reportsCopy.quietDays}
+                    name="quiet"
+                    inputMode="numeric"
+                    defaultValue={report.quiet.days}
+                    error={report.quiet.error}
+                  />
+                  <Button type="submit">{reportsCopy.show}</Button>
+                </Form>
+              </ListContent>
+              {report.quiet.empty === undefined ? null : <ListRow title={report.quiet.empty} />}
               {report.quiet.rows.map((row) => (
                 <ListLink
                   key={row.id}

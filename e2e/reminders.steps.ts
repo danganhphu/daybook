@@ -3,6 +3,7 @@ import { Temporal } from "temporal-polyfill/implementation";
 
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 
+import { answer } from "./confirm";
 import { Given, Then, When } from "./fixtures";
 
 // Reminders, found by role and by the words on screen
@@ -55,6 +56,7 @@ Given("chưa có việc cần nhắc nào", async ({ page }) => {
     await menus.first().click();
     const answered = page.waitForResponse((response) => response.request().method() === "POST");
     await page.getByRole("menuitem", { name: "Xoá" }).click();
+    await answer(page, "Xoá việc cần nhắc này?", "Xoá");
     await answered;
     await expect(menus).toHaveCount(left - 1);
   }

@@ -21,4 +21,9 @@
   &:has([data-fab]) {
     --column-padding-end: calc(#{size(fab)} + #{space(8)});
   }
+
+  // A bar docked at the foot ends the page itself
+  &:has([data-selection-bar]) {
+    --column-padding-end: 0;
+  }
 }

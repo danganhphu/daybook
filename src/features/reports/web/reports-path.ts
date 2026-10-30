@@ -12,6 +12,8 @@ export type ReportsQuery = {
   readonly kind?: string | undefined;
   readonly customer?: string | undefined;
   readonly product?: string | undefined;
+  // How many days without an order make a customer quiet; left out, the default
+  readonly quiet?: string | undefined;
 };
 
 // The row of filters. A link that narrows the report from low on the page lands here: the app navigates without

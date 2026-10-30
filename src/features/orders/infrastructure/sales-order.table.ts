@@ -29,6 +29,8 @@ export const salesOrderTable = sqliteTable(
     captureId: text("capture_id").references(() => captureTable.id),
     ...auditColumns(() => accountTable.id),
     ...deletionColumns(() => accountTable.id),
+    // The customer it was deleted with; it comes back with them
+    deletedWith: text("deleted_with").references(() => customerTable.id),
   },
   (table) => [
     check("sales_order_ordered_on_day", isCalendarDay(table.orderedOn)),
@@ -42,6 +44,10 @@ export const salesOrderTable = sqliteTable(
     ),
     ...auditChecks("sales_order", table),
     ...deletionChecks("sales_order", table),
+    check(
+      "sales_order_deleted_with_only_deleted",
+      sql`${table.deletedWith} is null or ${table.deletedAt} is not null`,
+    ),
     index("sales_order_live_by_day")
       .on(table.orderedOn)
       .where(sql`${table.deletedAt} is null`),

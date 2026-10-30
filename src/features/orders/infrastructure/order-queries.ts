@@ -149,6 +149,8 @@ export function createOrderQueries(db: Database): OrderQueries {
           and(
             isNotNull(salesOrderTable.deletedAt),
             gte(salesOrderTable.deletedAt, since.epochMilliseconds),
+            // Those deleted with their customer show under the customer
+            isNull(salesOrderTable.deletedWith),
           ),
         )
         .orderBy(desc(salesOrderTable.deletedAt), desc(salesOrderTable.id))

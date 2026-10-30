@@ -42,6 +42,7 @@ import * as icons from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
 import { ListBar } from "@/shared/ui/list/list-bar";
+import { ListCheck } from "@/shared/ui/list/list-check";
 import { ListContent } from "@/shared/ui/list/list-content";
 import { ListLink } from "@/shared/ui/list/list-link";
 import { ListRow } from "@/shared/ui/list/list-row";
@@ -50,6 +51,9 @@ import { PageHeader } from "@/shared/ui/page-header/page-header";
 import { QuietLink } from "@/shared/ui/quiet-link/quiet-link";
 import { SearchField } from "@/shared/ui/search-field/search-field";
 import { SelectField } from "@/shared/ui/select-field/select-field";
+import { SelectionBar } from "@/shared/ui/selection-bar/selection-bar";
+import { selectionCopy } from "@/shared/ui/selection-bar/selection-copy";
+import { useSelection } from "@/shared/ui/selection-bar/use-selection";
 import { Stats } from "@/shared/ui/stats/stats";
 import { Status } from "@/shared/ui/status/status";
 import { SuggestField } from "@/shared/ui/suggest-field/suggest-field";
@@ -155,6 +159,69 @@ function describeSample(product: SampleProduct) {
 }
 
 const sampleMenu = <ActionMenu label={actionLabels.options} actions={sampleActions} />;
+
+const sampleTrash = [
+  { id: "a", title: "Hỏi giá máy cạo vôi", detail: "Ghi chú, Xoá 29/10 (Lan)" },
+  { id: "b", title: "Hướng Dương", detail: "Đơn 22/10, 800.000đ, Xoá 28/10 (Lan)" },
+  { id: "c", title: "Nha khoa Sao Mai", detail: "Khách, kèm 2 đơn, Xoá 27/10 (Lan)" },
+] as const;
+
+const sampleTrashIds = sampleTrash.map((row) => row.id);
+
+function ChoosingSample() {
+  const selection = useSelection(sampleTrashIds);
+  const none = selection.chosen.size === 0;
+
+  return (
+    <>
+      <List>
+        <ListCheck
+          title={selectionCopy.chooseAll}
+          checked={selection.allChosen}
+          indeterminate={!none && !selection.allChosen}
+          onCheckedChange={selection.toggleAll}
+        />
+      </List>
+      <List>
+        {sampleTrash.map((row) => (
+          <SampleCheck
+            key={row.id}
+            row={row}
+            checked={selection.chosen.has(row.id)}
+            onToggle={selection.toggle}
+          />
+        ))}
+      </List>
+      <SelectionBar>
+        <Button>{none ? "Khôi phục tất cả" : actionLabels.restore}</Button>
+        <Button tone="danger">{none ? "Xoá tất cả" : "Xoá vĩnh viễn"}</Button>
+      </SelectionBar>
+    </>
+  );
+}
+
+function SampleCheck({
+  row,
+  checked,
+  onToggle,
+}: {
+  readonly row: (typeof sampleTrash)[number];
+  readonly checked: boolean;
+  readonly onToggle: (id: string, on: boolean) => void;
+}) {
+  const toggle = useCallback((on: boolean) => onToggle(row.id, on), [onToggle, row.id]);
+
+  return (
+    <ListCheck
+      title={row.title}
+      detail={row.detail}
+      icon={DeleteIcon}
+      iconTone={iconTones.danger}
+      checked={checked}
+      onCheckedChange={toggle}
+    />
+  );
+}
 
 export function Gallery() {
   const toast = useToast();
@@ -530,6 +597,14 @@ export function Gallery() {
         </Sample>
       </Section>
 
+      <Section title="ListCheck, SelectionBar">
+        <Sample caption="choosing many: Chọn tất cả mixed while some are ticked; with none ticked the bar acts on all">
+          <div className={styles.block}>
+            <ChoosingSample />
+          </div>
+        </Sample>
+      </Section>
+
       <Section title="ActionMenu">
         <Sample caption="destructive item last, below a divider, in the danger color">
           <article className={styles.row}>
@@ -550,7 +625,7 @@ export function Gallery() {
         <Sample caption="a sheet at the bottom on a phone, a card in the middle from md">
           <Button onClick={openDialog}>Mở hộp thoại</Button>
           <Button tone="danger" onClick={openConfirm}>
-            CloseIconác nhận xoá
+            Xác nhận xoá
           </Button>
           <Dialog
             open={dialogOpen}

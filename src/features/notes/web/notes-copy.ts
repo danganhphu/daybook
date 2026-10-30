@@ -3,6 +3,8 @@ import { notesSearchLimit } from "@/features/notes/application/search-notes";
 // What the note screens say, in one place, so a label and the test that looks for it cannot drift apart
 export const notesCopy = {
   deleted: "Đã xoá ghi chú",
+  // One of them, mid-sentence: "Xoá ghi chú này?"
+  one: "ghi chú",
   emptyToday: "Hôm nay chưa có ghi chú nào",
   emptyTodayHint: "Gõ vào ô bên dưới, ghi chú sẽ hiện ở đây.",
   emptyDay: "Ngày này không có ghi chú nào",

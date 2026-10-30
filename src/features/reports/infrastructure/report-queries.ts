@@ -130,19 +130,23 @@ export function createReportQueries(db: Database): ReportQueries {
       return money(row?.owed ?? 0);
     },
 
+    // A kind in the trash counts as none, as its customers read
     async salesByKind(filter) {
       const rows = await db
         .select({
-          kindId: customerTable.kindId,
+          kindId: customerKindTable.id,
           kindName: customerKindTable.name,
           sales: lineSales,
         })
         .from(orderLineTable)
         .innerJoin(salesOrderTable, eq(salesOrderTable.id, orderLineTable.orderId))
         .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
-        .leftJoin(customerKindTable, eq(customerKindTable.id, customerTable.kindId))
+        .leftJoin(
+          customerKindTable,
+          and(eq(customerKindTable.id, customerTable.kindId), isNull(customerKindTable.deletedAt)),
+        )
         .where(matchingLines(filter))
-        .groupBy(customerTable.kindId, customerKindTable.name)
+        .groupBy(customerKindTable.id, customerKindTable.name)
         .orderBy(desc(lineSales), asc(customerKindTable.position));
 
       return rows.map((row) => ({

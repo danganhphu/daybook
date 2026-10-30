@@ -33,16 +33,21 @@ describe("tables of the migration", () => {
 });
 
 describe("customer_merge table", () => {
-  it.each(["update customer_merge set moved = '{}'", "delete from customer_merge"])(
-    "given a merge, when %s, then the trigger refuses",
-    async (statement) => {
-      await twoCustomersMerged();
+  it("given a merge, when rewritten, then the trigger refuses", async () => {
+    await twoCustomersMerged();
 
-      await expect(env.DB.prepare(statement).run()).rejects.toThrow(
-        /customer_merge is append-only/,
-      );
-    },
-  );
+    await expect(env.DB.prepare("update customer_merge set moved = '{}'").run()).rejects.toThrow(
+      /customer_merge is append-only/,
+    );
+  });
+
+  it("given a merge into a customer still in use, when deleted, then the trigger refuses", async () => {
+    await twoCustomersMerged();
+
+    await expect(env.DB.prepare("delete from customer_merge").run()).rejects.toThrow(
+      /customer_merge goes only with the customers it joined/,
+    );
+  });
 });
 
 describe("customer table", () => {

@@ -45,6 +45,18 @@ When(
   },
 );
 
+When("tôi mở khách mới {string}", async ({ page, remembered }, name: string) => {
+  await page.goto(remembered.get(pageKey(name)) ?? "/customers");
+  await expect(
+    page.getByRole("heading", { name: ownName(remembered, name), level: 1 }),
+  ).toBeVisible();
+});
+
+When("tôi chọn {string} trong menu của khách này", async ({ page }, item: string) => {
+  await page.getByRole("button", { name: "Tuỳ chọn", exact: true }).click();
+  await page.getByRole("menuitem", { name: item, exact: true }).click();
+});
+
 Then("tôi đang xem khách mới {string}", async ({ page, remembered }, name: string) => {
   await expect(
     page.getByRole("heading", { name: ownName(remembered, name), level: 1 }),

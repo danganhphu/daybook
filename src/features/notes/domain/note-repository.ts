@@ -8,6 +8,7 @@ import type { DeletedNote, LiveNote, Note, NoteId } from "./note";
 // Reads only. Writes go through the application's unit of work, so several aggregates can change in one transaction.
 export type NoteRepository = {
   get(id: NoteId): Promise<Note | undefined>;
+  getMany(ids: ReadonlyArray<NoteId>): Promise<ReadonlyArray<Note>>;
   // Newest first
   listLiveCreatedWithin(bounds: DayBounds): Promise<ReadonlyArray<LiveNote>>;
   // Live notes containing every word of the term, newest first, at most `limit`

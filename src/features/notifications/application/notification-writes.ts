@@ -1,7 +1,7 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessLogPosition } from "@/features/access/domain/access-event-repository";
-import type { InboxItem } from "@/features/notifications/domain/inbox-item";
+import type { InboxItem, InboxItemId } from "@/features/notifications/domain/inbox-item";
 import type { NotificationPreference } from "@/features/notifications/domain/notification-preference";
 import type {
   PushSubscription,
@@ -32,4 +32,7 @@ export type InboxWrites = {
   // Every unread item of the person's made up to that moment
   markRead(accountId: AccountId, upTo: Temporal.Instant, at: Temporal.Instant): void;
   forget(before: Temporal.Instant): void;
+  // Gone for good, and only the person's own
+  remove(accountId: AccountId, ids: ReadonlyArray<InboxItemId>): void;
+  removeAll(accountId: AccountId): void;
 };

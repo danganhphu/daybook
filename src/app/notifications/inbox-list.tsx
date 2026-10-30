@@ -1,16 +1,19 @@
 "use client";
 
 import { unstable_rethrow } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { DeliverySubject } from "@/features/notifications/domain/delivery";
-import type { InboxView } from "@/features/notifications/web/inbox-view";
+import type { InboxRowView } from "@/features/notifications/web/inbox-view";
 import { notificationsCopy } from "@/features/notifications/web/notifications-copy";
 import type { Icon } from "@/shared/ui/icon/icon";
 import { iconTones, type IconTone } from "@/shared/ui/icon/icon-tone";
 import { AnalyticsIcon, ChecklistIcon, KeyIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
+import { ListCheck } from "@/shared/ui/list/list-check";
 import { ListLink } from "@/shared/ui/list/list-link";
+import { selectionCopy } from "@/shared/ui/selection-bar/selection-copy";
+import type { Selection } from "@/shared/ui/selection-bar/use-selection";
 
 import { markNotificationsRead } from "./actions";
 
@@ -21,13 +24,22 @@ const kinds = {
   notice: { icon: KeyIcon, tone: iconTones.item },
 } as const satisfies Record<DeliverySubject, { readonly icon: Icon; readonly tone: IconTone }>;
 
+export type InboxListProps = {
+  readonly rows: ReadonlyArray<InboxRowView>;
+  readonly footer: string;
+  // The newest item's time, while something is unread
+  readonly readUpTo: number | undefined;
+  // While choosing which to delete: each row ticks instead of opening
+  readonly selection: Selection | undefined;
+};
+
 // Marks the list read once it is on screen, by a request of its own: showing a page changes nothing. The screen then
-// comes back with everything read, so what was unread when it opened is remembered here and stays highlighted.
-export function InboxList({ view }: { readonly view: InboxView }) {
+// comes back with everything read, so what was unread when it opened is remembered here and stays highlighted - kept
+// while choosing too, since the list stays mounted.
+export function InboxList({ rows, footer, readUpTo, selection }: InboxListProps) {
   const [unreadAtOpen] = useState(
-    () => new Set(view.rows.filter((row) => row.unread).map((row) => row.id)),
+    () => new Set(rows.filter((row) => row.unread).map((row) => row.id)),
   );
-  const { readUpTo } = view;
 
   useEffect(() => {
     if (readUpTo === undefined) {
@@ -43,9 +55,34 @@ export function InboxList({ view }: { readonly view: InboxView }) {
     })();
   }, [readUpTo]);
 
+  if (selection !== undefined) {
+    return (
+      <>
+        <List>
+          <ListCheck
+            title={selectionCopy.chooseAll}
+            checked={selection.allChosen}
+            indeterminate={selection.chosen.size > 0 && !selection.allChosen}
+            onCheckedChange={selection.toggleAll}
+          />
+        </List>
+        <List footer={footer}>
+          {rows.map((row) => (
+            <ChoosableRow
+              key={row.id}
+              row={row}
+              checked={selection.chosen.has(row.id)}
+              onToggle={selection.toggle}
+            />
+          ))}
+        </List>
+      </>
+    );
+  }
+
   return (
-    <List footer={view.footer}>
-      {view.rows.map((row) => (
+    <List footer={footer}>
+      {rows.map((row) => (
         <ListLink
           key={row.id}
           href={row.href}
@@ -58,5 +95,28 @@ export function InboxList({ view }: { readonly view: InboxView }) {
         />
       ))}
     </List>
+  );
+}
+
+function ChoosableRow({
+  row,
+  checked,
+  onToggle,
+}: {
+  readonly row: InboxRowView;
+  readonly checked: boolean;
+  readonly onToggle: (id: string, on: boolean) => void;
+}) {
+  const toggle = useCallback((on: boolean) => onToggle(row.id, on), [onToggle, row.id]);
+
+  return (
+    <ListCheck
+      title={row.title}
+      detail={`${row.when}\n${row.body}`}
+      icon={kinds[row.subject].icon}
+      iconTone={kinds[row.subject].tone}
+      checked={checked}
+      onCheckedChange={toggle}
+    />
   );
 }

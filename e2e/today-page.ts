@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { answer } from "./confirm";
+
 export type TodayPage = ReturnType<typeof todayPage>;
 
 // Shown is not saved: a row stays aria-busy until the server has confirmed the change
@@ -53,6 +55,7 @@ export function todayPage(page: Page) {
           .click();
         const answered = page.waitForResponse((response) => response.request().method() === "POST");
         await page.getByRole("menuitem", { name: "Xoá" }).click();
+        await answer(page, "Xoá ghi chú này?", "Xoá");
         await answered;
         await expect(notes).toHaveCount(left - 1);
       }
@@ -75,6 +78,7 @@ export function todayPage(page: Page) {
     async remove(text: string) {
       await openMenu(text);
       await page.getByRole("menuitem", { name: "Xoá" }).click();
+      await answer(page, "Xoá ghi chú này?", "Xoá");
     },
   };
 }

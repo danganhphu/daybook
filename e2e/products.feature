@@ -22,3 +22,24 @@ Feature: Sản phẩm
     And tôi bấm vào sản phẩm "Kim nha khoa"
     Then tôi đang xem sản phẩm "Kim nha khoa" có đơn của "Hướng Dương"
     And trang không có lỗi trợ năng
+
+  Scenario: Sản phẩm đã có trong đơn thì chỉ ẩn được, không xoá
+    When tôi mở đơn của "Hướng Dương" giá "800.000đ"
+    And tôi bấm vào sản phẩm "Kim nha khoa"
+    Then tôi đang xem sản phẩm "Kim nha khoa" có đơn của "Hướng Dương"
+    When tôi xoá sản phẩm này
+    Then tôi được hỏi "Không xoá được sản phẩm này"
+    And câu hỏi có nói "Ẩn để các đơn cũ vẫn giữ tên"
+    And trang không có lỗi trợ năng
+    When tôi trả lời "Huỷ"
+    Then tôi đang xem sản phẩm "Kim nha khoa" có đơn của "Hướng Dương"
+
+  Scenario: Xoá một sản phẩm chưa bán rồi hoàn tác
+    When tôi mở trang Sản phẩm từ trang Đơn hàng
+    And tôi thêm sản phẩm "Đài cắt nha"
+    And tôi xoá sản phẩm này
+    Then tôi được hỏi "Xoá sản phẩm này?"
+    When tôi trả lời "Xoá"
+    Then tôi thấy thông báo "Đã xoá sản phẩm"
+    When tôi bấm "Hoàn tác"
+    Then tôi thấy thông báo "Đã khôi phục"

@@ -1,6 +1,6 @@
-import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
-import type { Product } from "@/features/products/domain/product";
+import type { ArchivedProduct, Product } from "@/features/products/domain/product";
 import type {
   ProductFilter,
   ProductRepository,
@@ -31,7 +31,7 @@ export function createProductRepository(db: Database): ProductRepository {
         and(
           filter.status === "active"
             ? isNull(productTable.archivedAt)
-            : isNotNull(productTable.archivedAt),
+            : and(isNotNull(productTable.archivedAt), isNull(productTable.deletedAt)),
           found,
         ),
       )
@@ -123,6 +123,24 @@ export function createProductRepository(db: Database): ProductRepository {
     },
 
     list,
+
+    async listDeleted(since, limit) {
+      const rows = await db
+        .select()
+        .from(productTable)
+        .where(
+          and(
+            isNotNull(productTable.deletedAt),
+            gte(productTable.deletedAt, since.epochMilliseconds),
+          ),
+        )
+        .orderBy(desc(productTable.deletedAt), desc(productTable.id))
+        .limit(limit);
+
+      return rows
+        .map(toProduct)
+        .filter((product): product is ArchivedProduct => product.status === "archived");
+    },
 
     async aliasesOf(id) {
       const rows = await db

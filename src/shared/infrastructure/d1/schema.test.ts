@@ -129,12 +129,23 @@ describe("capture table", () => {
     ).rejects.toThrow(/capture is append-only/);
   });
 
-  it("given a stored capture, when deleted, then the trigger refuses it", async () => {
-    await insertCapture(captureId, "ghi chú", "web", 1);
+  it("given a capture a note was made from, when deleted, then the trigger refuses it", async () => {
+    await insertCaptureAndNote();
 
     await expect(
       env.DB.prepare("delete from capture where id = ?").bind(captureId).run(),
-    ).rejects.toThrow(/capture is append-only/);
+    ).rejects.toThrow(/a capture goes only once nothing made from it is left/);
+  });
+
+  it("given the note made from a capture, when deleted outright, then the capture goes with it", async () => {
+    await insertCaptureAndNote();
+
+    await env.DB.prepare("delete from note where id = ?").bind(noteId).run();
+
+    const left = await env.DB.prepare("select count(*) as count from capture").first<{
+      count: number;
+    }>();
+    expect(left?.count).toBe(0);
   });
 });
 

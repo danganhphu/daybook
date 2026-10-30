@@ -8,6 +8,7 @@ import { problemMessage } from "@/features/access/web/attempt-setting";
 import type { SettingsResult } from "@/features/access/web/settings-commands";
 import { optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { LogoutIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
@@ -27,42 +28,67 @@ export type DevicesProps = {
 export function Devices({ devices, run }: DevicesProps) {
   const tell = useOutcomeToast();
   const [working, startWorking] = useTransition();
+  const { confirm, dialog } = useConfirm();
   const hasOthers = devices.some((device) => !device.current);
 
+  // Asks first, as every sign-out of another device and every delete does
   const end = useCallback(
-    (action: () => Promise<SettingsResult<null>>, done: string) => {
-      startWorking(async () => {
-        const ended = await run(action);
-        tell(ended.ok ? done : problemMessage(ended.error));
-      });
+    (question: string, action: () => Promise<SettingsResult<null>>, done: string) => {
+      void (async () => {
+        const sure = await confirm({
+          title: question,
+          description: accessCopy.signInAgain,
+          confirmLabel: accessCopy.signOut,
+        });
+        if (!sure) {
+          return;
+        }
+        startWorking(async () => {
+          const ended = await run(action);
+          tell(ended.ok ? done : problemMessage(ended.error));
+        });
+      })();
     },
-    [run, tell],
+    [confirm, run, tell],
   );
 
   const endOne = useCallback(
-    (device: DeviceRow) => end(() => endDevice(device.id), `Đã đăng xuất ${device.title}`),
+    (device: DeviceRow) =>
+      end(
+        `${accessCopy.signOut} ${device.title}?`,
+        () => endDevice(device.id),
+        `Đã đăng xuất ${device.title}`,
+      ),
     [end],
   );
   const endOthers = useCallback(
-    () => end(() => endOtherDevices(), `Đã ${accessCopy.signOutOthers.toLocaleLowerCase("vi")}`),
+    () =>
+      end(
+        `${accessCopy.signOutOthers}?`,
+        () => endOtherDevices(),
+        `Đã ${accessCopy.signOutOthers.toLocaleLowerCase("vi")}`,
+      ),
     [end],
   );
 
   return (
-    <List>
-      {devices.map((device) => (
-        <DeviceItem key={device.id} device={device} onEnd={endOne} />
-      ))}
-      {hasOthers ? (
-        <ListAction
-          label={accessCopy.signOutOthers}
-          icon={LogoutIcon}
-          tone="danger"
-          disabled={working}
-          onClick={endOthers}
-        />
-      ) : null}
-    </List>
+    <>
+      <List>
+        {devices.map((device) => (
+          <DeviceItem key={device.id} device={device} onEnd={endOne} />
+        ))}
+        {hasOthers ? (
+          <ListAction
+            label={accessCopy.signOutOthers}
+            icon={LogoutIcon}
+            tone="danger"
+            disabled={working}
+            onClick={endOthers}
+          />
+        ) : null}
+      </List>
+      {dialog}
+    </>
   );
 }
 

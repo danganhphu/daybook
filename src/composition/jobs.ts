@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import { createAccessEventRepository } from "@/features/access/infrastructure/access-event-repository";
 import { createAccountRepository } from "@/features/access/infrastructure/account-repository";
-import { createBookSettingRepository } from "@/features/book-settings/infrastructure/book-setting-repository";
 import { createCustomerRepository } from "@/features/customers/infrastructure/customer-repository";
 import { deliverNotification } from "@/features/notifications/application/deliver-notification";
 import type {
@@ -32,6 +31,8 @@ import {
 import { createWebPushSender } from "@/features/notifications/infrastructure/web-push-sender";
 import { createReminderRepository } from "@/features/reminders/infrastructure/reminder-repository";
 import { createReportQueries } from "@/features/reports/infrastructure/report-queries";
+import { emptyExpiredTrash } from "@/features/trash/application/purge-from-trash";
+import { createTrashWrites } from "@/features/trash/infrastructure/trash-writes";
 import type { Clock } from "@/shared/application/clock";
 import { createBatch } from "@/shared/infrastructure/d1/batch";
 import { createDatabase, type Database } from "@/shared/infrastructure/d1/database";
@@ -57,6 +58,12 @@ function jobsUnitOfWork(db: Database) {
     inbox: createInboxWrites(db, batch),
     commit: () => batch.commit(),
   };
+}
+
+function trashUnitOfWork(db: Database) {
+  const batch = createBatch(db);
+
+  return { trash: createTrashWrites(db, batch), commit: () => batch.commit() };
 }
 
 export function createJobs(bindings: JobBindings, clock: Clock = systemClock) {
@@ -99,12 +106,14 @@ export function createJobs(bindings: JobBindings, clock: Clock = systemClock) {
           reminders: createReminderRepository(db),
           customers: createCustomerRepository(db),
           reports: createReportQueries(db),
-          settings: createBookSettingRepository(db),
+          preferences: createNotificationPreferenceRepository(db),
           accessEvents,
           accounts,
         },
         job,
       ),
+    emptyExpiredTrash: () =>
+      emptyExpiredTrash({ clock, startUnitOfWork: () => trashUnitOfWork(db) }),
   } as const;
 }
 

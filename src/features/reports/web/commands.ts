@@ -8,6 +8,12 @@ import { monthLabel, shortDay } from "@/features/orders/web/day-text";
 import { productIdSchema } from "@/features/products/domain/product";
 import type { Report } from "@/features/reports/application/read-report";
 import {
+  orDefaultQuietAfterDays,
+  parseQuietAfterDays,
+  typedDays,
+  type QuietAfterDays,
+} from "@/features/reports/domain/gone-quiet";
+import {
   nextPeriod,
   periodContaining,
   periodKinds,
@@ -40,8 +46,8 @@ import {
   comparedWith,
   dayCount,
   emptyPeriod,
+  noneQuiet,
   orderCount,
-  quietFooter,
   reportsCopy,
   restOf,
   timesOver,
@@ -110,6 +116,42 @@ function contains(period: ReportPeriod, day: Temporal.PlainDate): boolean {
 }
 
 type Filters = Pick<ReportsQuery, "kind" | "customer" | "product">;
+
+type QuietAsked = {
+  readonly days: QuietAfterDays;
+  // What the field shows: the days, or what was typed when it was refused
+  readonly typed: string;
+  readonly error: string | undefined;
+  // In the address only when not the default
+  readonly query: string | undefined;
+};
+
+function askedQuiet(value: unknown): QuietAsked {
+  const fallback = orDefaultQuietAfterDays();
+  if (typeof value !== "string" || value === "") {
+    return { days: fallback, typed: String(fallback), error: undefined, query: undefined };
+  }
+  const parsed = parseQuietAfterDays(typedDays(value));
+  if (!parsed.ok) {
+    return { days: fallback, typed: value, error: parsed.error, query: undefined };
+  }
+
+  return {
+    days: parsed.value,
+    typed: String(parsed.value),
+    error: undefined,
+    query: parsed.value === fallback ? undefined : String(parsed.value),
+  };
+}
+
+// A query's parts as a form's hidden fields
+function fieldsOf(
+  query: ReportsQuery,
+): ReadonlyArray<{ readonly name: string; readonly value: string }> {
+  return Object.entries(query).flatMap(([name, value]) =>
+    typeof value === "string" && value !== "" ? [{ name, value }] : [],
+  );
+}
 
 // The query for a period: a calendar one by a day inside it, left out when that is today's
 function periodQuery(period: ReportPeriod, today: Temporal.PlainDate): ReportsQuery {
@@ -242,6 +284,9 @@ function bodyOf(
   today: Temporal.PlainDate,
   // A ranking row's link, narrowing the report to that row
   narrowTo: (filters: Filters) => string,
+  quietAsked: QuietAsked,
+  // The rest of the address, kept by the days' field
+  quietKeep: ReadonlyArray<{ readonly name: string; readonly value: string }>,
 ): ReportBodyView {
   const empty = report.sales.orders === 0;
   const { byKind, products, customers, quiet } = report;
@@ -315,7 +360,7 @@ function bodyOf(
             customers.rest > 0 ? restOf("customers", moneyText(customers.rest)) : undefined,
           ),
     quiet:
-      quiet === undefined || quiet.customers.length === 0
+      quiet === undefined
         ? undefined
         : {
             rows: quiet.customers.map((each) => ({
@@ -325,7 +370,10 @@ function bodyOf(
               days: dayCount(each.lastOrderedOn.until(today, { largestUnit: "days" }).days),
               href: customerPath(each.customerId),
             })),
-            footer: quietFooter(quiet.afterDays),
+            empty: quiet.customers.length === 0 ? noneQuiet(quiet.afterDays) : undefined,
+            days: quietAsked.typed,
+            error: quietAsked.error,
+            keep: quietKeep,
           },
   };
 }
@@ -339,6 +387,7 @@ export async function reportsScreen(
   const kindId = customerKindIdSchema.safeParse(params["kind"]).data;
   const customerId = customerIdSchema.safeParse(params["customer"]).data;
   const productId = productIdSchema.safeParse(params["product"]).data;
+  const quietAsked = askedQuiet(params["quiet"]);
 
   // A filter naming something that is not in the book is dropped
   const [kinds, customer, products] = await Promise.all([
@@ -352,9 +401,11 @@ export async function reportsScreen(
 
   const shown = asked.period ?? periodContaining("month", today);
   const here = periodQuery(shown, today);
-  const pathWith = (changed: Filters) => reportsPath({ ...here, ...filters, ...changed });
+  // The days carry over from one period or filter to another, as the filters do
+  const quiet = quietAsked.query;
+  const pathWith = (changed: Filters) => reportsPath({ ...here, ...filters, quiet, ...changed });
   const pathFor = (period: ReportPeriod) =>
-    reportsPath({ ...periodQuery(period, today), ...filters });
+    reportsPath({ ...periodQuery(period, today), ...filters, quiet });
 
   const removable: FilterView[] = [];
   const activeKinds = kinds.filter((each) => each.status === "active");
@@ -405,6 +456,7 @@ export async function reportsScreen(
           kindId: kind?.id,
           customerId: customer?.id,
           productId: product?.id,
+          quietAfterDays: quietAsked.days,
         });
 
   return {
@@ -418,12 +470,7 @@ export async function reportsScreen(
     range:
       asked.range === undefined
         ? undefined
-        : {
-            ...asked.range,
-            keep: Object.entries(filters).flatMap(([name, value]) =>
-              value === undefined ? [] : [{ name, value }],
-            ),
-          },
+        : { ...asked.range, keep: fieldsOf({ ...filters, quiet }) },
     report:
       report === undefined
         ? undefined
@@ -433,6 +480,8 @@ export async function reportsScreen(
             title,
             today,
             (changed) => `${pathWith(changed)}#${filtersAnchor}`,
+            quietAsked,
+            fieldsOf({ ...here, ...filters }),
           ),
   };
 }

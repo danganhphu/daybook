@@ -11,6 +11,7 @@ import {
   useTransition,
 } from "react";
 
+import type { SettingsResult } from "@/features/access/web/settings-commands";
 import { timesOfDay } from "@/features/notifications/domain/time-of-day";
 import {
   permissionNow,
@@ -24,9 +25,12 @@ import type {
 } from "@/features/notifications/web/notification-view";
 import { notificationsCopy } from "@/features/notifications/web/notifications-copy";
 import { usePushDevice, type PushDevice } from "@/features/notifications/web/use-push-device";
+import { dayCount } from "@/features/reports/web/reports-copy";
+import { err } from "@/shared/domain/result";
 import { optionsFor } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { Button } from "@/shared/ui/button/button";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { DeleteIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListContent } from "@/shared/ui/list/list-content";
@@ -35,7 +39,12 @@ import { Screen } from "@/shared/ui/screen/screen";
 import { SelectField } from "@/shared/ui/select-field/select-field";
 import { attempt } from "@/shared/web/attempt";
 
-import { saveNotificationTimes, turnOffPush } from "./notification-actions";
+import { EditableRow } from "./editable-row";
+import {
+  saveNotificationQuietDays,
+  saveNotificationTimes,
+  turnOffPush,
+} from "./notification-actions";
 import { settingsCopy } from "./settings-copy";
 import { turnOnHere } from "./turn-on-push";
 import { useOutcomeToast } from "./use-outcome-toast";
@@ -43,6 +52,7 @@ import { useOutcomeToast } from "./use-outcome-toast";
 import styles from "./settings.module.scss";
 
 const timeOptions = timesOfDay.map((time) => ({ value: time, label: time }));
+const daysField = { inputMode: "numeric" } as const;
 
 function deviceState(device: PushDevice | undefined, on: boolean): string | undefined {
   switch (device) {
@@ -154,6 +164,15 @@ export function NotificationsSection({
       saveTimes({ weeklyAt: event.target.value || undefined }),
     [saveTimes],
   );
+  const { version } = view;
+  // The row shows a refusal's sentence; its code matters only to step-up, which this does not ask for
+  const saveQuietDays = useCallback(
+    async (value: string): Promise<SettingsResult<null>> => {
+      const saved = await attempt(() => saveNotificationQuietDays(value, version ?? null));
+      return saved.ok ? saved : err({ code: "invalid", message: saved.error });
+    },
+    [version],
+  );
 
   return (
     <Screen title={settingsCopy.notifications} back={back}>
@@ -196,6 +215,18 @@ export function NotificationsSection({
         </ListContent>
       </List>
 
+      <List heading={notificationsCopy.quiet} footer={notificationsCopy.quietUse}>
+        <EditableRow
+          label={notificationsCopy.quietDays}
+          value={String(view.quietAfterDays)}
+          display={dayCount(view.quietAfterDays)}
+          description={notificationsCopy.quietRange}
+          field={daysField}
+          save={saveQuietDays}
+          saved={notificationsCopy.quietSaved}
+        />
+      </List>
+
       {view.devices.length === 0 ? null : (
         <List heading={notificationsCopy.devices}>
           {view.devices.map((row) => (
@@ -209,23 +240,35 @@ export function NotificationsSection({
 
 function DeviceItem({ device }: { readonly device: NotifiedDeviceRow }) {
   const tell = useOutcomeToast();
+  const { confirm, dialog } = useConfirm();
   const remove = useMemo<MenuAction>(
     () => ({
       label: notificationsCopy.remove,
       icon: DeleteIcon,
       onSelect: () => {
-        startTransition(async () => {
-          const result = await attempt(() => turnOffPush(device.id));
-          tell(result.ok ? `${notificationsCopy.removed} ${device.title}` : result.error);
-        });
+        void (async () => {
+          const sure = await confirm({
+            title: `${notificationsCopy.remove} ${device.title}?`,
+            description: notificationsCopy.removeMeans,
+            confirmLabel: notificationsCopy.remove,
+          });
+          if (!sure) {
+            return;
+          }
+          startTransition(async () => {
+            const result = await attempt(() => turnOffPush(device.id));
+            tell(result.ok ? `${notificationsCopy.removed} ${device.title}` : result.error);
+          });
+        })();
       },
     }),
-    [device.id, device.title, tell],
+    [confirm, device.id, device.title, tell],
   );
 
   return (
     <ListRow title={device.title} detail={device.detail}>
       {device.current ? null : <ActionMenu label={optionsFor(device.title)} destructive={remove} />}
+      {dialog}
     </ListRow>
   );
 }

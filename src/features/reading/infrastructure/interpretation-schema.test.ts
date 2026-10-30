@@ -61,16 +61,21 @@ describe("interpretation table", () => {
     await expect(insert({ neurons: "nhiều" })).rejects.toThrow(/cannot store TEXT value in REAL/);
   });
 
-  it.each(["update interpretation set outcome = 'order'", "delete from interpretation"])(
-    "given a reading, when %s, then the trigger refuses",
-    async (statement) => {
-      const id = await insert({});
+  it("given a reading, when rewritten, then the trigger refuses", async () => {
+    const id = await insert({});
 
-      await expect(env.DB.prepare(`${statement} where id = ?`).bind(id).run()).rejects.toThrow(
-        /interpretation is append-only/,
-      );
-    },
-  );
+    await expect(
+      env.DB.prepare("update interpretation set outcome = 'order' where id = ?").bind(id).run(),
+    ).rejects.toThrow(/interpretation is append-only/);
+  });
+
+  it("given a reading of a message whose note is still there, when deleted, then the trigger refuses", async () => {
+    const id = await insert({});
+
+    await expect(
+      env.DB.prepare("delete from interpretation where id = ?").bind(id).run(),
+    ).rejects.toThrow(/an interpretation goes only with its capture/);
+  });
 
   it.each(["order", "reminder", "note"])(
     "given a capture read as %s, when another reading is added, then the trigger refuses it as stale",

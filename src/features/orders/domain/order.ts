@@ -98,6 +98,8 @@ export type LiveOrder = OrderFields & { readonly status: "live" };
 export type DeletedOrder = OrderFields & {
   readonly status: "deleted";
   readonly deletion: Deletion;
+  // The customer deleted with it: it is in the trash under them, and comes back with them
+  readonly deletedWith: CustomerId | undefined;
 };
 
 export type Order = LiveOrder | DeletedOrder;
@@ -105,6 +107,7 @@ export type Order = LiveOrder | DeletedOrder;
 export type OrderRefusal =
   | "order_deleted"
   | "order_not_deleted"
+  | "order_deleted_with_customer"
   | "order_too_large"
   | "total_below_paid"
   | "payment_exceeds_owed"
@@ -313,8 +316,13 @@ export function replaceProduct<T extends Order>(
   };
 }
 
-// Soft, with Undo; deleting twice is harmless
-export function markDeleted(order: Order, by: AccountId, at: Temporal.Instant): DeletedOrder {
+// Soft, with Undo; deleting twice is harmless. `withCustomer` when it goes because its customer is deleted.
+export function markDeleted(
+  order: Order,
+  by: AccountId,
+  at: Temporal.Instant,
+  withCustomer?: CustomerId,
+): DeletedOrder {
   if (order.status === "deleted") {
     return order;
   }
@@ -324,19 +332,25 @@ export function markDeleted(order: Order, by: AccountId, at: Temporal.Instant): 
     status: "deleted",
     audit: Audits.change(order.audit, by, at),
     deletion: Audits.deletion(by, at),
+    deletedWith: withCustomer,
   };
 }
 
+// One deleted with its customer comes back only with them: `withCustomer` is that customer coming back
 export function restore(
   order: Order,
   by: AccountId,
   at: Temporal.Instant,
-): Result<LiveOrder, Extract<OrderRefusal, "order_not_deleted">> {
+  withCustomer?: CustomerId,
+): Result<LiveOrder, Extract<OrderRefusal, "order_not_deleted" | "order_deleted_with_customer">> {
   if (order.status === "live") {
     return err("order_not_deleted");
   }
+  if (order.deletedWith !== undefined && order.deletedWith !== withCustomer) {
+    return err("order_deleted_with_customer");
+  }
 
-  const { deletion: _deletion, ...rest } = order;
+  const { deletion: _deletion, deletedWith: _deletedWith, ...rest } = order;
 
   return ok({ ...rest, status: "live", audit: Audits.change(order.audit, by, at) });
 }

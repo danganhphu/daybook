@@ -16,8 +16,6 @@ import {
   createSessionWrites,
   createSetupLinkWrites,
 } from "@/features/access/infrastructure/access-writes";
-import type { BookSettingWrites } from "@/features/book-settings/application/book-setting-writes";
-import { createBookSettingWrites } from "@/features/book-settings/infrastructure/book-setting-writes";
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import { createCaptureWrites } from "@/features/capture/infrastructure/capture-writes";
 import type {
@@ -60,6 +58,8 @@ import type { InterpretationWrites } from "@/features/reading/application/interp
 import { createInterpretationWrites } from "@/features/reading/infrastructure/interpretation-writes";
 import type { ReminderWrites } from "@/features/reminders/application/reminder-writes";
 import { createReminderWrites } from "@/features/reminders/infrastructure/reminder-writes";
+import type { TrashWrites } from "@/features/trash/application/trash-writes";
+import { createTrashWrites } from "@/features/trash/infrastructure/trash-writes";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { createBatch, type Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
@@ -76,6 +76,7 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly reminders: ReminderWrites;
   readonly interpretations: InterpretationWrites;
   readonly merges: MergeWrites;
+  readonly trash: TrashWrites;
   readonly accounts: AccountWrites;
   readonly passkeys: PasskeyWrites;
   readonly passwords: PasswordWrites;
@@ -87,7 +88,6 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly notificationPreferences: NotificationPreferenceWrites;
   readonly noticeCursor: NoticeCursorWrites;
   readonly inbox: InboxWrites;
-  readonly bookSettings: BookSettingWrites;
 }>;
 
 // Every feature's writes go into one batch, so whatever a use case touches commits as one D1 transaction
@@ -104,6 +104,7 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     reminders: createReminderWrites(db, batch),
     interpretations: createInterpretationWrites(db, batch),
     merges: createMergeWrites(db, batch),
+    trash: createTrashWrites(db, batch),
     accounts: createAccountWrites(db, batch),
     passkeys: createPasskeyWrites(db, batch),
     passwords: createPasswordWrites(db, batch),
@@ -115,7 +116,6 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     notificationPreferences: createNotificationPreferenceWrites(db, batch),
     noticeCursor: createNoticeCursorWrites(db, batch),
     inbox: createInboxWrites(db, batch),
-    bookSettings: createBookSettingWrites(db, batch),
     commit: () => batch.commit(),
   };
 }

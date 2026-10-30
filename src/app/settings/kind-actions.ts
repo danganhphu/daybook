@@ -38,6 +38,13 @@ export async function showKind(id: string, version: number): Promise<KindResult>
   return refreshed(await Customers.showKind(app, session.accountId, id, version));
 }
 
+export async function deleteKind(id: string, version: number): Promise<KindResult> {
+  const app = daybook();
+  const session = await requireSession(app);
+
+  return refreshed(await Customers.deleteKind(app, session.accountId, id, version));
+}
+
 function refreshed(result: KindResult): KindResult {
   refresh();
 

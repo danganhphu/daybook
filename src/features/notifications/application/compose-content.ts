@@ -2,13 +2,15 @@ import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
-import type { BookSettingRepository } from "@/features/book-settings/domain/book-setting-repository";
 import type { CustomerRepository } from "@/features/customers/domain/customer-repository";
 import { isNotice } from "@/features/notifications/domain/notice";
+import * as NotificationPreferences from "@/features/notifications/domain/notification-preference";
+import type { NotificationPreferenceRepository } from "@/features/notifications/domain/notification-preference-repository";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
 import type { ReportQueries } from "@/features/reports/application/report-queries";
 import { quietCutoff } from "@/features/reports/domain/gone-quiet";
 import { periodContaining } from "@/features/reports/domain/report-period";
+import type { AccountId } from "@/shared/domain/account-id";
 
 import type {
   MorningContent,
@@ -22,7 +24,7 @@ export type ContentSources = {
   readonly reminders: ReminderRepository;
   readonly customers: CustomerRepository;
   readonly reports: ReportQueries;
-  readonly settings: BookSettingRepository;
+  readonly preferences: NotificationPreferenceRepository;
   readonly accessEvents: AccessEventRepository;
   readonly accounts: AccountRepository;
 };
@@ -35,28 +37,36 @@ export const contentLimits = {
   weeklyQuiet: 100,
 } as const;
 
-// By the book's setting, as the reports find them; the cutoff is the last order day that makes one quiet
-async function quietOn(sources: ContentSources, day: Temporal.PlainDate, limit: number) {
-  const cutoff = quietCutoff(day, (await sources.settings.get()).quietAfterDays);
+// By the person's own number of days, as the reports find them; the cutoff is the last order day that makes one quiet
+async function quietOn(
+  sources: ContentSources,
+  accountId: AccountId,
+  day: Temporal.PlainDate,
+  limit: number,
+) {
+  const preference =
+    (await sources.preferences.get(accountId)) ?? NotificationPreferences.defaults(accountId);
+  const cutoff = quietCutoff(day, preference.quietAfterDays);
 
   return { cutoff, customers: await sources.reports.quietCustomers(cutoff, undefined, limit) };
 }
 
 // A customer goes in the morning list on the day they go quiet, not every morning after: the reports keep the whole
 // list, and a notification that repeats itself is soon ignored
-async function newlyQuiet(sources: ContentSources, day: Temporal.PlainDate) {
-  const { cutoff, customers } = await quietOn(sources, day, contentLimits.quiet);
+async function newlyQuiet(sources: ContentSources, accountId: AccountId, day: Temporal.PlainDate) {
+  const { cutoff, customers } = await quietOn(sources, accountId, day, contentLimits.quiet);
 
   return customers.filter((customer) => customer.lastOrderedOn.equals(cutoff));
 }
 
 async function morning(
   sources: ContentSources,
+  accountId: AccountId,
   day: Temporal.PlainDate,
 ): Promise<MorningContent | undefined> {
   const [due, quiet] = await Promise.all([
     sources.reminders.listOpen({ dueBy: day }, contentLimits.due),
-    newlyQuiet(sources, day),
+    newlyQuiet(sources, accountId, day),
   ]);
   if (due.length === 0 && quiet.length === 0) {
     return undefined;
@@ -79,14 +89,18 @@ async function morning(
   };
 }
 
-async function weekly(sources: ContentSources, day: Temporal.PlainDate): Promise<WeeklyContent> {
+async function weekly(
+  sources: ContentSources,
+  accountId: AccountId,
+  day: Temporal.PlainDate,
+): Promise<WeeklyContent> {
   const week = periodContaining("week", day);
   const range = { from: week.from, to: week.to };
   const [sales, received, owed, quiet] = await Promise.all([
     sources.reports.sales(range),
     sources.reports.received(range),
     sources.reports.owedAt(day, {}),
-    quietOn(sources, day, contentLimits.weeklyQuiet),
+    quietOn(sources, accountId, day, contentLimits.weeklyQuiet),
   ]);
 
   return {
@@ -125,7 +139,9 @@ export async function composeContent(
   switch (job.kind) {
     case "digest": {
       const day = Temporal.PlainDate.from(job.day);
-      return job.digest === "morning" ? morning(sources, day) : weekly(sources, day);
+      return job.digest === "morning"
+        ? morning(sources, job.accountId, day)
+        : weekly(sources, job.accountId, day);
     }
     case "notice":
       return notice(sources, job);

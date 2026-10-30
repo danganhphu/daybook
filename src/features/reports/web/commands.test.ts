@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { quietAfterDaysSchema } from "@/features/book-settings/domain/book-setting";
-import { testApp, testClock, theAuthor } from "@/testing/support/app";
+import { testApp, testClock } from "@/testing/support/app";
 import { aCustomer, aKind, anOrder, line } from "@/testing/support/orders";
-import { expectOk } from "@/testing/support/result";
 
 import { reportsScreen } from "./commands";
 
@@ -253,20 +251,35 @@ describe("the reports screen", () => {
           href: `/customers/${lagoon.id}`,
         },
       ],
-      footer: "Không có đơn nào trong 21 ngày qua",
+      empty: undefined,
+      days: "21",
+      error: undefined,
+      keep: [],
     });
   });
 
-  it("given the book counts 30 days, when shown, then a customer four weeks quiet is not listed", async () => {
+  it("given 30 days typed on the report, when shown, then a customer four weeks quiet is not listed, the list says so, and the days stay in every link", async () => {
     const { app } = await aBook();
-    expectOk(
-      await app.changeQuietAfterDays({
-        by: await theAuthor(),
-        days: quietAfterDaysSchema.parse(30),
-        shown: undefined,
-      }),
-    );
 
-    expect((await reportsScreen(app, {})).report?.quiet).toBeUndefined();
+    const view = await reportsScreen(app, { period: "week", quiet: " 30 " });
+
+    expect([view.report?.quiet?.rows, view.report?.quiet?.empty, view.report?.quiet?.days]).toEqual(
+      [[], "Không khách nào quá 30 ngày chưa đặt", "30"],
+    );
+    expect(view.report?.quiet?.keep).toEqual([{ name: "period", value: "week" }]);
+    expect(paramsOf(view.previousPath)).toMatchObject({ period: "week", quiet: "30" });
+    expect(view.periods.every((each) => paramsOf(each.href)["quiet"] === "30")).toBe(true);
   });
+
+  it.each(["5", "abc", "7.5"])(
+    "given %s typed as the days, when shown, then it is refused with the bounds and the default is used",
+    async (typed) => {
+      const { app, lagoon } = await aBook();
+
+      const quiet = (await reportsScreen(app, { quiet: typed })).report?.quiet;
+
+      expect([quiet?.days, quiet?.error]).toEqual([typed, "Nhập số ngày từ 7 đến 180"]);
+      expect(quiet?.rows.map((row) => row.id)).toEqual([lagoon.id]);
+    },
+  );
 });

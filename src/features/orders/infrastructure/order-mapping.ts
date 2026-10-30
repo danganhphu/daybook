@@ -89,7 +89,12 @@ export function toOrder(
 
   return deletion === undefined
     ? { ...fields, status: "live" }
-    : { ...fields, status: "deleted", deletion };
+    : {
+        ...fields,
+        status: "deleted",
+        deletion,
+        deletedWith: row.deletedWith === null ? undefined : customerIdSchema.parse(row.deletedWith),
+      };
 }
 
 export function toOrderRow(order: Order): OrderRow {
@@ -102,6 +107,7 @@ export function toOrderRow(order: Order): OrderRow {
     captureId: order.captureId ?? null,
     ...toAuditRow(order.audit),
     ...toDeletionRow(order.status === "deleted" ? order.deletion : undefined),
+    deletedWith: order.status === "deleted" ? (order.deletedWith ?? null) : null,
   };
 }
 

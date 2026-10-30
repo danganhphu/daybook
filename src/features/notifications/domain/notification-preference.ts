@@ -1,6 +1,11 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 import { z } from "zod";
 
+import {
+  orDefaultQuietAfterDays,
+  parseQuietAfterDays,
+  type QuietAfterDays,
+} from "@/features/reports/domain/gone-quiet";
 import type { AccountId } from "@/shared/domain/account-id";
 import * as Audits from "@/shared/domain/audit";
 import type { Audit, Version } from "@/shared/domain/audit";
@@ -12,6 +17,8 @@ import { defaultTimes, parseTimeOfDay, type TimeOfDay } from "./time-of-day";
 // Read as a module: `import * as NotificationPreferences`
 
 export const timeOfDaySchema = checkedSchema(z.unknown(), parseTimeOfDay);
+
+export const quietAfterDaysSchema = checkedSchema(z.unknown(), parseQuietAfterDays);
 
 // What the app says on its own, on a schedule
 export const digestKinds = ["morning", "weekly"] as const;
@@ -30,7 +37,9 @@ export type NotificationTimes = {
 // One person's times. Each person sets their own; nobody else's changes them.
 export type NotificationPreference = NotificationTimes & {
   readonly accountId: AccountId;
-  // Undefined until the person first changes a time: until then they are the defaults, and nothing is stored
+  // After how many days without an order the morning list names a customer, and the Friday summary counts them
+  readonly quietAfterDays: QuietAfterDays;
+  // Undefined until the person first changes one: until then they are the defaults, and nothing is stored
   readonly audit: Audit | undefined;
 };
 
@@ -48,7 +57,24 @@ export function defaults(accountId: AccountId): NotificationPreference {
     accountId,
     morningAt: timeOf(defaultTimes.morning),
     weeklyAt: timeOf(defaultTimes.weekly),
+    quietAfterDays: orDefaultQuietAfterDays(),
     audit: undefined,
+  };
+}
+
+function changed(
+  preference: NotificationPreference,
+  changes: Partial<NotificationTimes> | { readonly quietAfterDays: QuietAfterDays },
+  by: AccountId,
+  at: Temporal.Instant,
+): NotificationPreference {
+  return {
+    ...preference,
+    ...changes,
+    audit:
+      preference.audit === undefined
+        ? Audits.start(by, at)
+        : Audits.change(preference.audit, by, at),
   };
 }
 
@@ -58,14 +84,16 @@ export function change(
   by: AccountId,
   at: Temporal.Instant,
 ): NotificationPreference {
-  return {
-    ...preference,
-    ...times,
-    audit:
-      preference.audit === undefined
-        ? Audits.start(by, at)
-        : Audits.change(preference.audit, by, at),
-  };
+  return changed(preference, times, by, at);
+}
+
+export function changeQuietAfterDays(
+  preference: NotificationPreference,
+  days: QuietAfterDays,
+  by: AccountId,
+  at: Temporal.Instant,
+): NotificationPreference {
+  return changed(preference, { quietAfterDays: days }, by, at);
 }
 
 // The screen showed what is stored now: the defaults when nothing is, or the same version

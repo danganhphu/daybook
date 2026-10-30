@@ -14,7 +14,12 @@ export type AccessLogPosition = {
 export type AccessEventRepository = {
   get(id: AccessEventId): Promise<AccessEvent | undefined>;
   // What happened to this account, and what it did to the other one, newest first
-  listForAccount(accountId: AccountId, limit: number): Promise<ReadonlyArray<AccessEvent>>;
+  // Newest first, on or after `since`
+  listForAccount(
+    accountId: AccountId,
+    limit: number,
+    since: Temporal.Instant,
+  ): Promise<ReadonlyArray<AccessEvent>>;
   // When each account last signed in, for the people list; an account that never has is missing
   lastSignIns(): Promise<ReadonlyMap<AccountId, Temporal.Instant>>;
   // The log in order after a position, up to a moment, at most `limit`

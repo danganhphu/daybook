@@ -1,8 +1,10 @@
 import { eq, inArray, type SQL } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 import type { Order } from "@/features/orders/domain/order";
 import type { OrderRepository } from "@/features/orders/domain/order-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { d1MaxBoundParameters } from "@/shared/infrastructure/d1/limits";
 
 import { orderLineTable } from "./order-line.table";
 import { toOrder } from "./order-mapping";
@@ -27,6 +29,19 @@ export function createOrderRepository(db: Database): OrderRepository {
     );
   }
 
+  // One round trip per chunk of values, under D1's bound-parameter limit
+  async function ordersIn(column: SQLiteColumn, values: ReadonlyArray<string>) {
+    const orders: Order[] = [];
+    for (let start = 0; start < values.length; start += d1MaxBoundParameters) {
+      const chunk = values.slice(start, start + d1MaxBoundParameters);
+      // oxlint-disable-next-line no-await-in-loop -- one chunk per round trip, under D1's bound-parameter limit
+      const found = await ordersWhere(inArray(column, chunk));
+      orders.push(...found);
+    }
+
+    return orders;
+  }
+
   return {
     // Three reads in one round trip
     async get(id) {
@@ -40,8 +55,16 @@ export function createOrderRepository(db: Database): OrderRepository {
       return order === undefined ? undefined : toOrder(order, lines, payments);
     },
 
+    getMany(ids) {
+      return ordersIn(salesOrderTable.id, ids);
+    },
+
     forCustomer(customerId) {
       return ordersWhere(eq(salesOrderTable.customerId, customerId));
+    },
+
+    forCustomers(customerIds) {
+      return ordersIn(salesOrderTable.customerId, customerIds);
     },
 
     withProduct(productId) {

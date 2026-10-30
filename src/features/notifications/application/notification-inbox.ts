@@ -1,7 +1,11 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
 import type { Session } from "@/features/access/domain/session";
-import { inboxLimits, type InboxItem } from "@/features/notifications/domain/inbox-item";
+import {
+  inboxLimits,
+  type InboxItem,
+  type InboxItemId,
+} from "@/features/notifications/domain/inbox-item";
 import type { InboxRepository } from "@/features/notifications/domain/inbox-repository";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
@@ -31,5 +35,23 @@ export async function markInboxRead(
 ): Promise<void> {
   const work = deps.startUnitOfWork();
   work.inbox.markRead(session.accountId, upTo, deps.clock());
+  await work.commit();
+}
+
+// Gone from the person's list for good, no trash: they are what the app said, not what anyone wrote in the book.
+// Only the person's own; an id that is not theirs, or is gone already, changes nothing.
+export async function deleteInboxItems(
+  deps: NotificationInboxDeps,
+  session: Session,
+  ids: ReadonlyArray<InboxItemId>,
+): Promise<void> {
+  const work = deps.startUnitOfWork();
+  work.inbox.remove(session.accountId, ids);
+  await work.commit();
+}
+
+export async function clearInbox(deps: NotificationInboxDeps, session: Session): Promise<void> {
+  const work = deps.startUnitOfWork();
+  work.inbox.removeAll(session.accountId);
   await work.commit();
 }

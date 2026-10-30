@@ -27,13 +27,14 @@ import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { moneySchema } from "@/shared/domain/money-schema";
+import { recentlyDeletedSince } from "@/shared/domain/recently-deleted";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { searchTermSchema } from "@/shared/domain/search-term";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayLabel } from "@/shared/web/day-label";
 import { moneyText } from "@/shared/web/money-text";
 import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
-import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
+import { deletedText } from "@/shared/web/recently-deleted-since";
 
 import { monthLabel, shortDay } from "./day-text";
 import { changeText } from "./history-text";
@@ -202,6 +203,7 @@ export async function deletedOrders(
       moneyText(row.total),
       deletedText(row.deletedAt, people.get(row.deletedBy) ?? "?"),
     ].join(", "),
+    deletedAt: row.deletedAt.epochMilliseconds,
   }));
 }
 

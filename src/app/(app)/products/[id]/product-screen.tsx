@@ -1,15 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { MergeDialog } from "@/app/(app)/_merge/merge-dialog";
 import { NameDialog } from "@/app/(app)/_names/name-dialog";
 import { OtherNames } from "@/app/(app)/_names/other-names";
+import { undoDelete } from "@/app/(app)/deleted/undo-delete";
 import { findProducts } from "@/app/(app)/orders/actions";
 import {
   addProductName,
+  deleteProduct,
   hideProduct,
   mergeProduct,
+  productDeleteConfirm,
   productMergeConfirm,
   removeProductName,
   renameProduct,
@@ -25,9 +29,11 @@ import { productsCopy } from "@/features/products/web/products-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { ButtonLink } from "@/shared/ui/button/button-link";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
+  DeleteIcon,
   EditIcon,
   MergeIcon,
   ReceiptLongIcon,
@@ -42,6 +48,7 @@ import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { moneyText } from "@/shared/web/money-text";
+import { recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { orderPath, productPath, routes } from "@/shared/web/routes";
 
 export type ProductScreenProps = {
@@ -87,6 +94,48 @@ export function ProductScreen({ view, orders }: ProductScreenProps) {
     [view.id, view.version],
   );
 
+  const router = useRouter();
+  const { confirm: ask, dialog: question } = useConfirm();
+  // Asked first. One an order names cannot go, so the question offers to hide it instead; otherwise the list, with
+  // Undo in the toast.
+  const remove = useCallback(() => {
+    void (async () => {
+      const asked = await attempt(() => productDeleteConfirm(view.id));
+      if (!asked.ok) {
+        toast.show({ title: asked.error });
+        return;
+      }
+      const { hideInstead, ...request } = asked.value;
+      if (!(await ask({ ...request, tone: hideInstead ? "neutral" : "danger" }))) {
+        return;
+      }
+      if (hideInstead) {
+        toggleHidden();
+        return;
+      }
+      startTransition(async () => {
+        const result = await attempt(() => deleteProduct(view.id, view.version));
+        if (!result.ok) {
+          toast.show({ title: result.error });
+          return;
+        }
+        const version = result.value;
+        toast.show({
+          title: productsCopy.deleted,
+          action: {
+            label: actionLabels.undo,
+            onAction: () => {
+              startTransition(async () => {
+                toast.show(await undoDelete({ kind: "product", id: view.id, version }));
+              });
+            },
+          },
+        });
+        router.push(routes.products);
+      });
+    })();
+  }, [ask, router, toast, toggleHidden, view.id, view.version]);
+
   const actions = useMemo<ReadonlyArray<MenuAction>>(
     () => [
       { label: productsCopy.rename, icon: EditIcon, onSelect: openRename },
@@ -97,13 +146,18 @@ export function ProductScreen({ view, orders }: ProductScreenProps) {
     ],
     [openMerge, openRename, toggleHidden, view.hidden],
   );
-  // A merged product has nothing left to change: its order lines are with the one kept
+  const destructive = useMemo<MenuAction>(
+    () => ({ label: productsCopy.remove, icon: DeleteIcon, onSelect: remove }),
+    [remove],
+  );
+  // A merged product has nothing left to change: its order lines are with the one kept. A deleted one comes back from
+  // the trash.
   const menu = useMemo(
     () =>
-      view.mergedInto === undefined ? (
-        <ActionMenu label={actionLabels.options} actions={actions} />
+      view.mergedInto === undefined && !view.deleted ? (
+        <ActionMenu label={actionLabels.options} actions={actions} destructive={destructive} />
       ) : undefined,
-    [actions, view.mergedInto],
+    [actions, destructive, view.deleted, view.mergedInto],
   );
 
   const stats = useMemo<ReadonlyArray<Stat>>(
@@ -124,7 +178,12 @@ export function ProductScreen({ view, orders }: ProductScreenProps) {
           <ButtonLink href={productPath(view.mergedInto)}>{mergingCopy.seeKept}</ButtonLink>
         </Notice>
       )}
-      {view.hidden && view.mergedInto === undefined ? (
+      {view.deleted ? (
+        <Notice message={productsCopy.isDeleted} tone="danger">
+          <ButtonLink href={routes.deleted}>{recentlyDeletedCopy.title}</ButtonLink>
+        </Notice>
+      ) : null}
+      {view.hidden && view.mergedInto === undefined && !view.deleted ? (
         <Notice message={productsCopy.isHidden} />
       ) : null}
 
@@ -184,6 +243,7 @@ export function ProductScreen({ view, orders }: ProductScreenProps) {
           onClose={close}
         />
       ) : null}
+      {question}
     </Screen>
   );
 }

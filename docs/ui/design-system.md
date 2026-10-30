@@ -31,8 +31,9 @@ Never decoration, never on frequent interactions, and none at all under reduced 
 
 **Never lose the user's words, and never make them confirm the obvious.** Save first, fix later. A note that could
 not be sent goes back into the box; one whose send ended at sign-in, because the session had run out, is kept by the
-tab and back in the box after signing in. Common destructive actions are one tap plus an Undo in the result toast; a
-confirmation dialog is only for something irreversible.
+tab and back in the box after signing in. Saving never asks. Every delete does, in a `ConfirmDialog` that says what
+goes and whether it can come back, and then still offers Undo in the result toast (the owner, 2026-10-29, after using
+the app: a delete with no question felt careless). Restoring never asks.
 
 ## Interaction rules
 
@@ -282,7 +283,9 @@ change.
 | `TextField` | One line of text, or a password | A label above, an optional `description` hint and an `error` below, both read out with the field. A password field has a show/hide button instead of a second "confirm" field (NIST 800-63B-4) |
 | `ActionMenu` | The ... menu on a row | Takes `actions` and an optional `destructive`. The destructive item is always last, below a divider, in the danger color. An action with `href` is a real link (`Menu.LinkItem` over `next/link`) |
 | `List`, `ListRow`, `ListAction`, `ListContent` | Grouped settings, as the phone's own | One card per group, edged by a hairline, a small `heading` above and an optional `footer` below; rows split by a hairline that starts where the text does, past a leading icon. `ListRow` shows a value large and what it is beneath, with what can be done to it as children, and takes an `icon` and `iconTone` as `ListLink` does. `ListAction` is a row that is itself the action, in the accent (or `tone="danger"`). `ListContent` gives a row over to a field being edited in place |
-| `Dialog`, `ConfirmDialog` | A question that must be answered before going on | A sheet at the bottom on a phone, a card in the middle from `md`; focus stays inside until it closes. `ConfirmDialog` is only for what cannot be undone: a question as the title, the verb on the button, never "OK" |
+| `Dialog`, `ConfirmDialog`, `useConfirm` | A question that must be answered before going on | A sheet at the bottom on a phone, a card in the middle from `md`; focus stays inside until it closes. `ConfirmDialog` comes before every delete: a question as the title ("Xoá ghi chú này?"), what goes and whether it comes back beneath, the verb on the button, never "OK"; `tone="neutral"` when the answer offered is not a delete, such as hiding a product orders name. `useConfirm()` awaits it where the delete is, outside any transition |
+| `ListCheck` | A row while choosing many | The whole row is the label of a Base UI checkbox, Material 3's (material-web `md-comp-checkbox`: 18px box, 2px corners, 2px outline, filled with the accent once ticked); a chosen row takes `accent-wash`. Drawn only while choosing, in the browser, since Base UI's hidden input carries a style attribute the CSP refuses in server HTML. The first row of a list being chosen from is "Chọn tất cả", mixed while some are |
+| `SelectionBar`, `useSelection` | The actions on what is chosen | Docked at the foot of the page while choosing, sticky inside the scrolling page, so it sits above the tab bar; buttons side by side, the destructive one in the danger tone; toasts rise above it. With nothing ticked its buttons act on everything shown ("Khôi phục tất cả", "Xoá tất cả"), as a phone's Recently Deleted does |
 | `Status` | The outcome of an action, in one line | An `<output>`, so a new message is read out without moving focus. Keeps its line when empty, so nothing below jumps |
 | `Toaster`, `useToast()` | The result of an action, with Undo when it can be undone | Mounted once in `src/app/layout.tsx`. A plain toast closes after 7 seconds (Fluent); one with an action after 10, and using the action closes it. Phone: full width at the bottom, the action under the title. From `md`: bottom right. A bar docked at the bottom calls `useToastClearance` so toasts sit above it, never on it |
 | `EmptyState` | A list with nothing in it | `title` says what is empty, `description` only when it helps, `action` is what fills it |
@@ -293,6 +296,10 @@ change.
   other names, each removed with one tap, added through `NameDialog`, the one-field dialog that also adds and renames
   a product. `MergeDialog` is the only change that asks before it acts, because a merge has no Undo: pick the one to
   keep from suggestions that leave out the one being merged, then a `ConfirmDialog` that says what will move.
+- **Choosing many** (the trash, the bell's list): "Chọn" in the header starts it, the title becomes "Đã chọn 3" and
+  "Xong" ends it; rows turn into `ListCheck`s under a "Chọn tất cả" row, and a `SelectionBar` holds the actions. A row
+  of the trash also has its own menu - Khôi phục, Xoá vĩnh viễn - for one at a time. Words in
+  `src/shared/ui/selection-bar/selection-copy.ts`.
 - **A disabled control says why.** Pass `focusableWhenDisabled` so keyboard and screen-reader users reach it, and
   point `aria-describedby` at the sentence beneath it.
 - **Keyboard:** menus open with Enter and move with the arrow keys; Escape closes and returns focus to the trigger.

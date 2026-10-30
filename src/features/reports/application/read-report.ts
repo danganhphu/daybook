@@ -1,10 +1,13 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import type { BookSettingRepository } from "@/features/book-settings/domain/book-setting-repository";
 import type { CustomerId } from "@/features/customers/domain/customer";
 import type { CustomerKindId } from "@/features/customers/domain/customer-kind";
 import type { ProductId } from "@/features/products/domain/product";
-import { quietCutoff, type QuietAfterDays } from "@/features/reports/domain/gone-quiet";
+import {
+  orDefaultQuietAfterDays,
+  quietCutoff,
+  type QuietAfterDays,
+} from "@/features/reports/domain/gone-quiet";
 import {
   bucketFor,
   bucketKey,
@@ -29,6 +32,8 @@ export type ReportRequest = {
   readonly kindId?: CustomerKindId | undefined;
   readonly customerId?: CustomerId | undefined;
   readonly productId?: ProductId | undefined;
+  // Left out, the default
+  readonly quietAfterDays?: QuietAfterDays | undefined;
 };
 
 export type Ranking<Row> = {
@@ -44,7 +49,7 @@ export type BucketSales = {
 };
 
 export type QuietList = {
-  // The book's setting they were found by
+  // The days they were found by
   readonly afterDays: QuietAfterDays;
   readonly customers: ReadonlyArray<QuietCustomer>;
 };
@@ -74,7 +79,6 @@ export const reportSizes = {
 
 export type ReportDeps = {
   readonly queries: ReportQueries;
-  readonly settings: BookSettingRepository;
   readonly today: () => Temporal.PlainDate;
 };
 
@@ -89,8 +93,8 @@ async function quietList(
   deps: ReportDeps,
   today: Temporal.PlainDate,
   kindId: CustomerKindId | undefined,
+  quietAfterDays: QuietAfterDays,
 ): Promise<QuietList> {
-  const { quietAfterDays } = await deps.settings.get();
   const customers = await deps.queries.quietCustomers(
     quietCutoff(today, quietAfterDays),
     kindId,
@@ -104,6 +108,7 @@ export async function readReport(deps: ReportDeps, request: ReportRequest): Prom
   const { queries } = deps;
   const today = deps.today();
   const { period, kindId, customerId, productId } = request;
+  const quietAfterDays = request.quietAfterDays ?? orDefaultQuietAfterDays();
   const filter = { from: period.from, to: period.to, kindId, customerId, productId };
   const previous = previousPeriod(period);
   const bucket = bucketFor(period);
@@ -125,7 +130,7 @@ export async function readReport(deps: ReportDeps, request: ReportRequest): Prom
       productId === undefined ? queries.topProducts(filter, reportSizes.ranked) : skipped,
       customerId === undefined ? queries.topCustomers(filter, reportSizes.ranked) : skipped,
       customerId === undefined && productId === undefined
-        ? quietList(deps, today, kindId)
+        ? quietList(deps, today, kindId, quietAfterDays)
         : skipped,
     ]);
   const inBuckets = new Map(overTime.map((point) => [point.bucket, point]));

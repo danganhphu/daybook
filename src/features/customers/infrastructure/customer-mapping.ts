@@ -19,6 +19,8 @@ import {
   toArchivalRow,
   toAudit,
   toAuditRow,
+  toDeletion,
+  toDeletionRow,
 } from "@/shared/infrastructure/d1/audit-mapping";
 
 import type { customerAliasTable } from "./customer-alias.table";
@@ -50,6 +52,7 @@ export function toCustomer(row: CustomerRow): Customer {
         archival,
         mergedInto:
           row.mergedIntoId === null ? undefined : customerIdSchema.parse(row.mergedIntoId),
+        deletion: toDeletion(row),
       };
 }
 
@@ -66,6 +69,7 @@ export function toCustomerRow(customer: Customer): CustomerRow {
     mergedIntoId: customer.status === "archived" ? (customer.mergedInto ?? null) : null,
     ...toAuditRow(customer.audit),
     ...toArchivalRow(customer.status === "archived" ? customer.archival : undefined),
+    ...toDeletionRow(customer.status === "archived" ? customer.deletion : undefined),
   };
 }
 

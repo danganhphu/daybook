@@ -7,12 +7,13 @@ import { noteIdSchema, type LiveNote, type Note } from "@/features/notes/domain/
 import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { parseContent } from "@/shared/domain/content";
+import { recentlyDeletedSince } from "@/shared/domain/recently-deleted";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { searchTermSchema } from "@/shared/domain/search-term";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayHeading, dayLabel } from "@/shared/web/day-label";
 import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
-import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
+import { deletedText } from "@/shared/web/recently-deleted-since";
 import { dayPath } from "@/shared/web/routes";
 
 import { preview, toNoteView, type NoteResult, type NoteView } from "./note-view";
@@ -137,6 +138,7 @@ export async function deletedNotes(
     version: note.audit.version,
     title: preview(note.content),
     detail: deletedText(note.deletion.deletedAt, people.get(note.deletion.deletedBy) ?? "?"),
+    deletedAt: note.deletion.deletedAt.epochMilliseconds,
   }));
 }
 

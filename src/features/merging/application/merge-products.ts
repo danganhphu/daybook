@@ -24,6 +24,7 @@ export type ProductMergeError = Extract<
   | "product_not_found"
   | "product_changed_elsewhere"
   | "product_merged"
+  | "product_deleted"
   | "product_kept_unavailable"
 >;
 

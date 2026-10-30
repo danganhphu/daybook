@@ -75,6 +75,34 @@ describe("the list behind the bell", () => {
     expect(await app.unreadNotifications(minhSession)).toBe(1);
   });
 
+  it("given her notifications and the other person's, when she deletes some, then hers go and an id of theirs she sends changes nothing", async () => {
+    const time = testClock("2026-10-29T08:00:00Z");
+    const lan = await seedAccount(time.clock, "lan", "Lan");
+    const minh = await seedAccount(time.clock, "minh", "Minh");
+    const lanSession = (await seedSession(time.clock, lan)).session;
+    const minhSession = (await seedSession(time.clock, minh)).session;
+    await told(lan, "Hôm nay có 2 việc", "2026-10-29T00:30:00Z");
+    await told(lan, "Có thêm một thiết bị nhận thông báo", "2026-10-29T07:15:00Z");
+    await told(minh, "Vừa đổi tên đăng nhập", "2026-10-29T07:30:00Z");
+    const app = testApp(time.clock);
+    const [newest] = await app.notificationInbox(lanSession);
+    const [theirs] = await app.notificationInbox(minhSession);
+    if (newest === undefined || theirs === undefined) {
+      throw new Error("A notification is missing");
+    }
+
+    await app.deleteInboxItems(lanSession, [newest.id, theirs.id]);
+
+    expect((await app.notificationInbox(lanSession)).map((item) => item.title)).toEqual([
+      "Hôm nay có 2 việc",
+    ]);
+    expect(await app.notificationInbox(minhSession)).toHaveLength(1);
+
+    await app.clearInbox(lanSession);
+    expect(await app.notificationInbox(lanSession)).toEqual([]);
+    expect(await app.notificationInbox(minhSession)).toHaveLength(1);
+  });
+
   it("given notifications older than 30 days and newer, when the midnight run comes, then only the old ones are gone", async () => {
     const time = testClock("2026-10-28T17:00:00Z");
     const lan = await seedAccount(time.clock, "lan", "Lan");

@@ -62,11 +62,6 @@ import { createSessionRepository } from "@/features/access/infrastructure/sessio
 import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import {
-  changeQuietAfterDays,
-  type ChangeQuietAfterDaysInput,
-} from "@/features/book-settings/application/change-quiet-after-days";
-import { createBookSettingRepository } from "@/features/book-settings/infrastructure/book-setting-repository";
-import {
   recordCapture,
   type RecordCaptureInput,
 } from "@/features/capture/application/record-capture";
@@ -84,6 +79,7 @@ import {
   removeCustomerAlias,
   type AddCustomerAliasInput,
 } from "@/features/customers/application/customer-aliases";
+import { deleteCustomerKind } from "@/features/customers/application/delete-customer-kind";
 import { listCustomers } from "@/features/customers/application/list-customers";
 import {
   renameCustomerKind,
@@ -116,10 +112,16 @@ import { restoreNote } from "@/features/notes/application/restore-note";
 import { searchNotes } from "@/features/notes/application/search-notes";
 import { createNoteRepository } from "@/features/notes/infrastructure/note-repository";
 import {
+  changeNotificationQuietDays,
+  type ChangeNotificationQuietDaysInput,
+} from "@/features/notifications/application/change-notification-quiet-days";
+import {
   changeNotificationTimes,
   type ChangeNotificationTimesInput,
 } from "@/features/notifications/application/change-notification-times";
 import {
+  clearInbox,
+  deleteInboxItems,
   markInboxRead,
   notificationInbox,
 } from "@/features/notifications/application/notification-inbox";
@@ -129,6 +131,7 @@ import {
   type SubscribeDeviceInput,
 } from "@/features/notifications/application/subscribe-device";
 import { unsubscribeDevice } from "@/features/notifications/application/unsubscribe-device";
+import type { InboxItemId } from "@/features/notifications/domain/inbox-item";
 import { createInboxRepository } from "@/features/notifications/infrastructure/inbox-repository";
 import { createNotificationPreferenceRepository } from "@/features/notifications/infrastructure/notification-preference-repository";
 import { createPushSubscriptionRepository } from "@/features/notifications/infrastructure/push-subscription-repository";
@@ -193,6 +196,16 @@ import type {
 import { createReminderRepository } from "@/features/reminders/infrastructure/reminder-repository";
 import { readReport, type ReportRequest } from "@/features/reports/application/read-report";
 import { createReportQueries } from "@/features/reports/infrastructure/report-queries";
+import {
+  customerDeletePreview,
+  deleteCustomer,
+  deletedWithCounts,
+} from "@/features/trash/application/delete-customer";
+import { deleteProduct, productOrderCount } from "@/features/trash/application/delete-product";
+import { purgeFromTrash } from "@/features/trash/application/purge-from-trash";
+import { restoreFromTrash } from "@/features/trash/application/restore-from-trash";
+import type { TrashDeps } from "@/features/trash/application/trash-deps";
+import type { TrashItem } from "@/features/trash/domain/trash";
 import type { Clock } from "@/shared/application/clock";
 import type { RecordChange } from "@/shared/application/record-change";
 import type { AccountId } from "@/shared/domain/account-id";
@@ -237,7 +250,6 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const setupLinks = createSetupLinkRepository(db);
   const rateLimiter = createRateLimiter(db);
   const accessEvents = createAccessEventRepository(db);
-  const bookSettings = createBookSettingRepository(db);
   const verifier = createLazyPasskeyVerifier(bindings.relyingParty);
   const secrets = webCryptoSecrets;
   const startUnitOfWork = () => createUnitOfWork(db);
@@ -261,13 +273,19 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const customerNames = { clock, customers, startUnitOfWork };
   const productBook = { clock, products, startUnitOfWork };
   const merging: MergingDeps = { clock, customers, products, orders, reminders, startUnitOfWork };
+  const trash: TrashDeps = {
+    clock,
+    notes,
+    orders,
+    reminders,
+    customers,
+    products,
+    kinds,
+    startUnitOfWork,
+  };
   const orderBook = { clock, orders, customers, products, startUnitOfWork };
   const reminderBook = { clock, reminders, customers, notes, startUnitOfWork };
-  const reports = {
-    queries: reportQueries,
-    settings: bookSettings,
-    today: () => vietnamDate(clock()),
-  };
+  const reports = { queries: reportQueries, today: () => vietnamDate(clock()) };
   const notifications = {
     clock,
     pushAvailable: bindings.pushAvailable ?? false,
@@ -308,6 +326,10 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       archiveCustomerKind(customerKinds, input),
     restoreCustomerKind: (input: RecordChange<CustomerKindId>) =>
       restoreCustomerKind(customerKinds, input),
+    deleteCustomerKind: (input: RecordChange<CustomerKindId>) =>
+      deleteCustomerKind(customerKinds, input),
+    listDeletedCustomerKinds: (since: Temporal.Instant, limit: number) =>
+      kinds.listDeleted(since, limit),
     getCustomer: (id: CustomerId) => customers.get(id),
     getCustomers: (ids: ReadonlyArray<CustomerId>) => customers.getMany(ids),
     listCustomers: (filter: CustomerFilter) => listCustomers({ customers }, filter),
@@ -315,6 +337,11 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     reviseCustomer: (input: ReviseCustomerInput) => reviseCustomer(customerBook, input),
     archiveCustomer: (input: RecordChange<CustomerId>) => archiveCustomer(customerBook, input),
     restoreCustomer: (input: RecordChange<CustomerId>) => restoreCustomer(customerBook, input),
+    customerDeletePreview: (id: CustomerId) => customerDeletePreview(trash, id),
+    deleteCustomer: (input: RecordChange<CustomerId>) => deleteCustomer(trash, input),
+    listDeletedCustomers: (since: Temporal.Instant, limit: number) =>
+      customers.listDeleted(since, limit),
+    deletedWithCounts: (ids: ReadonlyArray<CustomerId>) => deletedWithCounts(trash, ids),
     customerAliases: async (id: CustomerId) => (await customers.aliasesOf([id])).get(id) ?? [],
     addCustomerAlias: (input: AddCustomerAliasInput) => addCustomerAlias(customerNames, input),
     removeCustomerAlias: (id: CustomerAliasId) => removeCustomerAlias(customerNames, id),
@@ -328,6 +355,10 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     renameProduct: (input: RenameProductInput) => renameProduct(productBook, input),
     archiveProduct: (input: RecordChange<ProductId>) => archiveProduct(productBook, input),
     restoreProduct: (input: RecordChange<ProductId>) => restoreProduct(productBook, input),
+    productOrderCount: (id: ProductId) => productOrderCount(trash, id),
+    deleteProduct: (input: RecordChange<ProductId>) => deleteProduct(trash, input),
+    listDeletedProducts: (since: Temporal.Instant, limit: number) =>
+      products.listDeleted(since, limit),
     productAliases: (id: ProductId) => products.aliasesOf(id),
     addProductAlias: (input: AddProductAliasInput) => addProductAlias(productBook, input),
     removeProductAlias: (id: ProductAliasId) => removeProductAlias(productBook, id),
@@ -361,9 +392,6 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     listDeletedNotes: (since: Temporal.Instant, limit: number) => notes.listDeleted(since, limit),
 
     readReport: (request: ReportRequest) => readReport(reports, request),
-    bookSetting: () => bookSettings.get(),
-    changeQuietAfterDays: (input: ChangeQuietAfterDaysInput) =>
-      changeQuietAfterDays({ clock, settings: bookSettings, startUnitOfWork }, input),
 
     getReminder: (id: ReminderId) => reminders.get(id),
     listOpenReminders: (filter: OpenReminderFilter, limit: number) =>
@@ -378,6 +406,10 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     reopenReminder: (input: RecordChange<ReminderId>) => reopenReminder(reminderBook, input),
     deleteReminder: (input: RecordChange<ReminderId>) => deleteReminder(reminderBook, input),
     restoreReminder: (input: RecordChange<ReminderId>) => restoreReminder(reminderBook, input),
+
+    restoreFromTrash: (by: AccountId, items: ReadonlyArray<TrashItem>) =>
+      restoreFromTrash(trash, by, items),
+    purgeFromTrash: (items: ReadonlyArray<TrashItem>) => purgeFromTrash(trash, items),
 
     // Whether notes can be read here, so a screen offers to read again only where it can
     canRead: () => bindings.reader !== undefined,
@@ -406,7 +438,8 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     endOtherSessions: (session: Session, origin: RequestOrigin) =>
       endOtherSessions(access, session, origin),
     listSessions: (accountId: AccountId) => listSessions({ clock, sessions }, accountId),
-    accountOverview: (accountId: AccountId) => accountOverview(access, accountId),
+    accountOverview: (accountId: AccountId, activityShown?: number) =>
+      accountOverview(access, accountId, activityShown),
     changeDisplayName: (session: Session, displayName: DisplayName, origin: RequestOrigin) =>
       changeDisplayName(access, session, displayName, origin),
     changeUsername: (session: Session, username: Username, origin: RequestOrigin) =>
@@ -433,9 +466,14 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       unsubscribeDevice(notifications, session, subscriptionId, origin),
     changeNotificationTimes: (session: Session, input: ChangeNotificationTimesInput) =>
       changeNotificationTimes(notifications, session, input),
+    changeNotificationQuietDays: (session: Session, input: ChangeNotificationQuietDaysInput) =>
+      changeNotificationQuietDays(notifications, session, input),
     notificationInbox: (session: Session) => notificationInbox(inbox, session),
     unreadNotifications: (session: Session) => inbox.inbox.unreadCount(session.accountId),
     markInboxRead: (session: Session, upTo: Temporal.Instant) =>
       markInboxRead(inbox, session, upTo),
+    deleteInboxItems: (session: Session, ids: ReadonlyArray<InboxItemId>) =>
+      deleteInboxItems(inbox, session, ids),
+    clearInbox: (session: Session) => clearInbox(inbox, session),
   } as const;
 }

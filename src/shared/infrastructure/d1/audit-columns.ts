@@ -60,6 +60,19 @@ export function deletionChecks(
   ];
 }
 
+// Deleted only while hidden: deleting hides by the same act (customers, products, kinds)
+export function deletedOnlyArchivedChecks(
+  name: string,
+  table: { readonly deletedAt: SQLiteColumn; readonly archivedAt: SQLiteColumn },
+) {
+  return [
+    check(
+      `${name}_deleted_only_archived`,
+      sql`${table.deletedAt} is null or ${table.archivedAt} is not null`,
+    ),
+  ];
+}
+
 export function archivalChecks(
   name: string,
   table: { readonly archivedAt: SQLiteColumn; readonly archivedBy: SQLiteColumn },

@@ -74,9 +74,14 @@ export type QuietRowView = {
   readonly href: string;
 };
 
+// The quiet customers, and the field that says after how many days: shown even when nobody is, so the days can change
 export type QuietListView = {
   readonly rows: ReadonlyArray<QuietRowView>;
-  readonly footer: string;
+  readonly empty: string | undefined;
+  readonly days: string;
+  readonly error: string | undefined;
+  // The rest of the report's address, sent along with the days
+  readonly keep: ReadonlyArray<{ readonly name: string; readonly value: string }>;
 };
 
 export type ReportBodyView = {

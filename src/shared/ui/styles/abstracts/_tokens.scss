@@ -46,6 +46,8 @@ $space: (
 // Buttons and chips are pills (`full`). `field` is half the 44px message box, so one line is a pill and more lines
 // stay a soft rectangle.
 $radius: (
+  // Material 3's checkbox (material-web md-comp-checkbox container-shape)
+  checkbox: 2px,
   // The data end of a chart's bar; its base stays square on the baseline
   mark: 4px,
   control: 10px,
@@ -133,6 +135,8 @@ $sizes: (
   control-lg: 44px,
   // Material 3's large badge, a count over an icon
   badge: 16px,
+  // Material 3's checkbox (material-web md-comp-checkbox container-size)
+  checkbox: 18px,
   icon: 20px,
   icon-row: 24px,
   icon-tab: 24px,

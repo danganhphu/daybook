@@ -13,6 +13,7 @@ export const orderErrorMessages = {
   order_changed_elsewhere: "Đơn này vừa được sửa ở máy khác. Xem bản mới rồi thử lại.",
   order_deleted: "Đơn này đã bị xoá.",
   order_not_deleted: "Đơn này vẫn còn, không cần khôi phục.",
+  order_deleted_with_customer: "Đơn này bị xoá cùng khách. Khôi phục khách trong Đã xoá gần đây.",
   order_too_large: "Số tiền của đơn lớn quá, kiểm tra lại số lượng và giá.",
   total_below_paid: "Tổng đơn không thể ít hơn số đã thu.",
   payment_exceeds_owed: "Số tiền thu nhiều hơn số còn nợ.",

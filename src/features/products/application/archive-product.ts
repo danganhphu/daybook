@@ -33,6 +33,7 @@ export function restoreProduct(
       | "product_changed_elsewhere"
       | "product_not_archived"
       | "product_merged"
+      | "product_deleted"
       | "product_name_taken"
     >
   >

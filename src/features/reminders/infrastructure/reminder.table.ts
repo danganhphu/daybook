@@ -27,6 +27,8 @@ export const reminderTable = sqliteTable(
     doneBy: text("done_by").references(() => accountTable.id),
     ...auditColumns(() => accountTable.id),
     ...deletionColumns(() => accountTable.id),
+    // The customer it was deleted with; it comes back with them
+    deletedWith: text("deleted_with").references(() => customerTable.id),
   },
   (table) => [
     check(
@@ -37,6 +39,10 @@ export const reminderTable = sqliteTable(
     check("reminder_completion_whole", sql`(${table.doneAt} is null) = (${table.doneBy} is null)`),
     ...auditChecks("reminder", table),
     ...deletionChecks("reminder", table),
+    check(
+      "reminder_deleted_with_only_deleted",
+      sql`${table.deletedWith} is null or ${table.deletedAt} is not null`,
+    ),
     index("reminder_open_by_due_on")
       .on(table.dueOn)
       .where(sql`${table.doneAt} is null and ${table.deletedAt} is null`),

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { AccountId } from "@/shared/domain/account-id";
 import * as Audits from "@/shared/domain/audit";
-import type { Archival, Audit } from "@/shared/domain/audit";
+import type { Archival, Audit, Deletion } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { requiredTextSchema } from "@/shared/domain/short-text";
 
@@ -37,6 +37,8 @@ export type ArchivedProduct = ProductFields & {
   readonly archival: Archival;
   // The product it was merged into, when a merge hid it; its order lines went there
   readonly mergedInto: ProductId | undefined;
+  // Set when deleted: hidden by the same act, and in the trash; old orders still name it
+  readonly deletion: Deletion | undefined;
 };
 
 export type Product = ActiveProduct | ArchivedProduct;
@@ -76,25 +78,70 @@ export function archive(
     audit: Audits.change(product.audit, by, at),
     archival: Audits.archival(by, at),
     mergedInto: undefined,
+    deletion: undefined,
   });
 }
 
-// A merged product stays hidden: its order lines belong to the one it was merged into now
+function shown(product: ArchivedProduct, by: AccountId, at: Temporal.Instant): ActiveProduct {
+  const { archival: _archival, mergedInto: _mergedInto, deletion: _deletion, ...fields } = product;
+
+  return { ...fields, status: "active", audit: Audits.change(product.audit, by, at) };
+}
+
+// A merged product stays hidden: its order lines belong to the one it was merged into now. A deleted one comes back
+// from the trash, not from the hidden list.
 export function restore(
   product: Product,
   by: AccountId,
   at: Temporal.Instant,
-): Result<ActiveProduct, "product_not_archived" | "product_merged"> {
+): Result<ActiveProduct, "product_not_archived" | "product_merged" | "product_deleted"> {
   if (product.status === "active") {
     return err("product_not_archived");
   }
   if (product.mergedInto !== undefined) {
     return err("product_merged");
   }
+  if (product.deletion !== undefined) {
+    return err("product_deleted");
+  }
 
-  const { archival: _archival, mergedInto: _mergedInto, ...fields } = product;
+  return ok(shown(product, by, at));
+}
 
-  return ok({ ...fields, status: "active", audit: Audits.change(product.audit, by, at) });
+// Into the trash, hidden by the same act; orders that sold it keep its name. One merged into another is gone into it.
+export function markDeleted(
+  product: Product,
+  by: AccountId,
+  at: Temporal.Instant,
+): Result<ArchivedProduct, "product_merged" | "product_deleted"> {
+  if (product.status === "archived" && product.mergedInto !== undefined) {
+    return err("product_merged");
+  }
+  if (product.status === "archived" && product.deletion !== undefined) {
+    return err("product_deleted");
+  }
+
+  return ok({
+    ...product,
+    status: "archived",
+    audit: Audits.change(product.audit, by, at),
+    archival: product.status === "archived" ? product.archival : Audits.archival(by, at),
+    mergedInto: undefined,
+    deletion: Audits.deletion(by, at),
+  });
+}
+
+// Back from the trash, shown; the caller checks its name is still free, as for one shown again
+export function restoreDeleted(
+  product: Product,
+  by: AccountId,
+  at: Temporal.Instant,
+): Result<ActiveProduct, "product_not_deleted"> {
+  if (product.status === "active" || product.deletion === undefined) {
+    return err("product_not_deleted");
+  }
+
+  return ok(shown(product, by, at));
 }
 
 // Hidden for good, naming the product kept in its place. A hidden one can be merged; a merged one cannot again.
@@ -103,12 +150,15 @@ export function mergeInto(
   into: ActiveProduct,
   by: AccountId,
   at: Temporal.Instant,
-): Result<ArchivedProduct, "product_merged" | "merge_into_itself"> {
+): Result<ArchivedProduct, "product_merged" | "merge_into_itself" | "product_deleted"> {
   if (product.id === into.id) {
     return err("merge_into_itself");
   }
   if (product.status === "archived" && product.mergedInto !== undefined) {
     return err("product_merged");
+  }
+  if (product.status === "archived" && product.deletion !== undefined) {
+    return err("product_deleted");
   }
 
   return ok({
@@ -117,6 +167,7 @@ export function mergeInto(
     audit: Audits.change(product.audit, by, at),
     archival: product.status === "archived" ? product.archival : Audits.archival(by, at),
     mergedInto: into.id,
+    deletion: undefined,
   });
 }
 

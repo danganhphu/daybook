@@ -40,6 +40,8 @@ export type LiveReminder = ReminderFields & { readonly status: "live" };
 export type DeletedReminder = ReminderFields & {
   readonly status: "deleted";
   readonly deletion: Deletion;
+  // The customer deleted with it: it is in the trash under them, and comes back with them
+  readonly deletedWith: CustomerId | undefined;
 };
 
 export type Reminder = LiveReminder | DeletedReminder;
@@ -117,11 +119,13 @@ export function reassignCustomer<T extends Reminder>(
   return { ...reminder, customerId, audit: Audits.change(reminder.audit, by, at) };
 }
 
-// Deleting twice changes nothing: what was asked for already holds
+// Deleting twice changes nothing: what was asked for already holds. `withCustomer` when it goes because its customer
+// is deleted.
 export function markDeleted(
   reminder: Reminder,
   by: AccountId,
   at: Temporal.Instant,
+  withCustomer?: CustomerId,
 ): DeletedReminder {
   if (reminder.status === "deleted") {
     return reminder;
@@ -132,19 +136,25 @@ export function markDeleted(
     status: "deleted",
     audit: Audits.change(reminder.audit, by, at),
     deletion: Audits.deletion(by, at),
+    deletedWith: withCustomer,
   };
 }
 
+// One deleted with its customer comes back only with them: `withCustomer` is that customer coming back
 export function restore(
   reminder: Reminder,
   by: AccountId,
   at: Temporal.Instant,
-): Result<LiveReminder, "reminder_not_deleted"> {
+  withCustomer?: CustomerId,
+): Result<LiveReminder, "reminder_not_deleted" | "reminder_deleted_with_customer"> {
   if (reminder.status === "live") {
     return err("reminder_not_deleted");
   }
+  if (reminder.deletedWith !== undefined && reminder.deletedWith !== withCustomer) {
+    return err("reminder_deleted_with_customer");
+  }
 
-  const { deletion: _deletion, ...fields } = reminder;
+  const { deletion: _deletion, deletedWith: _deletedWith, ...fields } = reminder;
 
   return ok({ ...fields, status: "live", audit: Audits.change(reminder.audit, by, at) });
 }

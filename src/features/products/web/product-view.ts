@@ -26,6 +26,8 @@ export type ProductScreenView = {
   readonly hidden: boolean;
   // The product it was merged into: hidden for good, its order lines are there now
   readonly mergedInto: string | undefined;
+  // In "Đã xoá gần đây": it comes back from there
+  readonly deleted: boolean;
   readonly lastPrice: number | undefined;
   readonly orderCount: number;
   readonly otherNames: ReadonlyArray<OtherNameView>;

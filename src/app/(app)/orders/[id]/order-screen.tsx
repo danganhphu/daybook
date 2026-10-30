@@ -19,6 +19,7 @@ import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu
 import { Button } from "@/shared/ui/button/button";
 import { ButtonLink } from "@/shared/ui/button/button-link";
 import { DayPicker } from "@/shared/ui/day-picker/day-picker";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
   DeleteIcon,
@@ -39,6 +40,7 @@ import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { moneyText } from "@/shared/web/money-text";
+import { deleteQuestion, recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { customerPath, editOrderPath, productPath, routes } from "@/shared/web/routes";
 
 import { PaymentDialog } from "./payment-dialog";
@@ -87,25 +89,36 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
     [run, view.id, view.version],
   );
 
-  // One tap, no confirmation: the toast's Undo is the safety net, as for a note
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  // Asks first, then the toast's Undo is there too, as for a note
   const remove = useCallback(() => {
-    startTransition(async () => {
-      const result = await attempt(() => deleteOrder(view.id, view.version));
-      if (!result.ok) {
-        toast.show({ title: result.error });
+    void (async () => {
+      const sure = await confirm({
+        title: deleteQuestion(ordersCopy.one),
+        description: recentlyDeletedCopy.canRestore,
+        confirmLabel: actionLabels.remove,
+      });
+      if (!sure) {
         return;
       }
-      const deletedVersion = result.value;
-      toast.show({
-        title: ordersCopy.deleted,
-        action: {
-          label: actionLabels.undo,
-          onAction: () => run(() => restoreOrder(view.id, deletedVersion)),
-        },
+      startTransition(async () => {
+        const result = await attempt(() => deleteOrder(view.id, view.version));
+        if (!result.ok) {
+          toast.show({ title: result.error });
+          return;
+        }
+        const deletedVersion = result.value;
+        toast.show({
+          title: ordersCopy.deleted,
+          action: {
+            label: actionLabels.undo,
+            onAction: () => run(() => restoreOrder(view.id, deletedVersion)),
+          },
+        });
+        router.push(routes.orders);
       });
-      router.push(routes.orders);
-    });
-  }, [router, run, toast, view.id, view.version]);
+    })();
+  }, [confirm, router, run, toast, view.id, view.version]);
 
   const menu = useMemo<ReadonlyArray<MenuAction>>(
     () =>
@@ -149,8 +162,18 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
     [view.owed, view.paid, view.total],
   );
   const dropPayment = useCallback(
-    (paymentId: string) => run(() => removePayment(view.id, view.version, paymentId)),
-    [run, view.id, view.version],
+    (paymentId: string) => {
+      void (async () => {
+        const sure = await confirm({
+          title: deleteQuestion(ordersCopy.paymentSubject),
+          confirmLabel: actionLabels.remove,
+        });
+        if (sure) {
+          run(() => removePayment(view.id, view.version, paymentId));
+        }
+      })();
+    },
+    [confirm, run, view.id, view.version],
   );
   const openPayment = useCallback(() => setPaying(true), []);
   const closePayment = useCallback(() => setPaying(false), []);
@@ -277,6 +300,7 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
         owed={view.owed}
         today={view.today}
       />
+      {confirmDialog}
     </Screen>
   );
 }

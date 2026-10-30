@@ -50,7 +50,7 @@ export function ProductsScreen({ view }: { readonly view: ProductsView }) {
           description={view.filtered || view.showingHidden ? undefined : productsCopy.emptyHint}
         />
       ) : (
-        <List>
+        <List footer={view.more ? productsCopy.more : undefined}>
           {view.rows.map((row) => (
             <ListLink
               key={row.id}

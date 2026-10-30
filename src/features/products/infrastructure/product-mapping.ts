@@ -13,6 +13,8 @@ import {
   toArchivalRow,
   toAudit,
   toAuditRow,
+  toDeletion,
+  toDeletionRow,
 } from "@/shared/infrastructure/d1/audit-mapping";
 
 import type { productAliasTable } from "./product-alias.table";
@@ -36,6 +38,7 @@ export function toProduct(row: ProductRow): Product {
         status: "archived",
         archival,
         mergedInto: row.mergedIntoId === null ? undefined : productIdSchema.parse(row.mergedIntoId),
+        deletion: toDeletion(row),
       };
 }
 
@@ -47,6 +50,7 @@ export function toProductRow(product: Product): ProductRow {
     mergedIntoId: product.status === "archived" ? (product.mergedInto ?? null) : null,
     ...toAuditRow(product.audit),
     ...toArchivalRow(product.status === "archived" ? product.archival : undefined),
+    ...toDeletionRow(product.status === "archived" ? product.deletion : undefined),
   };
 }
 

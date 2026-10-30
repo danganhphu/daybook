@@ -23,6 +23,7 @@ export type CustomerMergeError = Extract<
   | "customer_not_found"
   | "customer_changed_elsewhere"
   | "customer_merged"
+  | "customer_deleted"
   | "customer_kept_unavailable"
 >;
 

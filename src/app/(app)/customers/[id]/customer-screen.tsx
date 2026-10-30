@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { startTransition, useCallback, useMemo, useState } from "react";
 
 import { MergeDialog } from "@/app/(app)/_merge/merge-dialog";
@@ -7,12 +8,15 @@ import { OtherNames } from "@/app/(app)/_names/other-names";
 import { ReminderList } from "@/app/(app)/_reminders/reminder-list";
 import {
   addCustomerName,
+  customerDeleteConfirm,
   customerMergeConfirm,
+  deleteCustomer,
   hideCustomer,
   mergeCustomer,
   removeCustomerName,
   showCustomer,
 } from "@/app/(app)/customers/actions";
+import { undoDelete } from "@/app/(app)/deleted/undo-delete";
 import { findCustomers } from "@/app/(app)/orders/actions";
 import { customerLimits } from "@/features/customers/domain/customer-limits";
 import type { CustomerScreenView } from "@/features/customers/web/commands";
@@ -28,11 +32,13 @@ import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import { actionLabels } from "@/shared/ui/action-labels";
 import { ActionMenu, type MenuAction } from "@/shared/ui/action-menu/action-menu";
 import { ButtonLink } from "@/shared/ui/button/button-link";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { EmptyState } from "@/shared/ui/empty-state/empty-state";
 import { iconTones } from "@/shared/ui/icon/icon-tone";
 import {
   AddIcon,
   CallIcon,
+  DeleteIcon,
   EditIcon,
   LocationOnIcon,
   MergeIcon,
@@ -50,6 +56,7 @@ import { Stats, type Stat } from "@/shared/ui/stats/stats";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import { moneyText } from "@/shared/web/money-text";
+import { recentlyDeletedCopy } from "@/shared/web/recently-deleted";
 import { customerPath, editCustomerPath, orderPath, routes } from "@/shared/web/routes";
 
 import styles from "./customer-screen.module.scss";
@@ -102,6 +109,42 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
   );
   const addName = useCallback((name: string) => addCustomerName(view.id, name), [view.id]);
 
+  const router = useRouter();
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  // Asked first, saying what goes with them; then the list, with Undo in the toast
+  const remove = useCallback(() => {
+    void (async () => {
+      const asked = await attempt(() => customerDeleteConfirm(view.id));
+      if (!asked.ok) {
+        toast.show({ title: asked.error });
+        return;
+      }
+      if (!(await confirm(asked.value))) {
+        return;
+      }
+      startTransition(async () => {
+        const result = await attempt(() => deleteCustomer(view.id, view.version));
+        if (!result.ok) {
+          toast.show({ title: result.error });
+          return;
+        }
+        const version = result.value;
+        toast.show({
+          title: customersCopy.deleted,
+          action: {
+            label: actionLabels.undo,
+            onAction: () => {
+              startTransition(async () => {
+                toast.show(await undoDelete({ kind: "customer", id: view.id, version }));
+              });
+            },
+          },
+        });
+        router.push(routes.customers);
+      });
+    })();
+  }, [confirm, router, toast, view.id, view.version]);
+
   const actions = useMemo<ReadonlyArray<MenuAction>>(
     () => [
       { label: customersCopy.edit, icon: EditIcon, href: editCustomerPath(view.id) },
@@ -112,13 +155,18 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
     ],
     [openMerge, toggleHidden, view.hidden, view.id],
   );
-  // A merged customer has nothing left to change: its orders are with the one kept
+  const destructive = useMemo<MenuAction>(
+    () => ({ label: customersCopy.remove, icon: DeleteIcon, onSelect: remove }),
+    [remove],
+  );
+  // A merged customer has nothing left to change: its orders are with the one kept. A deleted one comes back from
+  // the trash.
   const menu = useMemo(
     () =>
-      view.mergedInto === undefined ? (
-        <ActionMenu label={actionLabels.options} actions={actions} />
+      view.mergedInto === undefined && !view.deleted ? (
+        <ActionMenu label={actionLabels.options} actions={actions} destructive={destructive} />
       ) : undefined,
-    [actions, view.mergedInto],
+    [actions, destructive, view.deleted, view.mergedInto],
   );
   const stats = useMemo<ReadonlyArray<Stat>>(
     () => [
@@ -148,6 +196,11 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
           <ButtonLink href={customerPath(view.mergedInto)}>{mergingCopy.seeKept}</ButtonLink>
         </Notice>
       )}
+      {view.deleted ? (
+        <Notice message={customersCopy.isDeleted} tone="danger">
+          <ButtonLink href={routes.deleted}>{recentlyDeletedCopy.title}</ButtonLink>
+        </Notice>
+      ) : null}
 
       <Stats label={view.name} items={stats} />
 
@@ -249,6 +302,7 @@ export function CustomerScreen({ view, orders, reminders }: CustomerScreenProps)
           onClose={closeMerge}
         />
       ) : null}
+      {confirmDialog}
     </Screen>
   );
 }

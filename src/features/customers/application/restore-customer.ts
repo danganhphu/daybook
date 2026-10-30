@@ -20,6 +20,7 @@ export async function restoreCustomer(
       | "customer_changed_elsewhere"
       | "customer_not_archived"
       | "customer_merged"
+      | "customer_deleted"
     >
   >
 > {

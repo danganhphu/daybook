@@ -6,6 +6,14 @@
 }
 
 // From and to side by side, the button under them
+// The quiet customers' days: the field, then its button on the same line
+.quiet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: space(3);
+  align-items: end;
+}
+
 .range {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

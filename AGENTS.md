@@ -16,7 +16,8 @@ obvious choice. [docs/README.md](docs/README.md) lists every document.
 
 The web app works locally, whole: today's notes as a chat, read into orders and reminders by Workers AI; days and a
 search; customers, products (with the other names each is known by, and merging two that are one), orders with
-delivery, payments and history; reminders, open and finished; reports; what was deleted lately, to restore; and
+delivery, payments and history; reminders, open and finished; reports; a trash that keeps what was deleted for thirty
+days, to restore or delete for good, one or many at once; and
 sign-in with passkeys, a password as the fallback, and Settings for the account, its devices and the people. It
 installs to a phone's home screen, and speaks first: a morning list and a Friday summary at each person's times, and
 notices about their sign-in, by Web Push (its service worker shows notifications and caches nothing). The Telegram bot
@@ -38,7 +39,7 @@ The free-plan limits that shape the code:
 | 100,000 Worker requests a day | Static asset requests are free and do not count |
 | D1: 5M rows read, 100k rows written a day | Index every lookup. An unindexed scan counts every row it touches as read |
 | Workers AI: 10,000 Neurons a day | It errors once used up. Local dev calls the real service, so dev runs spend the same budget |
-| 5 Cron Triggers per account, UTC only | 07:30 in Vietnam is `30 0 * * *`. Write day names (`FRI`): in Cloudflare's numbering 1 is Sunday. One is used: the notifications' scheduler, every 15 minutes |
+| 5 Cron Triggers per account, UTC only | 07:30 in Vietnam is `30 0 * * *`. Write day names (`FRI`): in Cloudflare's numbering 1 is Sunday. One is used: the notifications' scheduler, every 15 minutes; its first run of the day also empties the trash |
 | Queues: 10,000 operations a day, 24 hours' retention | A message is three operations. Jobs carry ids, never words |
 
 ## Stack
@@ -110,7 +111,8 @@ src/
     merging/      two customers or two products that are one: everything moved to one, in one batch, and recorded
     notifications/  the app speaking first: times, push subscriptions, the scheduler, the delivery ledger, Web Push,
                     the list behind the bell
-    book-settings/  what the book is set to, shared by both people: the days after which a customer has gone quiet
+    trash/        "Đã xoá gần đây": deleting a customer with their orders, restoring and deleting for good across every
+                  kind, the daily run that empties what is older than thirty days
   jobs/           the scheduler's and the queue consumer's adapters: what `src/worker.ts` hands a cron run and a message
   shared/
     domain/       Result, Content, the Vietnamese day

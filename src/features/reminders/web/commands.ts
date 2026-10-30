@@ -20,11 +20,12 @@ import type { AccountId } from "@/shared/domain/account-id";
 import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { parseContent } from "@/shared/domain/content";
+import { recentlyDeletedSince } from "@/shared/domain/recently-deleted";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { dayLabel } from "@/shared/web/day-label";
 import { recentlyDeleted, type DeletedRowView } from "@/shared/web/recently-deleted";
-import { deletedText, recentlyDeletedSince } from "@/shared/web/recently-deleted-since";
+import { deletedText } from "@/shared/web/recently-deleted-since";
 
 import type { DoneRemindersView, DueView, ReminderGroup, ReminderView } from "./reminder-view";
 import { doneText, overdueBy, remindersCopy } from "./reminders-copy";
@@ -189,6 +190,7 @@ export async function deletedReminders(
       reminder.deletion.deletedAt,
       people.get(reminder.deletion.deletedBy) ?? "?",
     ),
+    deletedAt: reminder.deletion.deletedAt.epochMilliseconds,
   }));
 }
 

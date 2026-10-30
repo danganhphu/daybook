@@ -22,4 +22,15 @@ export const accessCopy = {
   setBackupPassword: `Đặt ${backupPasswordTerm}`,
   backupPasswordPurpose: `${sentenceCase(backupPasswordTerm)} dùng khi máy không có ${passkeyTerm}.`,
   thisDevice: "Thiết bị này",
+  // Under a sign-out's question: nothing is lost
+  signInAgain: "Thiết bị đó cần đăng nhập lại để dùng tiếp.",
+  moreActivity: "Xem thêm",
 } as const;
+
+export function noActivity(days: number): string {
+  return `Chưa có gì trong ${days} ngày qua`;
+}
+
+export function activityWindow(days: number): string {
+  return `Chỉ hiện ${days} ngày gần nhất.`;
+}

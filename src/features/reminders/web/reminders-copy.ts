@@ -1,5 +1,7 @@
 export const remindersCopy = {
   title: "Việc cần nhắc",
+  // One of them, mid-sentence: "Xoá việc cần nhắc này?"
+  one: "việc cần nhắc",
   add: "Thêm việc cần nhắc",
   fromNote: "Nhắc việc này",
   edit: "Sửa việc cần nhắc",

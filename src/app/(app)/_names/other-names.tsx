@@ -3,7 +3,9 @@
 import { startTransition, useCallback, useOptimistic, useState } from "react";
 
 import type { Result } from "@/shared/domain/result";
+import { actionLabels } from "@/shared/ui/action-labels";
 import { IconButton } from "@/shared/ui/button/icon-button";
+import { useConfirm } from "@/shared/ui/dialog/use-confirm";
 import { AddIcon, CloseIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
@@ -11,6 +13,7 @@ import { ListRow } from "@/shared/ui/list/list-row";
 import { useToast } from "@/shared/ui/toast/use-toast";
 import { attempt } from "@/shared/web/attempt";
 import type { OtherNameView } from "@/shared/web/other-name-view";
+import { deleteQuestion } from "@/shared/web/recently-deleted";
 
 import { NameDialog } from "./name-dialog";
 import { otherNamesCopy, removeName } from "./other-names-copy";
@@ -40,19 +43,30 @@ export function OtherNames({ names, footer, maxLength, editable, add, remove }: 
   const close = useCallback(() => setAdding(false), []);
   const added = useCallback(() => toast.show({ title: otherNamesCopy.added }), [toast]);
 
+  const { confirm, dialog } = useConfirm();
   const drop = useCallback(
     (name: OtherNameView) => {
-      startTransition(async () => {
-        hide(name.id);
-        const result = await attempt(() => remove(name.id));
-        toast.show(
-          result.ok
-            ? { title: otherNamesCopy.removed, description: name.name }
-            : { title: result.error },
-        );
-      });
+      void (async () => {
+        const sure = await confirm({
+          title: deleteQuestion(otherNamesCopy.one),
+          description: name.name,
+          confirmLabel: actionLabels.remove,
+        });
+        if (!sure) {
+          return;
+        }
+        startTransition(async () => {
+          hide(name.id);
+          const result = await attempt(() => remove(name.id));
+          toast.show(
+            result.ok
+              ? { title: otherNamesCopy.removed, description: name.name }
+              : { title: result.error },
+          );
+        });
+      })();
     },
-    [hide, remove, toast],
+    [confirm, hide, remove, toast],
   );
 
   if (!editable && shown.length === 0) {
@@ -77,6 +91,7 @@ export function OtherNames({ names, footer, maxLength, editable, add, remove }: 
           onClose={close}
         />
       ) : null}
+      {dialog}
     </>
   );
 }

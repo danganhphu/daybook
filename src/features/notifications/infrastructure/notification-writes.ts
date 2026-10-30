@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt, lte } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, lte } from "drizzle-orm";
 
 import type {
   InboxWrites,
@@ -120,6 +120,21 @@ export function createInboxWrites(db: Database, batch: Batch): InboxWrites {
       batch.enlist(
         db.delete(inboxItemTable).where(lt(inboxItemTable.createdAt, before.epochMilliseconds)),
       );
+    },
+
+    // The list shows at most inboxLimits.listed, far under D1's bound-parameter limit
+    remove(accountId, ids) {
+      batch.enlist(
+        db
+          .delete(inboxItemTable)
+          .where(
+            and(eq(inboxItemTable.accountId, accountId), inArray(inboxItemTable.id, [...ids])),
+          ),
+      );
+    },
+
+    removeAll(accountId) {
+      batch.enlist(db.delete(inboxItemTable).where(eq(inboxItemTable.accountId, accountId)));
     },
   };
 }
