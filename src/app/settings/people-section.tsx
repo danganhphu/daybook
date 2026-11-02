@@ -10,15 +10,23 @@ import { useAccountStepUp } from "./use-step-up";
 export function PeopleSection({
   view,
   back,
+  linkMinutes,
 }: {
   readonly view: AccountView;
   readonly back: string;
+  // How long a link stays usable; read on the server, which alone loads the durations
+  readonly linkMinutes: number;
 }) {
   const stepUp = useAccountStepUp(view);
 
   return (
     <Screen title={settingsCopy.people} back={back}>
-      <People people={view.people} run={stepUp.run} />
+      <People
+        people={view.people}
+        canInvite={view.canInvite}
+        linkMinutes={linkMinutes}
+        run={stepUp.run}
+      />
       {stepUp.dialog}
     </Screen>
   );

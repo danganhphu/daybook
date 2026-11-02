@@ -1,11 +1,8 @@
 import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-import {
-  argon2Minimum,
-  digestByteLength,
-  passwordSaltByteLength,
-} from "@/features/access/domain/access-policy";
+import { digestByteLength } from "@/features/access/domain/access-policy";
+import { argon2Minimum, passwordSaltByteLength } from "@/features/access/domain/password-policy";
 import { base64UrlLength } from "@/shared/domain/base64url";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
 

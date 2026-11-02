@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { unreadNotifications } from "@/features/notifications/web/inbox-commands";
-import { ordersScreen } from "@/features/orders/web/commands";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
+import { ordersScreen } from "@/features/orders/web/orders-list-commands";
 
 import { OrdersScreen } from "./orders-screen";
 

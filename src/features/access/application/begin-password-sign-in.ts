@@ -1,4 +1,3 @@
-import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import { passwordSignInAttempts } from "@/features/access/domain/access-policy";
 import { usernameSchema } from "@/features/access/domain/account";
@@ -16,6 +15,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, CeremonyWrites } from "./access-writes";
 import { formatCeremonyCookie } from "./ceremony-cookie";
+import { overLimit } from "./over-limit";
 import { decoySaltFor, usernameLimitKey } from "./password-keys";
 import type { Peppers } from "./peppers";
 import { clientNetwork } from "./rate-limit-keys";
@@ -65,21 +65,7 @@ export async function beginPasswordSignIn(
       ...passwordSignInAttempts.perAccount,
     },
   ];
-  const counts = await Promise.all(
-    limits.map((limit) => deps.rateLimiter.hit(limit.key, limit.window, now)),
-  );
-  if (counts.some((count, index) => count > (limits[index]?.limit ?? 0))) {
-    const work = deps.startUnitOfWork();
-    work.accessEvents.add(
-      AccessEvents.record(
-        "rate_limited",
-        { detail: { on: "password_sign_in" } },
-        request.origin,
-        now,
-      ),
-    );
-    await work.commit();
-
+  if (await overLimit(deps, limits, "password_sign_in", request.origin, now)) {
     return err("rate_limited");
   }
 

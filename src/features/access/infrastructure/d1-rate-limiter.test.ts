@@ -46,12 +46,31 @@ describe("createRateLimiter", () => {
     expect(counts.toSorted((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it("given windows long over, when another hit lands, then their rows are dropped", async () => {
+  it("given this key's ended windows, when it is hit again, then their rows are dropped", async () => {
     const limiter = createRateLimiter(createDatabase(env.DB));
-    await limiter.hit("old", tenMinutes, at("2026-10-21T01:00:00Z"));
+    await limiter.hit("k", tenMinutes, at("2026-10-21T01:00:00Z"));
 
-    await limiter.hit("new", tenMinutes, at("2026-10-21T03:00:00Z"));
+    await limiter.hit("k", tenMinutes, at("2026-10-21T01:20:00Z"));
+
+    expect(await rows("select key, hits from rate_limit")).toEqual([{ key: "k", hits: 1 }]);
+  });
+
+  it("given another key's rows a day old, when any key is hit, then they are dropped", async () => {
+    const limiter = createRateLimiter(createDatabase(env.DB));
+    await limiter.hit("old", tenMinutes, at("2026-10-20T01:00:00Z"));
+
+    await limiter.hit("new", tenMinutes, at("2026-10-21T01:10:00Z"));
 
     expect(await rows("select key from rate_limit")).toEqual([{ key: "new" }]);
+  });
+
+  it("given another key counting in a longer window, when a short one is hit, then its count is kept", async () => {
+    const limiter = createRateLimiter(createDatabase(env.DB));
+    const hour = Temporal.Duration.from({ hours: 1 });
+    await limiter.hit("long", hour, at("2026-10-21T01:00:00Z"));
+
+    await limiter.hit("short", tenMinutes, at("2026-10-21T01:30:00Z"));
+
+    expect(await limiter.hit("long", hour, at("2026-10-21T01:40:00Z"))).toBe(2);
   });
 });

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, lt, notExists, sql, type SQL } from "drizzle-orm";
+import { and, inArray, isNotNull, lt, sql, type SQL } from "drizzle-orm";
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import type { Temporal } from "temporal-polyfill/implementation";
 
@@ -16,7 +16,7 @@ import { productAliasTable } from "@/features/products/infrastructure/product-al
 import { productTable } from "@/features/products/infrastructure/product.table";
 import { reminderTable } from "@/features/reminders/infrastructure/reminder.table";
 import type { TrashWrites } from "@/features/trash/application/trash-writes";
-import { trashKinds, type TrashKind } from "@/features/trash/domain/trash";
+import type { TrashKind } from "@/features/trash/domain/trash";
 import type { Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { d1MaxBoundParameters } from "@/shared/infrastructure/d1/limits";
@@ -42,6 +42,29 @@ function withMergedInto(table: typeof customerTable | typeof productTable, start
   return sql`(with recursive kept(id) as (select ${table.id} from ${table} where ${start} union select merged.id from ${table} as merged join kept on merged.merged_into_id = kept.id) select id from kept)`;
 }
 
+// `used` and every row those were merged into, up the line of merges: deleting one of those would take the used one
+// with it, so none of them may go
+function andWhatTheyWereMergedInto(
+  table: typeof customerTable | typeof productTable,
+  used: SQL,
+): SQL {
+  return sql`(with recursive kept(id) as (select id from (${used}) union select merged.merged_into_id from ${table} as merged join kept on merged.id = kept.id where merged.merged_into_id is not null) select id from kept)`;
+}
+
+// Every product an order line names. A merge moves lines, but a form open during it can still name the one merged
+// away; the database refuses that now (order_line_names_kept_product), and older rows are left in place here.
+const productsInUse = andWhatTheyWereMergedInto(
+  productTable,
+  sql`select ${orderLineTable.productId} as id from ${orderLineTable}`,
+);
+
+// Every customer with a live order or reminder, and every one merged away that still has any order or reminder at
+// all - an order placed while the merge ran
+const customersInUse = andWhatTheyWereMergedInto(
+  customerTable,
+  sql`select ${salesOrderTable.customerId} as id from ${salesOrderTable} where ${salesOrderTable.deletedAt} is null union select ${reminderTable.customerId} from ${reminderTable} where ${reminderTable.deletedAt} is null and ${reminderTable.customerId} is not null union select owner.id from ${customerTable} as owner where owner.merged_into_id is not null and (exists (select 1 from ${salesOrderTable} where ${salesOrderTable.customerId} = owner.id) or exists (select 1 from ${reminderTable} where ${reminderTable.customerId} = owner.id))`,
+);
+
 export function createTrashWrites(db: Database, batch: Batch): TrashWrites {
   // An order goes with its log, payments and lines
   function orders(where: SQL) {
@@ -53,23 +76,10 @@ export function createTrashWrites(db: Database, batch: Batch): TrashWrites {
   }
 
   // A customer goes with every order and reminder of theirs still in the trash, their other names, and the customers
-  // merged into them. One with a live order or reminder - restored on its own meanwhile - stays.
+  // merged into them. One still in use - a live order or reminder restored on its own meanwhile, or one of those merged
+  // into them still holding something - stays.
   function customers(which: Which) {
-    const start = sql`${picked(customerTable, which)} and ${notExists(
-      db
-        .select({ id: salesOrderTable.id })
-        .from(salesOrderTable)
-        .where(
-          and(eq(salesOrderTable.customerId, customerTable.id), isNull(salesOrderTable.deletedAt)),
-        ),
-    )} and ${notExists(
-      db
-        .select({ id: reminderTable.id })
-        .from(reminderTable)
-        .where(
-          and(eq(reminderTable.customerId, customerTable.id), isNull(reminderTable.deletedAt)),
-        ),
-    )}`;
+    const start = sql`${picked(customerTable, which)} and ${customerTable.id} not in ${customersInUse}`;
     const going = db.select({ id: customerTable.id }).from(customerTable).where(start);
     orders(
       sql`${inArray(salesOrderTable.customerId, going)} and ${isNotNull(salesOrderTable.deletedAt)}`,
@@ -87,15 +97,10 @@ export function createTrashWrites(db: Database, batch: Batch): TrashWrites {
     batch.enlist(db.delete(customerTable).where(sql`${customerTable.id} in ${line}`));
   }
 
-  // A product no order line names - the delete refused any other, and nothing can name one hidden - with its other
-  // names and the products merged into it
+  // A product no order line names - the delete refused any other - with its other names and the products merged into
+  // it, when none of those is named either
   function products(which: Which) {
-    const start = sql`${picked(productTable, which)} and ${notExists(
-      db
-        .select({ productId: orderLineTable.productId })
-        .from(orderLineTable)
-        .where(eq(orderLineTable.productId, productTable.id)),
-    )}`;
+    const start = sql`${picked(productTable, which)} and ${productTable.id} not in ${productsInUse}`;
     const line = withMergedInto(productTable, start);
     batch.enlist(
       db.delete(productAliasTable).where(sql`${productAliasTable.productId} in ${line}`),
@@ -148,16 +153,16 @@ export function createTrashWrites(db: Database, batch: Batch): TrashWrites {
   }
 
   return {
+    // One statement binds `at` beside the ids (the kinds' customers), so a chunk leaves it room
     purge(kind, ids, at) {
-      for (let start = 0; start < ids.length; start += d1MaxBoundParameters) {
-        purgeKind(kind, { ids: ids.slice(start, start + d1MaxBoundParameters) }, at);
+      const size = d1MaxBoundParameters - 1;
+      for (let start = 0; start < ids.length; start += size) {
+        purgeKind(kind, { ids: ids.slice(start, start + size) }, at);
       }
     },
 
-    purgeDeletedBefore(before, at) {
-      for (const kind of trashKinds) {
-        purgeKind(kind, { before: before.epochMilliseconds }, at);
-      }
+    purgeDeletedBefore(kind, before, at) {
+      purgeKind(kind, { before: before.epochMilliseconds }, at);
     },
   };
 }

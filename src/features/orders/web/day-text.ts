@@ -1,8 +1,10 @@
+import { dayMonthText } from "@/shared/web/time-text";
+
 // "24/10" from "2026-10-24", for a day inside a sentence; the year is clear from the order around it
 export function shortDay(day: string): string {
   const [, month, date] = day.split("-");
 
-  return `${Number(date)}/${Number(month)}`;
+  return dayMonthText(Number(date), Number(month));
 }
 
 // "Tháng 10/2026" from "2026-10"

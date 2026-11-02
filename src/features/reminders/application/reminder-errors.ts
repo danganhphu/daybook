@@ -6,6 +6,7 @@ export type ReminderError =
   | "reminder_open"
   | "reminder_not_deleted"
   | "reminder_deleted_with_customer"
+  | "reminder_customer_deleted"
   | "customer_unavailable"
   | "note_unavailable";
 
@@ -18,6 +19,7 @@ export const reminderErrorMessages = {
   reminder_not_deleted: "Việc này vẫn còn, không cần khôi phục.",
   reminder_deleted_with_customer:
     "Việc này bị xoá cùng khách. Khôi phục khách trong Đã xoá gần đây.",
+  reminder_customer_deleted: "Khách của việc này đang trong Đã xoá gần đây. Khôi phục khách trước.",
   customer_unavailable: "Khách này không còn trong danh sách.",
   note_unavailable: "Không tìm thấy ghi chú này nữa.",
 } as const satisfies Record<ReminderError, string>;

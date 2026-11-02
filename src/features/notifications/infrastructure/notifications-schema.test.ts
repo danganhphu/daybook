@@ -41,6 +41,15 @@ function insertSubscription(
   );
 }
 
+function insertPreference() {
+  return run(
+    "insert into notification_preference values (?, null, null, 21, 1, ?, 1, ?, 1, 1)",
+    accountId,
+    accountId,
+    accountId,
+  );
+}
+
 function insertDelivery(id: string, status: string, finishedAt: unknown) {
   return run(
     "insert into notification_delivery values (?, ?, 'morning', '2026-10-29', 'push', ?, 1, 1, ?)",
@@ -60,7 +69,7 @@ describe("STRICT on every notifications table", () => {
     ],
     [
       "notification_preference",
-      "insert into notification_preference values ('a', null, null, 21, 'soon', 'a', 1, 'a', 1)",
+      "insert into notification_preference values ('a', null, null, 21, 'soon', 'a', 1, 'a', 1, 1)",
     ],
     [
       "push_subscription",
@@ -115,7 +124,7 @@ describe("notification_preference table", () => {
 
       await expect(
         run(
-          "insert into notification_preference values (?, ?, null, 21, 1, ?, 1, ?, 1)",
+          "insert into notification_preference values (?, ?, null, 21, 1, ?, 1, ?, 1, 1)",
           accountId,
           morningAt,
           accountId,
@@ -132,7 +141,7 @@ describe("notification_preference table", () => {
 
       await expect(
         run(
-          "insert into notification_preference values (?, null, null, ?, 1, ?, 1, ?, 1)",
+          "insert into notification_preference values (?, null, null, ?, 1, ?, 1, ?, 1, 1)",
           accountId,
           days,
           accountId,
@@ -141,9 +150,57 @@ describe("notification_preference table", () => {
       ).rejects.toThrow(/notification_preference_quiet_after_days_range/);
     },
   );
+
+  it("given a preference stored before the switch, when read, then Gửi qua Telegram is on", async () => {
+    await seedAccountAndSession();
+
+    await run(
+      "insert into notification_preference (account_id, morning_at, weekly_at, quiet_after_days, created_at, created_by, updated_at, updated_by, version) values (?, null, null, 21, 1, ?, 1, ?, 1)",
+      accountId,
+      accountId,
+      accountId,
+    );
+
+    expect(
+      (await env.DB.prepare("select telegram from notification_preference").all()).results,
+    ).toEqual([{ telegram: 1 }]);
+  });
+
+  it("given the switch as 2, when stored, then the check refuses it", async () => {
+    await seedAccountAndSession();
+
+    await expect(
+      run(
+        "insert into notification_preference values (?, null, null, 21, 1, ?, 1, ?, 1, 2)",
+        accountId,
+        accountId,
+        accountId,
+      ),
+    ).rejects.toThrow(/notification_preference_telegram_boolean/);
+  });
+
+  it("given a person's settings, when a second first row is added for them, then the trigger refuses it as stale", async () => {
+    await seedAccountAndSession();
+    await insertPreference();
+
+    await expect(insertPreference()).rejects.toThrow(/stale_version/);
+  });
 });
 
 describe("notification_delivery table", () => {
+  it("given the Telegram channel, when stored, then the check takes it", async () => {
+    await seedAccountAndSession();
+
+    await run(
+      "insert into notification_delivery values ('d1', ?, 'morning', '2026-10-29', 'telegram', 'claimed', 1, 1, null)",
+      accountId,
+    );
+
+    expect(
+      (await env.DB.prepare("select channel from notification_delivery").all()).results,
+    ).toEqual([{ channel: "telegram" }]);
+  });
+
   it("given a channel nobody built, when stored, then the check refuses it", async () => {
     await seedAccountAndSession();
 
@@ -153,6 +210,19 @@ describe("notification_delivery table", () => {
         accountId,
       ),
     ).rejects.toThrow(/notification_delivery_channel_known/);
+  });
+
+  it("given a message the bot could not answer, when its telling is claimed, then the check takes its subject", async () => {
+    await seedAccountAndSession();
+
+    await run(
+      "insert into notification_delivery values ('d1', ?, 'reply_failed', 'n1', 'inbox', 'claimed', 1, 1, null)",
+      accountId,
+    );
+
+    expect(
+      (await env.DB.prepare("select subject from notification_delivery").all()).results,
+    ).toEqual([{ subject: "reply_failed" }]);
   });
 
   it("given a delivery already in the ledger, when the same one is inserted again, then the unique index refuses it", async () => {
@@ -179,19 +249,42 @@ describe("notification_delivery table", () => {
 
 function insertInboxItem(
   id: string,
-  { path = "/reminders", readAt = null }: { path?: string; readAt?: number | null } = {},
+  {
+    path = "/reminders",
+    readAt = null,
+    subject = "morning",
+  }: { path?: string; readAt?: number | null; subject?: string } = {},
 ) {
   return run(
-    "insert into inbox_item values (?, ?, 'morning', '2026-10-29', 'Hôm nay có 2 việc', '', ?, 10, ?)",
+    "insert into inbox_item values (?, ?, ?, '2026-10-29', 'Hôm nay có 2 việc', '', ?, 10, ?)",
     id,
     accountId,
+    subject,
     path,
     readAt,
   );
 }
 
 describe("inbox_item table", () => {
-  it.each(["//evil.example", "https://evil.example", "reminders"])(
+  it("given a message the bot could not answer, when kept, then the check takes its subject", async () => {
+    await seedAccountAndSession();
+
+    await insertInboxItem("i1", { subject: "reply_failed", path: "/days/2026-10-29" });
+
+    expect((await env.DB.prepare("select subject from inbox_item").all()).results).toEqual([
+      { subject: "reply_failed" },
+    ]);
+  });
+
+  it("given a subject nobody built, when kept, then the check refuses it", async () => {
+    await seedAccountAndSession();
+
+    await expect(insertInboxItem("i1", { subject: "email" })).rejects.toThrow(
+      /inbox_item_subject_known/,
+    );
+  });
+
+  it.each(["//evil.example", "/\\evil.example", "https://evil.example", "reminders"])(
     "given the path %s, when stored, then the check refuses it: a tap only opens the app",
     async (path) => {
       await seedAccountAndSession();

@@ -18,17 +18,23 @@ export type ResolvedLines = {
 
 // Turns the form's lines into order lines. A name matching an active product's name or another name it is known by,
 // ignoring case and diacritics, is that product; any other name is a new one, made once even if two lines name it.
+// A product picked by id must be active, unless the order already names it (`kept`): a form open while the product was
+// deleted or merged away would otherwise put an order on a product the trash is about to delete for good.
 export async function resolveLines(
   products: ProductRepository,
   lines: ReadonlyArray<LineInput>,
   by: AccountId,
   at: Temporal.Instant,
+  kept: ReadonlySet<ProductId> = new Set(),
 ): Promise<Result<ResolvedLines, "product_not_found">> {
   const ids = new Set(lines.flatMap((line) => ("id" in line.product ? [line.product.id] : [])));
   const names = lines.flatMap((line) => ("name" in line.product ? [line.product.name] : []));
 
   const known = await products.getMany([...ids]);
-  if (known.length !== ids.size) {
+  if (
+    known.length !== ids.size ||
+    known.some((product) => product.status !== "active" && !kept.has(product.id))
+  ) {
     return err("product_not_found");
   }
 
@@ -49,6 +55,7 @@ export async function resolveLines(
       productId: "id" in line.product ? line.product.id : productNamed(byName, line.product.name),
       quantity: line.quantity,
       unitPrice: line.unitPrice,
+      ...(line.total === undefined ? {} : { total: line.total }),
     })),
     created,
   });

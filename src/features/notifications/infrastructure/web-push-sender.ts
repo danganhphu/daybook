@@ -1,6 +1,7 @@
 import { buildPushPayload } from "@block65/webcrypto-web-push";
 
 import type { PushOutcome, PushSender } from "@/features/notifications/application/push-sender";
+import { logEvent } from "@/shared/infrastructure/log-event";
 
 // The VAPID key pair as the library takes it: the public key as an uncompressed P-256 point and the private key as
 // the JWK `d`, both base64url. The subject says who sends (RFC 8292): the app's own address.
@@ -14,6 +15,10 @@ const sent: PushOutcome = { kind: "sent" };
 const gone: PushOutcome = { kind: "gone" };
 const tooManyRequests = 429;
 const serverErrors = 500;
+
+// A push service answers in well under a second; the queue runs one job at a time, the bot's replies among them, so
+// one that hangs must not hold the rest
+const sendTimeoutMs = 10_000;
 
 // Retry-After in seconds; the HTTP-date form is left to the queue's own backoff
 function retryAfter(response: Response): number | undefined {
@@ -61,8 +66,14 @@ export function createWebPushSender(vapid: VapidKeys, fetcher: typeof fetch = fe
           method: payload.method,
           headers: payload.headers,
           body: payload.body,
+          signal: AbortSignal.timeout(sendTimeoutMs),
         });
-      } catch {
+      } catch (error) {
+        // The host only: the rest of the address is the browser's capability
+        logEvent("push_unreachable", {
+          host: new URL(subscription.endpoint).host,
+          reason: error instanceof Error ? error.name : "unknown",
+        });
         return { kind: "retry", afterSeconds: undefined };
       }
       await response.body?.cancel();

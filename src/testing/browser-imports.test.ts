@@ -3,8 +3,9 @@
 
 import { describe, expect, it } from "vitest";
 
-// The browser loads Zod only on the passkey screens (AGENTS.md). This follows every client module's imports through
-// the source, so a form that imports an aggregate for one constant fails here rather than in a phone's download.
+// The browser loads Zod only on the passkey screens (AGENTS.md), and nothing of the server's: storage, the runtime,
+// the composition root, infrastructure, the Temporal polyfill. This follows every client module's imports through the
+// source, so a form that imports an aggregate for one constant fails here rather than in a phone's download.
 
 const sources = import.meta.glob<string>("/src/**/*.{ts,tsx}", {
   query: "?raw",
@@ -58,8 +59,17 @@ function resolve(importer: string, specifier: string): string | undefined {
   return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`].find((path) => path in sources);
 }
 
-// Each module the browser would load that imports Zod itself, with the chain that brought it in
-function zodImporters(): string[] {
+const isZod = (specifier: string) => specifier === "zod" || specifier.startsWith("zod/");
+
+// What only the server runs
+const serverOnly =
+  /^(drizzle-orm|drizzle-kit|temporal-polyfill)(\/|$)|^cloudflare:|^@\/composition\/|^@\/(features\/[^/]+|shared)\/infrastructure\//;
+
+// Each module the browser would load that imports a forbidden one itself, with the chain that brought it in
+function importersOf(
+  forbidden: (specifier: string) => boolean,
+  allowed: ReadonlySet<string> = new Set(),
+): string[] {
   const roots = Object.entries(sources)
     .filter(([path, text]) => !isTest(path) && !path.startsWith(devOnly) && isClient(text))
     .map(([path]) => path);
@@ -73,9 +83,9 @@ function zodImporters(): string[] {
     }
     seen.add(path);
     for (const specifier of valueImports(text)) {
-      if (specifier === "zod" || specifier.startsWith("zod/")) {
-        if (!allowedZod.has(path)) {
-          found.push([...chain, path].join(" -> "));
+      if (forbidden(specifier)) {
+        if (!allowed.has(path)) {
+          found.push([...chain, path, specifier].join(" -> "));
         }
         continue;
       }
@@ -104,6 +114,10 @@ describe("what the browser loads", () => {
   });
 
   it("given every client module, when its imports are followed, then none reaches Zod but the passkey screens'", () => {
-    expect(zodImporters()).toEqual([]);
+    expect(importersOf(isZod, allowedZod)).toEqual([]);
+  });
+
+  it("given every client module, when its imports are followed, then none reaches what only the server runs", () => {
+    expect(importersOf((specifier) => serverOnly.test(specifier))).toEqual([]);
   });
 });

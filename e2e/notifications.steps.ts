@@ -14,7 +14,9 @@ const serviceWorker = "/sw.js";
 const bell = /^Thông báo(, \d+ chưa đọc)?$/;
 
 // What the queue's consumer would keep for Lan, written straight into the run's database: no cron runs here. Each
-// scenario's own, so a run on another device finds one of its own unread.
+// scenario's own, so a run on another device finds one of its own unread. ADR 0008 chose the screen over writing into
+// the SQLite file the server holds; this is the one step that writes there, as the bell has no way in from a browser
+// and a test-only route would ship one.
 function tellLan(title: string) {
   const file = readdirSync(databaseFolder).find(
     (name) => name.endsWith(".sqlite") && name !== "metadata.sqlite",

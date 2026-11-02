@@ -37,14 +37,15 @@ import { versionSchema } from "@/shared/domain/audit";
 import { calendarDaySchema } from "@/shared/domain/calendar-day";
 import { moneySchema } from "@/shared/domain/money-schema";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { readInChunks } from "@/shared/infrastructure/d1/limits";
 
 import { orderChangeTable } from "./order-change.table";
-import { orderLineTable } from "./order-line.table";
+import { lineAmountSql, orderLineTable } from "./order-line.table";
 import { paymentTable } from "./payment.table";
 import { salesOrderTable } from "./sales-order.table";
 
 // Per order, computed where the order is read: the total of its lines and what its live payments add up to
-const orderTotal = sql<number>`(select coalesce(sum(${orderLineTable.quantity} * ${orderLineTable.unitPrice}), 0) from ${orderLineTable} where ${orderLineTable.orderId} = ${salesOrderTable.id})`;
+const orderTotal = sql<number>`(select coalesce(sum(${lineAmountSql}), 0) from ${orderLineTable} where ${orderLineTable.orderId} = ${salesOrderTable.id})`;
 const orderPaid = sql<number>`(select coalesce(sum(${paymentTable.amount}), 0) from ${paymentTable} where ${paymentTable.orderId} = ${salesOrderTable.id} and ${paymentTable.deletedAt} is null)`;
 const orderOwed = sql<number>`max(${orderTotal} - ${orderPaid}, 0)`;
 
@@ -310,20 +311,19 @@ export function createOrderQueries(db: Database): OrderQueries {
     },
 
     async madeFrom(captureIds) {
-      if (captureIds.length === 0) {
-        return [];
-      }
-      const rows = await db
-        .select({
-          id: salesOrderTable.id,
-          captureId: salesOrderTable.captureId,
-          customerName: customerTable.name,
-          lines: lineFields,
-          total: orderTotal,
-        })
-        .from(salesOrderTable)
-        .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
-        .where(and(live, inArray(salesOrderTable.captureId, [...captureIds])));
+      const rows = await readInChunks(captureIds, (chunk) =>
+        db
+          .select({
+            id: salesOrderTable.id,
+            captureId: salesOrderTable.captureId,
+            customerName: customerTable.name,
+            lines: lineFields,
+            total: orderTotal,
+          })
+          .from(salesOrderTable)
+          .innerJoin(customerTable, eq(customerTable.id, salesOrderTable.customerId))
+          .where(and(live, inArray(salesOrderTable.captureId, [...chunk]))),
+      );
 
       return rows.flatMap((row) =>
         row.captureId === null

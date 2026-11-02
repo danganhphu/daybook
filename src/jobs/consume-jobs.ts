@@ -1,5 +1,6 @@
 import type { createJobs } from "@/composition/jobs";
 import { errorLines } from "@/shared/infrastructure/error-lines";
+import { logEvent } from "@/shared/infrastructure/log-event";
 
 import { jobMessageSchema } from "./job-message";
 
@@ -17,7 +18,7 @@ async function consume(jobs: Jobs, message: Message): Promise<void> {
   const job = jobMessageSchema.safeParse(message.body);
   if (!job.success) {
     // Retrying cannot make it readable
-    console.error(JSON.stringify({ event: "job_unreadable", id: message.id }));
+    logEvent("job_unreadable", { id: message.id });
     message.ack();
     return;
   }
@@ -25,19 +26,19 @@ async function consume(jobs: Jobs, message: Message): Promise<void> {
   try {
     const outcome = await jobs.deliver(job.data);
     if (outcome.kind === "retry") {
-      message.retry({ delaySeconds: outcome.afterSeconds ?? retryDelay(message.attempts) });
+      const delaySeconds = outcome.afterSeconds ?? retryDelay(message.attempts);
+      // A retry that keeps happening ends in the dead-letter queue; this line says why, along the way
+      logEvent("job_retry", { kind: job.data.kind, attempts: message.attempts, delaySeconds });
+      message.retry({ delaySeconds });
     } else {
       message.ack();
     }
   } catch (error) {
-    console.error(
-      JSON.stringify({
-        event: "job_failed",
-        kind: job.data.kind,
-        attempts: message.attempts,
-        errors: errorLines(error),
-      }),
-    );
+    logEvent("job_failed", {
+      kind: job.data.kind,
+      attempts: message.attempts,
+      errors: errorLines(error),
+    });
     message.retry({ delaySeconds: retryDelay(message.attempts) });
   }
 }

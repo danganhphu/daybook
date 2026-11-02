@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { passwordLockAfter } from "@/features/access/domain/access-policy";
 import { currentArgon2Parameters } from "@/features/access/domain/password";
+import { passwordLockAfter } from "@/features/access/domain/password-policy";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import { origin, rows, seedAccount, seedSession } from "@/testing/support/access";
 import { testApp, testClock, testPeppers } from "@/testing/support/app";

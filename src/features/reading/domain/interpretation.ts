@@ -22,6 +22,11 @@ export const readFailures = ["schema", "quota", "timeout", "error", "refused"] a
 
 export type ReadFailure = (typeof readFailures)[number];
 
+// Read again, a refused order would be refused again; any other failure may pass the next time
+export function isWorthReadingAgain(failure: ReadFailure): boolean {
+  return failure !== "refused";
+}
+
 // Why a reading waits for a person: the customer it names matches nobody, or more than one
 export const customerQuestions = ["unknown", "ambiguous"] as const;
 

@@ -5,7 +5,7 @@ import { changeOf, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer, anOrder, line } from "@/testing/support/orders";
 import { expectOk } from "@/testing/support/result";
 
-import { deletedOrders, productOrders } from "./commands";
+import { deletedOrders, productOrders } from "./orders-list-commands";
 
 describe("deletedOrders", () => {
   it("given orders deleted now and a month ago, when the recently deleted list is read, then only the recent one is there, with what it was", async () => {

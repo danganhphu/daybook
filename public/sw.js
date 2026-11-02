@@ -61,11 +61,11 @@ function readMessage(data) {
 }
 
 /**
- * A path inside the app, never another origin
+ * A path inside the app, never another origin: "//host" and "/\host" both name another host to a URL parser
  * @param {unknown} path
  */
 function inApp(path) {
-  return typeof path === "string" && path.startsWith("/") && !path.startsWith("//") ? path : "/";
+  return typeof path === "string" && /^\/(?![/\\])/.test(path) ? path : "/";
 }
 
 worker.addEventListener("push", (event) => {

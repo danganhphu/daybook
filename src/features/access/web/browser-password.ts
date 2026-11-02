@@ -1,7 +1,7 @@
 import { argon2idAsync } from "@noble/hashes/argon2.js";
 
-import { derivedKeyByteLength, passwordLength } from "@/features/access/domain/access-policy";
 import type { Argon2Parameters } from "@/features/access/domain/password";
+import { derivedKeyByteLength, passwordLength } from "@/features/access/domain/password-policy";
 import { decodeBase64Url, encodeBase64Url } from "@/shared/domain/base64url";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { searchText } from "@/shared/domain/search-text";

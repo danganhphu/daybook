@@ -46,6 +46,7 @@ function toLine(row: LineRow): OrderLine {
     productId: productIdSchema.parse(row.productId),
     quantity: quantitySchema.parse(row.quantity),
     unitPrice: moneySchema.parse(row.unitPrice),
+    ...(row.total === null ? {} : { total: moneySchema.parse(row.total) }),
   };
 }
 
@@ -118,6 +119,7 @@ export function toLineRows(order: Order): ReadonlyArray<LineRow> {
     productId: line.productId,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
+    total: line.total ?? null,
   }));
 }
 

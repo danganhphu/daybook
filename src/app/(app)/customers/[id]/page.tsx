@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import { customerScreen } from "@/features/customers/web/commands";
-import { customerOrders } from "@/features/orders/web/commands";
+import { customerOrders } from "@/features/orders/web/orders-list-commands";
 import { customerReminders } from "@/features/reminders/web/commands";
 
 import { CustomerScreen } from "./customer-screen";

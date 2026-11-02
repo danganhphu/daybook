@@ -18,6 +18,8 @@ export const reportsCopy = {
     year: "năm trước",
     range: "kỳ trước",
   } satisfies Record<PeriodKind, string>,
+  // The week or month now, as the Friday summary and the bot's /week and /month begin
+  current: { week: "Tuần này", month: "Tháng này" },
   previous: "Kỳ trước",
   next: "Kỳ sau",
   noNext: "Kỳ sau chưa tới",

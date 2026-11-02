@@ -8,14 +8,21 @@ import type { Passkey } from "@/features/access/domain/passkey";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
 import type { SessionId } from "@/features/access/domain/session";
 import type { SetupLinkRepository } from "@/features/access/domain/setup-link-repository";
+import type { TelegramLinkRepository } from "@/features/access/domain/telegram-link-repository";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
-import type { AccessEventWrites, CeremonyWrites, PasskeyWrites } from "./access-writes";
+import type {
+  AccessEventWrites,
+  CeremonyWrites,
+  PasskeyWrites,
+  TelegramLinkWrites,
+} from "./access-writes";
 import { findBoundCeremony } from "./bound-ceremony";
 import { enlistNewSession, type OpenedSession, type SessionStores } from "./enlist-new-session";
+import { enlistTelegramUnlink } from "./enlist-telegram-unlink";
 import type { PasskeyVerifier } from "./passkey-verifier";
 import type { Secrets } from "./secrets";
 
@@ -26,12 +33,14 @@ export type FinishPasskeySetupDeps = {
   readonly accounts: AccountRepository;
   readonly passkeys: PasskeyRepository;
   readonly setupLinks: SetupLinkRepository;
+  readonly telegramLinks: TelegramLinkRepository;
   readonly verifier: PasskeyVerifier;
   readonly startUnitOfWork: () => UnitOfWork<
     SessionStores & {
       readonly ceremonies: CeremonyWrites;
       readonly passkeys: PasskeyWrites;
       readonly accessEvents: AccessEventWrites;
+      readonly telegramLinks: TelegramLinkWrites;
     }
   >;
 };
@@ -47,7 +56,7 @@ export type FinishPasskeySetupRequest = {
 export type FinishedSetup = OpenedSession & { readonly passkey: Passkey };
 
 // Stores the passkey a setup link was for and signs the person in with it. A recovery link also ends every other
-// session of the account, since whoever held them may be the reason for the recovery.
+// session of the account and unlinks its Telegram, since whoever held them may be the reason for the recovery.
 export async function finishPasskeySetup(
   deps: FinishPasskeySetupDeps,
   request: FinishPasskeySetupRequest,
@@ -97,9 +106,10 @@ export async function finishPasskeySetup(
     return refuse("already_registered");
   }
 
-  const [account, link] = await Promise.all([
+  const [account, link, telegram] = await Promise.all([
     deps.accounts.get(accountId),
     deps.setupLinks.get(setup.setupLinkId),
+    deps.telegramLinks.get(accountId),
   ]);
   if (account === undefined || link === undefined) {
     return err("setup_link_unusable");
@@ -135,6 +145,13 @@ export async function finishPasskeySetup(
         request.origin,
         now,
       ),
+    );
+    enlistTelegramUnlink(
+      work,
+      telegram,
+      { actorId: account.id, detail: { via: "recovery" } },
+      request.origin,
+      now,
     );
   }
   const opened = await enlistNewSession(

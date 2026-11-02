@@ -1,7 +1,7 @@
-import { derivedKeyByteLength } from "@/features/access/domain/access-policy";
 import type { Account } from "@/features/access/domain/account";
 import type { PasskeyId } from "@/features/access/domain/passkey";
 import { derivedKeySchema, type DerivedKey } from "@/features/access/domain/password";
+import { derivedKeyByteLength } from "@/features/access/domain/password-policy";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import { encodeBase64Url } from "@/shared/domain/base64url";
 

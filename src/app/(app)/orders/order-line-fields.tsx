@@ -20,6 +20,8 @@ export type LineState = {
   readonly productName: string;
   readonly quantity: string;
   readonly price: string;
+  // The saved line's total, while its quantity and price are as saved: a message's amount that does not divide
+  readonly total?: number | undefined;
 };
 
 export function wholeNumber(text: string): number | undefined {
@@ -27,7 +29,7 @@ export function wholeNumber(text: string): number | undefined {
 }
 
 export function lineAmount(line: LineState): number {
-  return (wholeNumber(line.quantity) ?? 0) * (parseMoneyInput(line.price) ?? 0);
+  return line.total ?? (wholeNumber(line.quantity) ?? 0) * (parseMoneyInput(line.price) ?? 0);
 }
 
 export type OrderLineFieldsProps = {

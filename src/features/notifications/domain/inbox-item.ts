@@ -44,9 +44,9 @@ function clipped(text: string, max: number): string {
   return text.length > max ? `${text.slice(0, max - 3).trimEnd()}...` : text;
 }
 
-// A path inside the app, never another site's address
+// A path inside the app, never another site's address: "//host" and "/\host" both name another host to a URL parser
 export function isInApp(path: string): boolean {
-  return path.startsWith("/") && !path.startsWith("//");
+  return /^\/(?![/\\])/.test(path);
 }
 
 export function create(details: InboxItemDetails, at: Temporal.Instant): InboxItem {

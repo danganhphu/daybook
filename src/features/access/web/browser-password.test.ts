@@ -1,7 +1,7 @@
 import { argon2id } from "@noble/hashes/argon2.js";
 import { describe, expect, it } from "vitest";
 
-import { argon2Parameters } from "@/features/access/domain/access-policy";
+import { argon2Parameters } from "@/features/access/domain/password-policy";
 import { encodeBase64Url } from "@/shared/domain/base64url";
 
 import {

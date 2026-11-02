@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import type { NoteListChange } from "@/features/notes/web/note-list";
-import { clockTime, unsavedVersion, type NoteResult } from "@/features/notes/web/note-view";
+import { unsavedVersion, type NoteResult } from "@/features/notes/web/note-view";
 import { parseContent } from "@/shared/domain/content";
 import { IconButton } from "@/shared/ui/button/icon-button";
 import { SendIcon } from "@/shared/ui/icon/icons";
@@ -22,6 +22,7 @@ import { TextArea } from "@/shared/ui/text-area/text-area";
 import { useToastClearance } from "@/shared/ui/toast/use-toast-clearance";
 import { attempt } from "@/shared/web/attempt";
 import { currentDevice, enterSends } from "@/shared/web/enter-key";
+import { clockTime } from "@/shared/web/time-text";
 import { useHydrated } from "@/shared/web/use-hydrated";
 
 import { keepUnsent, takeUnsent } from "./unsent";

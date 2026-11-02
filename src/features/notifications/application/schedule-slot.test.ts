@@ -155,6 +155,21 @@ describe("scheduleSlot, security notices", () => {
     );
   });
 
+  it("given more refused sign-ins than a run reads, logged before a change to her sign-in, when the next run comes, then she is told in that run", async () => {
+    const time = testClock("2026-10-28T01:00:00Z");
+    const { lan } = await lanWithAPhone(time);
+    const jobs = testJobs(time.clock, recordingPushSender().sender);
+    await jobs.scheduleSlot(scheduledAt("2026-10-28T01:00:00Z"));
+    await Promise.all(
+      Array.from({ length: 60 }, () => recordEvent("sign_in_failed", lan, "2026-10-28T01:05:00Z")),
+    );
+    await recordEvent("passkey_added", lan, "2026-10-28T01:10:00Z");
+
+    expect(await jobs.scheduleSlot(scheduledAt("2026-10-28T01:15:00Z"))).toMatchObject({
+      notices: 1,
+    });
+  });
+
   it("given the queue refusing, when a run fails, then the notice is not lost: the next run queues it", async () => {
     const time = testClock("2026-10-28T01:00:00Z");
     const { lan } = await lanWithAPhone(time);

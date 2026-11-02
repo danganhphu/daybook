@@ -1,4 +1,4 @@
-import { digestByteLength, passwordSaltByteLength } from "@/features/access/domain/access-policy";
+import { digestByteLength } from "@/features/access/domain/access-policy";
 import {
   passwordSaltSchema,
   passwordVerifierSchema,
@@ -6,6 +6,7 @@ import {
   type PasswordSalt,
   type PasswordVerifier,
 } from "@/features/access/domain/password";
+import { passwordSaltByteLength } from "@/features/access/domain/password-policy";
 import { base64UrlLength, decodeBase64Url, encodeBase64Url } from "@/shared/domain/base64url";
 
 import type { Pepper } from "./peppers";

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { OrderForm } from "@/app/(app)/orders/order-form";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
-import { orderForm } from "@/features/orders/web/commands";
+import { orderForm } from "@/features/orders/web/order-form-commands";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { Screen } from "@/shared/ui/screen/screen";
 import { customerPath, routes } from "@/shared/web/routes";

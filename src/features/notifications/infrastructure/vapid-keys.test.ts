@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 
-import { vapidPairFrom } from "./vapid-config";
+import { vapidPairFrom, vapidPairOrOff } from "./vapid-config";
 import {
   developmentVapidKeys,
   newVapidKeys,
@@ -70,6 +70,23 @@ describe("vapidPairFrom", () => {
         deployed,
       ),
     ).toThrow(/development pair/);
+  });
+});
+
+describe("vapidPairOrOff", () => {
+  const deployed = "https://daybook.example.workers.dev";
+
+  it("given one half only, as between setting the two, when read, then push is off and nothing throws", () => {
+    expect(vapidPairOrOff({ VAPID_PUBLIC_KEY: `B${"x".repeat(86)}` }, deployed)).toBeUndefined();
+  });
+
+  it("given the development pair on a real origin, when read, then push is off and nothing throws", () => {
+    const development = {
+      VAPID_PUBLIC_KEY: developmentVapidKeys.publicKey,
+      VAPID_PRIVATE_KEY: developmentVapidKeys.privateKey,
+    };
+
+    expect(vapidPairOrOff(development, deployed)).toBeUndefined();
   });
 });
 

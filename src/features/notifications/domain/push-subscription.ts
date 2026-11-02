@@ -98,7 +98,3 @@ export function rebind(
 ): PushSubscription {
   return { ...subscription, ...session, keys };
 }
-
-export function markSent(subscription: PushSubscription, at: Temporal.Instant): PushSubscription {
-  return { ...subscription, lastSentAt: at };
-}

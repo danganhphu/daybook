@@ -6,7 +6,7 @@ import { createUnitOfWork } from "@/composition/unit-of-work";
 import * as AccessEvents from "@/features/access/domain/access-event";
 import type { Account } from "@/features/access/domain/account";
 import type { NotificationJob } from "@/features/notifications/application/notification-job";
-import type { PushOutcome } from "@/features/notifications/application/push-sender";
+import type { PushOutcome, PushSender } from "@/features/notifications/application/push-sender";
 import { quietAfterDaysSchema } from "@/features/notifications/domain/notification-preference";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import { origin, rows, seedAccount, seedSession } from "@/testing/support/access";
@@ -261,5 +261,51 @@ describe("deliverNotification", () => {
     await testJobs(time.clock, recordingPushSender().sender).deliver(morningOf(lan));
 
     expect(await inbox()).toEqual([]);
+  });
+
+  it("given a push service that fails outright, when the job runs, then the list in the app finishes its part before the fault is passed on", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    await remind(time, lan, "giao 2 hộp thuốc tê", thursday);
+    const failing: PushSender = {
+      send: async () => {
+        throw new Error("push service down");
+      },
+    };
+
+    await expect(testJobs(time.clock, failing).deliver(morningOf(lan))).rejects.toThrow(
+      "push service down",
+    );
+
+    expect(await inbox()).toHaveLength(1);
+    expect(
+      await rows(
+        "select channel, status from notification_delivery where channel in ('inbox', 'push') order by channel",
+      ),
+    ).toEqual([
+      { channel: "inbox", status: "sent" },
+      { channel: "push", status: "claimed" },
+    ]);
+  });
+
+  it("given her browser moved to a new sign-in while a push was on its way, when it is sent, then only the time it was sent is written", async () => {
+    const time = testClock("2026-10-29T00:30:00Z");
+    const lan = await lanWithAPhone(time);
+    await remind(time, lan, "giao 2 hộp thuốc tê", thursday);
+    const later = await seedSession(time.clock, lan);
+    const movingOn: PushSender = {
+      async send(to) {
+        await env.DB.prepare("update push_subscription set session_id = ? where id = ?")
+          .bind(later.session.id, to.id)
+          .run();
+        return { kind: "sent" };
+      },
+    };
+
+    await testJobs(time.clock, movingOn).deliver(morningOf(lan));
+
+    expect(await rows("select session_id, last_sent_at from push_subscription")).toEqual([
+      { session_id: later.session.id, last_sent_at: time.clock().epochMilliseconds },
+    ]);
   });
 });

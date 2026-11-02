@@ -34,6 +34,18 @@ function emptyLine(): LineState {
   };
 }
 
+// A line whose product, quantity or price is changed comes to quantity × price from then on, as the server reckons it
+// (Orders.keepTotals); a saved total stays while they read the same
+function changed(line: LineState, change: Partial<LineState>): LineState {
+  const next = { ...line, ...change };
+  const same =
+    next.productId === line.productId &&
+    wholeNumber(next.quantity) === wholeNumber(line.quantity) &&
+    parseMoneyInput(next.price) === parseMoneyInput(line.price);
+
+  return same ? next : { ...next, total: undefined };
+}
+
 // The lines as the server takes them, or undefined when one is not complete. Empty lines are left out.
 function parseLines(lines: ReadonlyArray<LineState>) {
   const filled = lines.filter((line) => line.productName.trim() !== "" || line.price.trim() !== "");
@@ -66,6 +78,7 @@ export function OrderForm({ view }: { readonly view: OrderFormView }) {
         productName: line.productName,
         quantity: String(line.quantity),
         price: groupedDigits(line.unitPrice),
+        total: line.amount === line.quantity * line.unitPrice ? undefined : line.amount,
       })) ?? [emptyLine()],
   );
   // The line added last, whose product field takes the focus
@@ -76,9 +89,7 @@ export function OrderForm({ view }: { readonly view: OrderFormView }) {
   const total = lines.reduce((sum, line) => sum + lineAmount(line), 0);
 
   const changeLine = useCallback((key: string, change: Partial<LineState>) => {
-    setLines((current) =>
-      current.map((line) => (line.key === key ? { ...line, ...change } : line)),
-    );
+    setLines((current) => current.map((line) => (line.key === key ? changed(line, change) : line)));
     setError(undefined);
   }, []);
   const addLine = useCallback(() => {

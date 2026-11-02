@@ -16,7 +16,7 @@ import { customerIdSchema } from "@/features/customers/domain/customer";
 import { customerKindIdSchema } from "@/features/customers/domain/customer-kind";
 import { customerKindTable } from "@/features/customers/infrastructure/customer-kind.table";
 import { customerTable } from "@/features/customers/infrastructure/customer.table";
-import { orderLineTable } from "@/features/orders/infrastructure/order-line.table";
+import { lineAmountSql, orderLineTable } from "@/features/orders/infrastructure/order-line.table";
 import { paymentTable } from "@/features/orders/infrastructure/payment.table";
 import { salesOrderTable } from "@/features/orders/infrastructure/sales-order.table";
 import { productIdSchema } from "@/features/products/domain/product";
@@ -32,7 +32,7 @@ import { moneySchema } from "@/shared/domain/money-schema";
 import type { Database } from "@/shared/infrastructure/d1/database";
 
 // Sales are summed over order lines, so a product filter sums that product's lines rather than whole orders
-const lineSales = sql<number>`coalesce(sum(${orderLineTable.quantity} * ${orderLineTable.unitPrice}), 0)`;
+const lineSales = sql<number>`coalesce(sum(${lineAmountSql}), 0)`;
 const lineUnits = sql<number>`coalesce(sum(${orderLineTable.quantity}), 0)`;
 const orderCount = countDistinct(salesOrderTable.id);
 
@@ -119,7 +119,7 @@ export function createReportQueries(db: Database): ReportQueries {
 
     async owedAt(day, filter) {
       const end = day.toString();
-      const total = sql<number>`(select coalesce(sum(${orderLineTable.quantity} * ${orderLineTable.unitPrice}), 0) from ${orderLineTable} where ${orderLineTable.orderId} = ${salesOrderTable.id})`;
+      const total = sql<number>`(select coalesce(sum(${lineAmountSql}), 0) from ${orderLineTable} where ${orderLineTable.orderId} = ${salesOrderTable.id})`;
       const paidBy = sql<number>`(select coalesce(sum(${paymentTable.amount}), 0) from ${paymentTable} where ${paymentTable.orderId} = ${salesOrderTable.id} and ${paymentTable.deletedAt} is null and ${paymentTable.paidOn} <= ${end})`;
       const [row] = await db
         .select({ owed: sql<number>`coalesce(sum(max(${total} - ${paidBy}, 0)), 0)` })

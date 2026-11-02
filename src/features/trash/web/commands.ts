@@ -8,7 +8,7 @@ import { customersCopy } from "@/features/customers/web/customers-copy";
 import { noteIdSchema } from "@/features/notes/domain/note";
 import { deletedNotes } from "@/features/notes/web/commands";
 import { orderIdSchema } from "@/features/orders/domain/order";
-import { deletedOrders } from "@/features/orders/web/commands";
+import { deletedOrders } from "@/features/orders/web/orders-list-commands";
 import { productErrorMessages } from "@/features/products/application/product-errors";
 import { productIdSchema } from "@/features/products/domain/product";
 import {

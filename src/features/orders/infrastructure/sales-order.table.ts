@@ -55,5 +55,7 @@ export const salesOrderTable = sqliteTable(
       .on(table.deletedAt)
       .where(sql`${table.deletedAt} is not null`),
     index("sales_order_by_customer").on(table.customerId),
+    // What each message became, read on every Hôm nay, and by the triggers that let a message go with its last order
+    index("sales_order_by_capture").on(table.captureId),
   ],
 );

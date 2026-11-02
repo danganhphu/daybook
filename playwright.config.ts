@@ -21,6 +21,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env["CI"]),
   retries: process.env["CI"] === undefined ? 0 : 1,
+  // In CI, under the job's 30 minutes (ci.yml), so a stuck run fails with its report rather than being cancelled
+  globalTimeout: process.env["CI"] === undefined ? 0 : 25 * 60_000,
   reporter: process.env["CI"] === undefined ? "list" : [["github"], ["html", { open: "never" }]],
   use: {
     baseURL: origin,

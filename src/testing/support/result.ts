@@ -8,3 +8,12 @@ export function expectOk<T, E>(result: Result<T, E>): T {
 
   return result.value;
 }
+
+// Narrows a value a test knows is there, failing when it is not
+export function expectDefined<T>(value: T | undefined): T {
+  if (value === undefined) {
+    throw new Error("Expected a value, got undefined");
+  }
+
+  return value;
+}

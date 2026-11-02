@@ -21,6 +21,8 @@ export const orderLineTable = sqliteTable(
       .references(() => productTable.id),
     quantity: integer("quantity").notNull(),
     unitPrice: integer("unit_price").notNull(),
+    // Null when the line comes to quantity × unit price; set only for a total that does not divide (orders' totalFits)
+    total: integer("total"),
   },
   (table) => [
     primaryKey({ columns: [table.orderId, table.position] }),
@@ -33,6 +35,13 @@ export const orderLineTable = sqliteTable(
       sql`${table.quantity} between 1 and ${sqlNumber(orderLimits.quantity)}`,
     ),
     check("order_line_price_range", sql`${table.unitPrice} between 0 and ${sqlNumber(moneyMax)}`),
+    check(
+      "order_line_total_fits",
+      sql`${table.total} is null or (${table.total} between 0 and ${sqlNumber(moneyMax)} and abs(${table.total} - ${table.quantity} * ${table.unitPrice}) * 2 <= ${table.quantity})`,
+    ),
     index("order_line_by_product").on(table.productId),
   ],
 );
+
+// What a line comes to, in SQL as orders' lineAmount reckons it
+export const lineAmountSql = sql<number>`coalesce(${orderLineTable.total}, ${orderLineTable.quantity} * ${orderLineTable.unitPrice})`;

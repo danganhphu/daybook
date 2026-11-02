@@ -4,6 +4,7 @@ import { positionSchema, type ArchivedKind } from "@/features/customers/domain/c
 import type { CustomerKindRepository } from "@/features/customers/domain/customer-kind-repository";
 import { searchText } from "@/shared/domain/search-text";
 import type { Database } from "@/shared/infrastructure/d1/database";
+import { readInChunks } from "@/shared/infrastructure/d1/limits";
 
 import { toCustomerKind } from "./customer-kind-mapping";
 import { customerKindTable } from "./customer-kind.table";
@@ -22,13 +23,12 @@ export function createCustomerKindRepository(db: Database): CustomerKindReposito
 
     // The owner's kinds are a handful: one query, no chunking
     async getMany(ids) {
-      if (ids.length === 0) {
-        return [];
-      }
-      const rows = await db
-        .select()
-        .from(customerKindTable)
-        .where(inArray(customerKindTable.id, [...ids]));
+      const rows = await readInChunks(ids, (chunk) =>
+        db
+          .select()
+          .from(customerKindTable)
+          .where(inArray(customerKindTable.id, [...chunk])),
+      );
 
       return rows.map(toCustomerKind);
     },

@@ -54,5 +54,7 @@ export const reminderTable = sqliteTable(
       .on(table.deletedAt)
       .where(sql`${table.deletedAt} is not null`),
     index("reminder_by_customer").on(table.customerId),
+    // As for orders: what each message became
+    index("reminder_by_capture").on(table.captureId),
   ],
 );

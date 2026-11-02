@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { moneySchema } from "@/shared/domain/money-schema";
 
 import { nameWords } from "./customer-words";
-import { unitPriceOf } from "./line-price";
+import { linePriceOf } from "./line-price";
 import { moneyWords } from "./money-words";
 
 const money = (amount: number) => moneySchema.parse(amount);
@@ -45,18 +45,35 @@ describe("nameWords", () => {
   });
 });
 
-describe("unitPriceOf", () => {
+describe("linePriceOf", () => {
   it("given a price said to be for one unit, or a single unit, when priced, then the amount is the unit price", () => {
-    expect(unitPriceOf(money(95_000), 5, true, undefined)).toBe(95_000);
-    expect(unitPriceOf(money(1_200_000), 1, false, undefined)).toBe(1_200_000);
+    expect(linePriceOf(money(95_000), 5, true, undefined)).toEqual({
+      unitPrice: 95_000,
+      total: undefined,
+    });
+    expect(linePriceOf(money(1_200_000), 1, false, undefined).unitPrice).toBe(1_200_000);
   });
 
   it("given a bare amount and no history, when priced, then it is the line's total", () => {
-    expect(unitPriceOf(money(500_000), 2, false, undefined)).toBe(250_000);
+    expect(linePriceOf(money(500_000), 2, false, undefined)).toEqual({
+      unitPrice: 250_000,
+      total: undefined,
+    });
+  });
+
+  it("given a total that does not divide by the quantity, when priced, then the unit price is rounded and the total is kept as written", () => {
+    expect(linePriceOf(money(100_000), 3, false, undefined)).toEqual({
+      unitPrice: 33_333,
+      total: 100_000,
+    });
+    expect(linePriceOf(money(200_000), 3, false, undefined)).toEqual({
+      unitPrice: 66_667,
+      total: 200_000,
+    });
   });
 
   it("given a bare amount and a last price, when priced, then the reading nearer the last price wins", () => {
-    expect(unitPriceOf(money(30_000), 50, false, money(32_000))).toBe(30_000);
-    expect(unitPriceOf(money(500_000), 2, false, money(240_000))).toBe(250_000);
+    expect(linePriceOf(money(30_000), 50, false, money(32_000)).unitPrice).toBe(30_000);
+    expect(linePriceOf(money(500_000), 2, false, money(240_000)).unitPrice).toBe(250_000);
   });
 });

@@ -4,7 +4,8 @@ export type TrashError =
   | "trash_changed_elsewhere"
   | "trash_not_deleted"
   | "trash_customer_deleted"
-  | "trash_name_taken";
+  | "trash_name_taken"
+  | "trash_in_use";
 
 export const trashErrorMessages = {
   trash_not_found: "Không còn trong Đã xoá gần đây.",
@@ -12,4 +13,5 @@ export const trashErrorMessages = {
   trash_not_deleted: "Đã được khôi phục rồi.",
   trash_customer_deleted: "Khách của mục này cũng đang bị xoá. Khôi phục khách trước.",
   trash_name_taken: "Đang có một mục khác cùng tên.",
+  trash_in_use: "Mục này còn được một đơn hay việc cần nhắc dùng tới, nên chưa xoá vĩnh viễn được.",
 } as const satisfies Record<TrashError, string>;

@@ -1,7 +1,7 @@
 import { TabActions } from "@/app/(app)/_shell/tab-actions";
-import type { OrdersView } from "@/features/orders/web/commands";
 import type { OrderRowView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
+import type { OrdersView } from "@/features/orders/web/orders-list-commands";
 import { ordersPath } from "@/features/orders/web/orders-path";
 import { productsCopy } from "@/features/products/web/products-copy";
 import { ButtonLink } from "@/shared/ui/button/button-link";

@@ -5,7 +5,7 @@ import type { CustomerAlias } from "@/features/customers/domain/customer-alias";
 import type { CustomerRepository } from "@/features/customers/domain/customer-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { containsLiterally } from "@/shared/infrastructure/d1/like-pattern";
-import { d1MaxBoundParameters } from "@/shared/infrastructure/d1/limits";
+import { readInChunks } from "@/shared/infrastructure/d1/limits";
 
 import { customerAliasTable } from "./customer-alias.table";
 import { toCustomer, toCustomerAlias } from "./customer-mapping";
@@ -20,13 +20,12 @@ export function createCustomerRepository(db: Database): CustomerRepository {
     },
 
     async getMany(ids) {
-      if (ids.length === 0) {
-        return [];
-      }
-      const rows = await db
-        .select()
-        .from(customerTable)
-        .where(inArray(customerTable.id, [...ids]));
+      const rows = await readInChunks(ids, (chunk) =>
+        db
+          .select()
+          .from(customerTable)
+          .where(inArray(customerTable.id, [...chunk])),
+      );
 
       return rows.map(toCustomer);
     },
@@ -77,20 +76,18 @@ export function createCustomerRepository(db: Database): CustomerRepository {
         .filter((customer): customer is ArchivedCustomer => customer.status === "archived");
     },
 
+    // Each customer's own aliases are in one chunk, so their order holds
     async aliasesOf(ids) {
-      const byCustomer = new Map<CustomerAlias["customerId"], CustomerAlias[]>();
-      for (let start = 0; start < ids.length; start += d1MaxBoundParameters) {
-        // oxlint-disable-next-line no-await-in-loop -- one chunk per query, under D1's bound-parameter limit
-        const rows = await db
+      const rows = await readInChunks(ids, (chunk) =>
+        db
           .select()
           .from(customerAliasTable)
-          .where(
-            inArray(customerAliasTable.customerId, ids.slice(start, start + d1MaxBoundParameters)),
-          )
-          .orderBy(asc(customerAliasTable.createdAt), asc(customerAliasTable.id));
-        for (const alias of rows.map(toCustomerAlias)) {
-          byCustomer.set(alias.customerId, [...(byCustomer.get(alias.customerId) ?? []), alias]);
-        }
+          .where(inArray(customerAliasTable.customerId, [...chunk]))
+          .orderBy(asc(customerAliasTable.createdAt), asc(customerAliasTable.id)),
+      );
+      const byCustomer = new Map<CustomerAlias["customerId"], CustomerAlias[]>();
+      for (const alias of rows.map(toCustomerAlias)) {
+        byCustomer.set(alias.customerId, [...(byCustomer.get(alias.customerId) ?? []), alias]);
       }
 
       return byCustomer;

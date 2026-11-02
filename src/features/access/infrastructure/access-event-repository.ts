@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, isNotNull, lte, max, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, lte, max, or } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill/implementation";
 
 import type { AccessEventRepository } from "@/features/access/domain/access-event-repository";
@@ -59,7 +59,7 @@ export function createAccessEventRepository(db: Database): AccessEventRepository
       );
     },
 
-    async listAfter(after, upTo, limit) {
+    async listAfter(after, upTo, limit, kinds) {
       const at = after.occurredAt.epochMilliseconds;
       const rows = await db
         .select()
@@ -71,6 +71,8 @@ export function createAccessEventRepository(db: Database): AccessEventRepository
               and(eq(accessEventTable.occurredAt, at), gt(accessEventTable.id, after.id)),
             ),
             lte(accessEventTable.occurredAt, upTo.epochMilliseconds),
+            inArray(accessEventTable.kind, [...kinds]),
+            isNotNull(accessEventTable.accountId),
           ),
         )
         .orderBy(asc(accessEventTable.occurredAt), asc(accessEventTable.id))
@@ -79,10 +81,13 @@ export function createAccessEventRepository(db: Database): AccessEventRepository
       return rows.map(toAccessEvent);
     },
 
-    async latest() {
+    async latest(upTo) {
       const [row] = await db
         .select()
         .from(accessEventTable)
+        .where(
+          upTo === undefined ? undefined : lte(accessEventTable.occurredAt, upTo.epochMilliseconds),
+        )
         .orderBy(desc(accessEventTable.occurredAt), desc(accessEventTable.id))
         .limit(1);
 

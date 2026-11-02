@@ -10,7 +10,7 @@ import {
 } from "@/features/orders/application/place-order";
 import { quantitySchema } from "@/features/orders/domain/order";
 import { productNameSchema, type ProductName } from "@/features/products/domain/product";
-import { unitPriceOf } from "@/features/reading/domain/line-price";
+import { linePriceOf } from "@/features/reading/domain/line-price";
 import { moneyWords } from "@/features/reading/domain/money-words";
 import type { Reading, ReadLine } from "@/features/reading/domain/reading";
 import * as Reminders from "@/features/reminders/domain/reminder";
@@ -33,7 +33,8 @@ export type Message = {
 };
 
 // The order a reading describes, checked like one from the form but not yet written. A line's amount becomes its
-// unit price; a line with none is sold at its last price, or at nothing until someone fills it in.
+// unit price, and stays its total when it does not divide; a line with none is sold at its last price, or at nothing
+// until someone fills it in.
 export async function prepareOrderFrom(
   deps: Pick<ReadingDeps, "clock" | "customers" | "products" | "orderQueries">,
   message: Message,
@@ -61,14 +62,16 @@ export async function prepareOrderFrom(
     const lastPrice = productId === undefined ? undefined : lastPrices.get(productId);
     const quantity = line.quantity ?? 1;
     const amount = line.price === null ? undefined : moneyWords(line.price);
+    const price =
+      amount === undefined
+        ? { unitPrice: lastPrice ?? zeroMoney, total: undefined }
+        : linePriceOf(amount, quantity, line.priceIsPerUnit, lastPrice);
 
     return {
       product: productId === undefined ? { name } : { id: productId },
       quantity: quantitySchema.parse(quantity),
-      unitPrice:
-        amount === undefined
-          ? (lastPrice ?? zeroMoney)
-          : unitPriceOf(amount, quantity, line.priceIsPerUnit, lastPrice),
+      unitPrice: price.unitPrice,
+      total: price.total,
     };
   });
 

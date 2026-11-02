@@ -34,9 +34,10 @@ export const inboxItemTable = sqliteTable(
       sql`length(trim(${table.title})) between 1 and ${sqlNumber(inboxLimits.title)}`,
     ),
     check("inbox_item_body_length", sql`length(${table.body}) <= ${sqlNumber(inboxLimits.body)}`),
+    // "//host" and "/\host" both name another host to a URL parser
     check(
       "inbox_item_path_in_app",
-      sql`${table.path} like '/%' and ${table.path} not like '//%' and length(${table.path}) <= ${sqlNumber(inboxLimits.path)}`,
+      sql`${table.path} like '/%' and ${table.path} not like '//%' and ${table.path} not like '/\\%' and length(${table.path}) <= ${sqlNumber(inboxLimits.path)}`,
     ),
     check(
       "inbox_item_read_after_created",

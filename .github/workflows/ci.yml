@@ -39,9 +39,17 @@ jobs:
       - name: Committed CSS Module types match the build
         run: git diff --exit-code -- '*.module.scss.d.ts'
 
+      # A table changed without its migration makes drizzle-kit write a new one
+      - name: The tables match the migrations
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain -- migrations)"
+
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The suite took 11 to 12 minutes here in late October and grows with each feature; Playwright's own limit
+    # (playwright.config.ts) stops a stuck run first, so its report is still uploaded
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -59,10 +67,12 @@ jobs:
       - run: pnpm build:e2e
       - run: pnpm test:e2e
 
-      # Failures only: a passing run's report has nothing to look at
+      # Failures only: a passing run's report has nothing to look at. The traces are in test-results/.
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 14

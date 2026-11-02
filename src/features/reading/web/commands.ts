@@ -4,59 +4,19 @@ import { z } from "zod";
 import type { App } from "@/composition/create-app";
 import { customerIdSchema } from "@/features/customers/domain/customer";
 import { noteIdSchema } from "@/features/notes/domain/note";
-import type { OrderMadeFrom } from "@/features/orders/application/order-queries";
 import {
   readingErrorMessages,
   type ReadingError,
 } from "@/features/reading/application/reading-errors";
 import type { ReadingState } from "@/features/reading/application/reading-states";
 import type { Settlement } from "@/features/reading/application/settlement";
-import type { ReadFailure } from "@/features/reading/domain/interpretation";
-import type { LiveReminder } from "@/features/reminders/domain/reminder";
-import { remindersCopy } from "@/features/reminders/web/reminders-copy";
+import { isWorthReadingAgain } from "@/features/reading/domain/interpretation";
 import type { AccountId } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
-import { dayLabel } from "@/shared/web/day-label";
-import { moneyText } from "@/shared/web/money-text";
 import { orderPath, routes } from "@/shared/web/routes";
 
-import { lineText, readingCopy } from "./reading-copy";
+import { dueWords, failureText, orderSummary } from "./reading-text";
 import type { DayReadings, MadeView, ReadingView, ReadResult } from "./reading-view";
-
-function orderSummary(order: OrderMadeFrom): string {
-  const lines = order.lines.map((line) => lineText(line.productName, line.quantity)).join(", ");
-  const priced = order.lines.every((line) => line.unitPrice > 0);
-
-  return `${order.customerName}: ${lines}, ${priced ? moneyText(order.total) : readingCopy.unpriced}`;
-}
-
-function dueWords(reminder: LiveReminder, today: Temporal.PlainDate): string {
-  if (reminder.completion !== undefined) {
-    return remindersCopy.done;
-  }
-  const days = today.until(reminder.dueOn, { largestUnit: "days" }).days;
-
-  return days === 0
-    ? remindersCopy.today
-    : days === 1
-      ? remindersCopy.tomorrow
-      : dayLabel(reminder.dueOn, today);
-}
-
-function failureText(failure: ReadFailure): string {
-  switch (failure) {
-    case "quota":
-      return readingCopy.quota;
-    case "refused":
-      return readingCopy.refused;
-    case "schema":
-    case "timeout":
-    case "error":
-      return readingCopy.failed;
-    default:
-      return failure satisfies never;
-  }
-}
 
 function toView(state: ReadingState, today: Temporal.PlainDate, canRead: boolean): ReadingView {
   switch (state.kind) {
@@ -85,8 +45,7 @@ function toView(state: ReadingState, today: Temporal.PlainDate, canRead: boolean
       return {
         kind: "failed",
         message: failureText(state.failure),
-        // Read again, the order would be refused again
-        canReadAgain: canRead && state.failure !== "refused",
+        canReadAgain: canRead && isWorthReadingAgain(state.failure),
       };
     default:
       return state satisfies never;
