@@ -8,7 +8,7 @@ import type { InboxRowView } from "@/features/notifications/web/inbox-view";
 import { notificationsCopy } from "@/features/notifications/web/notifications-copy";
 import type { Icon } from "@/shared/ui/icon/icon";
 import { iconTones, type IconTone } from "@/shared/ui/icon/icon-tone";
-import { AnalyticsIcon, ChecklistIcon, KeyIcon } from "@/shared/ui/icon/icons";
+import { AnalyticsIcon, ChecklistIcon, KeyIcon, SendIcon } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListCheck } from "@/shared/ui/list/list-check";
 import { ListLink } from "@/shared/ui/list/list-link";
@@ -22,6 +22,7 @@ const kinds = {
   morning: { icon: ChecklistIcon, tone: iconTones.note },
   weekly: { icon: AnalyticsIcon, tone: iconTones.money },
   notice: { icon: KeyIcon, tone: iconTones.item },
+  reply_failed: { icon: SendIcon, tone: iconTones.danger },
 } as const satisfies Record<DeliverySubject, { readonly icon: Icon; readonly tone: IconTone }>;
 
 export type InboxListProps = {

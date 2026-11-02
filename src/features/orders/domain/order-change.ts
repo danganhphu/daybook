@@ -41,7 +41,12 @@ export const orderSnapshotSchema = z.object({
   deliveredOn: calendarDaySchema.transform((day) => day.toString()).nullable(),
   note: z.string().nullable(),
   lines: z.array(
-    z.object({ productId: productIdSchema, quantity: z.number().int(), unitPrice: moneySchema }),
+    z.object({
+      productId: productIdSchema,
+      quantity: z.number().int(),
+      unitPrice: moneySchema,
+      total: moneySchema.optional(),
+    }),
   ),
   payments: z.array(
     z.object({
@@ -78,6 +83,7 @@ export function snapshot(order: Order): OrderSnapshot {
       productId: line.productId,
       quantity: line.quantity,
       unitPrice: line.unitPrice,
+      ...(line.total === undefined ? {} : { total: line.total }),
     })),
     payments: order.payments.map((payment) => ({
       id: payment.id,

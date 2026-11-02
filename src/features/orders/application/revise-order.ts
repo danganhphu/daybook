@@ -49,14 +49,20 @@ export async function reviseOrder(
   }
 
   const at = deps.clock();
-  const resolved = await resolveLines(deps.products, input.order.lines, input.by, at);
+  const resolved = await resolveLines(
+    deps.products,
+    input.order.lines,
+    input.by,
+    at,
+    new Set(order.lines.map((line) => line.productId)),
+  );
   if (!resolved.ok) {
     return resolved;
   }
 
   const revised = Orders.revise(
     order,
-    { ...input.order, lines: resolved.value.lines },
+    { ...input.order, lines: Orders.keepTotals(resolved.value.lines, order.lines) },
     input.by,
     at,
   );

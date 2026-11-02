@@ -10,8 +10,8 @@ import {
   restoreOrder,
   undeliverOrder,
 } from "@/app/(app)/orders/actions";
-import type { OrderChangeResult } from "@/features/orders/web/commands";
 import { shortDay } from "@/features/orders/web/day-text";
+import type { OrderChangeResult } from "@/features/orders/web/order-page-commands";
 import type { OrderScreenView, PaymentView } from "@/features/orders/web/order-view";
 import { ordersCopy } from "@/features/orders/web/orders-copy";
 import { actionLabels, optionsFor } from "@/shared/ui/action-labels";
@@ -203,7 +203,7 @@ export function OrderScreen({ view }: { readonly view: OrderScreenView }) {
             href={productPath(line.productId)}
             title={line.productName}
             detail={`${line.quantity} × ${moneyText(line.unitPrice)}`}
-            value={moneyText(line.quantity * line.unitPrice)}
+            value={moneyText(line.amount)}
             icon={Inventory2Icon}
             iconTone={iconTones.item}
           />

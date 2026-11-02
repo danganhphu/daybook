@@ -8,6 +8,7 @@ import type {
 import { searchText } from "@/shared/domain/search-text";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { containsLiterally } from "@/shared/infrastructure/d1/like-pattern";
+import { readInChunks } from "@/shared/infrastructure/d1/limits";
 
 import { productAliasTable } from "./product-alias.table";
 import { toProduct, toProductAlias } from "./product-mapping";
@@ -49,13 +50,12 @@ export function createProductRepository(db: Database): ProductRepository {
     },
 
     async getMany(ids) {
-      if (ids.length === 0) {
-        return [];
-      }
-      const rows = await db
-        .select()
-        .from(productTable)
-        .where(inArray(productTable.id, [...ids]));
+      const rows = await readInChunks(ids, (chunk) =>
+        db
+          .select()
+          .from(productTable)
+          .where(inArray(productTable.id, [...chunk])),
+      );
 
       return rows.map(toProduct);
     },

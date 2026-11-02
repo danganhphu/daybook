@@ -74,5 +74,15 @@ export async function deliverNotification(
     }
   }
 
-  return together(await Promise.all(deps.channels.map(deliverOn)));
+  // Every channel records how it went before a fault is passed on: a channel that sent and is still finishing its row
+  // must not be cut short by another's failure, or the retry sends it again (Telegram has no tag to replace a message)
+  const settled = await Promise.allSettled(deps.channels.map(deliverOn));
+  const failed = settled.find((outcome) => outcome.status === "rejected");
+  if (failed !== undefined) {
+    throw failed.reason;
+  }
+
+  return together(
+    settled.flatMap((outcome) => (outcome.status === "fulfilled" ? [outcome.value] : [])),
+  );
 }

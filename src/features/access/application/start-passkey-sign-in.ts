@@ -1,4 +1,3 @@
-import * as AccessEvents from "@/features/access/domain/access-event";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import { passkeySignInAttempts } from "@/features/access/domain/access-policy";
 import * as Ceremonies from "@/features/access/domain/ceremony";
@@ -12,6 +11,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, CeremonyWrites } from "./access-writes";
 import { formatCeremonyCookie } from "./ceremony-cookie";
+import { overLimit } from "./over-limit";
 import type { PasskeyVerifier } from "./passkey-verifier";
 import { clientNetwork } from "./rate-limit-keys";
 import type { RateLimiter } from "./rate-limiter";
@@ -51,23 +51,14 @@ export async function startPasskeySignIn(
   const { ip } = request.origin;
   if (
     ip !== undefined &&
-    (await deps.rateLimiter.hit(
-      `passkey-sign-in:${clientNetwork(ip)}`,
-      passkeySignInAttempts.window,
+    (await overLimit(
+      deps,
+      [{ key: `passkey-sign-in:${clientNetwork(ip)}`, ...passkeySignInAttempts }],
+      "passkey_sign_in",
+      request.origin,
       now,
-    )) > passkeySignInAttempts.limit
+    ))
   ) {
-    const work = deps.startUnitOfWork();
-    work.accessEvents.add(
-      AccessEvents.record(
-        "rate_limited",
-        { detail: { on: "passkey_sign_in" } },
-        request.origin,
-        now,
-      ),
-    );
-    await work.commit();
-
     return err("rate_limited");
   }
 

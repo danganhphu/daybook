@@ -7,6 +7,8 @@ import type { Passkey, PasskeyId } from "@/features/access/domain/passkey";
 import type { Password } from "@/features/access/domain/password";
 import type { Session, SessionId } from "@/features/access/domain/session";
 import type { PendingSetupLink, RedeemedSetupLink } from "@/features/access/domain/setup-link";
+import type { TelegramLink } from "@/features/access/domain/telegram-link";
+import type { TelegramLinkCode } from "@/features/access/domain/telegram-link-code";
 import type { AccountId } from "@/shared/domain/account-id";
 
 // What the access feature writes, store by store. Each queues on the current unit of work; nothing is stored until
@@ -61,4 +63,17 @@ export type CeremonyWrites = {
 
 export type AccessEventWrites = {
   add(event: AccessEvent): void;
+};
+
+export type TelegramLinkWrites = {
+  // Links the account, replacing the Telegram user it had
+  save(link: TelegramLink): void;
+  remove(accountId: AccountId): void;
+};
+
+export type TelegramLinkCodeWrites = {
+  add(code: TelegramLinkCode): void;
+  // An account has one code at a time; codes nobody used are swept whenever a new one is made
+  removeForAccount(accountId: AccountId): void;
+  removeExpired(now: Temporal.Instant): void;
 };

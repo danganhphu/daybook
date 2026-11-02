@@ -27,6 +27,10 @@ export const developmentVapidKeys = {
 // Every quarter hour: the scheduler for notifications, whose times are in 15-minute steps (time-of-day.ts)
 export const notificationSchedule = "*/15 * * * *";
 
+// The jobs queue and its dead-letter queue; src/jobs/job-queues.ts has its own copy
+export const jobsQueue = "jobs";
+export const deadJobsQueue = "jobs-dead";
+
 export default defineConfig({
   worker: defineWorker(({ mode }) => ({
     name: "daybook",
@@ -35,12 +39,14 @@ export default defineConfig({
       triggers.scheduled({ schedule: notificationSchedule }),
       // One message at a time, in order; a message that keeps failing waits in jobs-dead
       triggers.queue({
-        name: "jobs",
-        deadLetterQueue: "jobs-dead",
+        name: jobsQueue,
+        deadLetterQueue: deadJobsQueue,
         maxBatchSize: 1,
         maxConcurrency: 1,
         maxRetries: 3,
       }),
+      // The same Worker reads what failed every retry, to log it and tell whoever is waiting on it
+      triggers.queue({ name: deadJobsQueue, maxBatchSize: 1, maxRetries: 2 }),
     ],
     compatibilityDate,
     compatibilityFlags,
@@ -57,7 +63,7 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       DB: bindings.d1({ name: "daybook", id: databaseId }),
-      JOBS: bindings.queue({ name: "jobs" }),
+      JOBS: bindings.queue({ name: jobsQueue }),
       // The address the app is served from. A secret outside development, so the real one is not in the repository.
       APP_ORIGIN: mode === "development" ? bindings.text(developmentOrigin) : bindings.secret(),
       // Mixed into every password verifier. Development has a pepper of its own; it guards nothing real.
@@ -73,6 +79,16 @@ export default defineConfig({
       ...(mode === endToEndMode
         ? { REPLAY_READINGS: bindings.secret() }
         : { AI: bindings.ai({ dev: { remote: true } }) }),
+      // The Telegram bot is optional, so its two secrets are not declared for a deploy, which keeps whatever secrets
+      // the Worker has; declaring them would make every deploy need a bot. The end-to-end build declares them, with
+      // a stand-in for Telegram's API, all given by e2e/serve.ts.
+      ...(mode === endToEndMode
+        ? {
+            TELEGRAM_BOT_TOKEN: bindings.secret(),
+            TELEGRAM_WEBHOOK_SECRET: bindings.secret(),
+            TELEGRAM_API_ORIGIN: bindings.secret(),
+          }
+        : {}),
     },
   })),
 });

@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 
 import { passkeyTerm } from "@/features/access/application/access-terms";
-import { setupLinkLifetime } from "@/features/access/domain/access-policy";
 import { accessCopy } from "@/features/access/web/access-copy";
 import type { PersonRow } from "@/features/access/web/account-view";
 import { problemMessage } from "@/features/access/web/attempt-setting";
@@ -21,19 +20,25 @@ import { LinkDialog, type IssuedLink } from "./link-dialog";
 import { useOutcomeToast } from "./use-outcome-toast";
 import type { StepUp } from "./use-step-up";
 
-const validFor = `Link chỉ dùng được một lần, trong ${setupLinkLifetime.total("minutes")} phút.`;
+function validFor(minutes: number): string {
+  return `Link chỉ dùng được một lần, trong ${minutes} phút.`;
+}
 
 const recoverLabel = "Tạo link khôi phục";
 
 export type PeopleProps = {
   readonly people: ReadonlyArray<PersonRow>;
+  // Until two people can sign in; then the book is full and no invite is offered
+  readonly canInvite: boolean;
+  // How long a link stays usable
+  readonly linkMinutes: number;
   readonly run: StepUp["run"];
 };
 
-// Everyone who shares the book, and what one can do for another: invite someone new, send a way back in to someone
-// who lost theirs, and sign out every device of someone whose phone was lost. No roles: both users see and do the
-// same here.
-export function People({ people, run }: PeopleProps) {
+// Everyone who shares the book, and what one can do for another: invite someone new while there is room, send a way
+// back in to someone who lost theirs, and sign out every device of someone whose phone was lost. No roles: both users
+// see and do the same here.
+export function People({ people, canInvite, linkMinutes, run }: PeopleProps) {
   const tell = useOutcomeToast();
   const [working, startWorking] = useTransition();
   const [link, setLink] = useState<IssuedLink>();
@@ -61,17 +66,17 @@ export function People({ people, run }: PeopleProps) {
     () =>
       issue(() => createInvite(), {
         title: "Link mời",
-        description: `Gửi link này cho người bạn muốn mời. ${validFor}`,
+        description: `Gửi link này cho người bạn muốn mời. ${validFor(linkMinutes)}`,
       }),
-    [issue],
+    [issue, linkMinutes],
   );
   const recover = useCallback(
     (person: PersonRow) =>
       issue(() => createRecoveryLink(person.id), {
         title: `${recoverLabel} cho ${person.displayName}`,
-        description: `Khi ${person.displayName} dùng link, các thiết bị khác của ${person.displayName} sẽ bị đăng xuất. ${validFor}`,
+        description: `Khi ${person.displayName} dùng link, các thiết bị khác của ${person.displayName} sẽ bị đăng xuất và Telegram bị ngắt kết nối. ${validFor(linkMinutes)}`,
       }),
-    [issue],
+    [issue, linkMinutes],
   );
   const hide = useCallback(() => setShowing(false), []);
 
@@ -106,18 +111,20 @@ export function People({ people, run }: PeopleProps) {
             onSignOut={askToSignOut}
           />
         ))}
-        <ListAction
-          label="Mời người dùng"
-          icon={PersonAddIcon}
-          disabled={working}
-          onClick={invite}
-        />
+        {canInvite ? (
+          <ListAction
+            label="Mời người dùng"
+            icon={PersonAddIcon}
+            disabled={working}
+            onClick={invite}
+          />
+        ) : null}
       </List>
       <LinkDialog open={showing} link={link} onClose={hide} />
       <ConfirmDialog
         open={confirming}
         title={`${accessCopy.signOutEverywhere} của ${target?.displayName ?? ""}?`}
-        description={`Dùng khi máy bị mất. ${target?.displayName ?? ""} đăng nhập lại bằng ${passkeyTerm} là dùng tiếp được.`}
+        description={`Dùng khi máy bị mất. Telegram của ${target?.displayName ?? ""} cũng bị ngắt kết nối. ${target?.displayName ?? ""} đăng nhập lại bằng ${passkeyTerm} là dùng tiếp được.`}
         confirmLabel={accessCopy.signOut}
         onConfirm={signOut}
         onClose={stopSigningOut}

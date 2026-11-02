@@ -4,13 +4,13 @@ import type { z } from "zod";
 import type { AccountId } from "@/shared/domain/account-id";
 import { base64UrlSchema } from "@/shared/domain/base64url-schema";
 
+import { digestByteLength } from "./access-policy";
 import {
   argon2Parameters,
   derivedKeyByteLength,
-  digestByteLength,
   passwordLockAfter,
   passwordSaltByteLength,
-} from "./access-policy";
+} from "./password-policy";
 
 // Read as a module: `import * as Passwords` then `Passwords.set(...)`
 

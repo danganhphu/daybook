@@ -2,13 +2,13 @@ import type { AccountId } from "@/shared/domain/account-id";
 
 import { digestKinds } from "./notification-preference";
 
-// What was sent: a digest, or a notice about the account's sign-in
-export const deliverySubjects = [...digestKinds, "notice"] as const;
+// What was sent: a digest, a notice about the account's sign-in, or word that the bot could not answer a message
+export const deliverySubjects = [...digestKinds, "notice", "reply_failed"] as const;
 
 export type DeliverySubject = (typeof deliverySubjects)[number];
 
-// Where it goes: the list in the app, always, and the browsers with push on. The bot adds Telegram.
-export const deliveryChannels = ["inbox", "push"] as const;
+// Where it goes: the list in the app, always; the browsers with push on; the linked Telegram chat, unless turned off
+export const deliveryChannels = ["inbox", "push", "telegram"] as const;
 
 export type DeliveryChannel = (typeof deliveryChannels)[number];
 

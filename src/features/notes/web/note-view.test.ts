@@ -5,7 +5,7 @@ import * as Captures from "@/features/capture/domain/capture";
 import * as Notes from "@/features/notes/domain/note";
 import { anAuthorId, content } from "@/testing/support/app";
 
-import { clockTime, preview, toNoteView } from "./note-view";
+import { preview, toNoteView } from "./note-view";
 
 describe("toNoteView", () => {
   it("given a note, when viewed, then it keeps the words exactly, shows the time on the user's clock and carries its version", () => {
@@ -38,19 +38,5 @@ describe("preview", () => {
     const long = "Giao 2 hộp thuốc tê cho nha khoa Minh Tâm, thu 850.000đ trước thứ 6";
 
     expect(preview(long)).toBe(`${long.slice(0, 40)}...`);
-  });
-});
-
-describe("clockTime", () => {
-  it("given the last minute of a Vietnamese day, when shown, then it reads 23:59", () => {
-    const instant = Temporal.Instant.from("2026-10-19T16:59:59Z");
-
-    expect(clockTime(instant.epochMilliseconds)).toBe("23:59");
-  });
-
-  it("given midnight in Vietnam, when shown, then it reads 00:00, not 24:00", () => {
-    const instant = Temporal.Instant.from("2026-10-19T17:00:00Z");
-
-    expect(clockTime(instant.epochMilliseconds)).toBe("00:00");
   });
 });

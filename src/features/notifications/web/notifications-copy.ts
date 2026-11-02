@@ -35,6 +35,10 @@ export const notificationsCopy = {
   quietRange: `Từ ${quietAfterDaysLimits.min} đến ${quietAfterDaysLimits.max} ngày`,
   quietUse: "Tin buổi sáng nhắc tên khách vào ngày họ chạm số này; tổng kết thứ Sáu đếm cả.",
   quietSaved: "Đã lưu số ngày",
+  telegram: "Gửi qua Telegram",
+  telegramUse: "Nhận các thông báo này cả trong Telegram.",
+  telegramOn: "Đã bật gửi qua Telegram",
+  telegramOff: "Đã tắt gửi qua Telegram",
   inboxEmpty: "Chưa có thông báo nào",
   unread: "Chưa đọc",
   yesterday: "Hôm qua",
@@ -83,4 +87,5 @@ export const notificationErrorMessages = {
   not_found: "Không tìm thấy thiết bị này.",
   times_changed_elsewhere: "Giờ nhắc vừa được đổi ở nơi khác. Hãy xem lại.",
   days_changed_elsewhere: "Số ngày vừa được đổi ở nơi khác. Hãy xem lại.",
+  telegram_changed_elsewhere: "Cài đặt này vừa được đổi ở nơi khác. Hãy xem lại.",
 } as const satisfies Record<NotificationError, string>;

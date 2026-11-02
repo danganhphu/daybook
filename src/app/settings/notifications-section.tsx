@@ -42,6 +42,7 @@ import { attempt } from "@/shared/web/attempt";
 import { EditableRow } from "./editable-row";
 import {
   saveNotificationQuietDays,
+  saveNotificationTelegram,
   saveNotificationTimes,
   turnOffPush,
 } from "./notification-actions";
@@ -164,7 +165,19 @@ export function NotificationsSection({
       saveTimes({ weeklyAt: event.target.value || undefined }),
     [saveTimes],
   );
-  const { version } = view;
+  const { version, telegramOn } = view;
+  const switchTelegram = useCallback(() => {
+    startWorking(async () => {
+      const result = await attempt(() => saveNotificationTelegram(!telegramOn, version ?? null));
+      tell(
+        result.ok
+          ? telegramOn
+            ? notificationsCopy.telegramOff
+            : notificationsCopy.telegramOn
+          : result.error,
+      );
+    });
+  }, [telegramOn, tell, version]);
   // The row shows a refusal's sentence; its code matters only to step-up, which this does not ask for
   const saveQuietDays = useCallback(
     async (value: string): Promise<SettingsResult<null>> => {
@@ -189,6 +202,19 @@ export function NotificationsSection({
       ) : (
         <List>
           <ListRow title={notificationsCopy.thisDevice} detail={notificationsCopy.unavailable} />
+        </List>
+      )}
+
+      {view.telegramOn === undefined ? null : (
+        <List footer={notificationsCopy.telegramUse}>
+          <ListRow
+            title={notificationsCopy.telegram}
+            detail={view.telegramOn ? notificationsCopy.on : notificationsCopy.off}
+          >
+            <Button variant="quiet" disabled={working} onClick={switchTelegram}>
+              {view.telegramOn ? notificationsCopy.turnOff : notificationsCopy.turnOn}
+            </Button>
+          </ListRow>
         </List>
       )}
 

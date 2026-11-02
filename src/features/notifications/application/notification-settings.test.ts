@@ -191,4 +191,25 @@ describe("changeNotificationTimes", () => {
     expect(second).toMatchObject({ ok: true, value: { morningAt: undefined, weeklyAt: "16:30" } });
     expect(second.ok && second.value.audit?.version).toBe(2);
   });
+
+  it("given no saved times, when two screens save their first change at once, then one is saved and the other is told it changed elsewhere", async () => {
+    const time = testClock("2026-10-28T01:00:00Z");
+    const lan = await seedAccount(time.clock);
+    const phone = await seedSession(time.clock, lan);
+    const app = testApp(time.clock);
+
+    const both = await Promise.all(
+      ["06:45", "08:00"].map((at) =>
+        app.changeNotificationTimes(phone.session, {
+          times: { morningAt: timeOf(at), weeklyAt: undefined },
+          shown: undefined,
+        }),
+      ),
+    );
+
+    expect(both.filter((answer) => answer.ok)).toHaveLength(1);
+    expect(both.filter((answer) => !answer.ok)).toEqual([
+      { ok: false, error: "times_changed_elsewhere" },
+    ]);
+  });
 });

@@ -2,6 +2,8 @@ import { Temporal } from "temporal-polyfill/implementation";
 
 import { weekdayName } from "@/shared/domain/weekday";
 
+import { dayMonthText } from "./time-text";
+
 // Monday first, as Temporal numbers them
 const shortWeekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"] as const;
 
@@ -12,7 +14,7 @@ export function shortWeekday(day: Temporal.PlainDate): string {
 
 // "Thứ Hai, 19/10", with the year only when it is not this one: "Thứ Tư, 31/12/2025"
 export function dayLabel(day: Temporal.PlainDate, today: Temporal.PlainDate): string {
-  const date = `${day.day}/${day.month}`;
+  const date = dayMonthText(day.day, day.month);
 
   return `${weekdayName(day)}, ${day.year === today.year ? date : `${date}/${day.year}`}`;
 }

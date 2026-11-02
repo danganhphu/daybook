@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import { accountIdSchema } from "@/shared/domain/account-id";
 
-import { passwordLockAfter } from "./access-policy";
 import * as Passwords from "./password";
 import { passwordSaltSchema, passwordVerifierSchema } from "./password";
+import { passwordLockAfter } from "./password-policy";
 
 const setAt = Temporal.Instant.from("2026-10-22T01:00:00Z");
 const failedAt = Temporal.Instant.from("2026-10-22T02:00:00Z");

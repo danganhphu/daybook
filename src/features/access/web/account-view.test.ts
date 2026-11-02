@@ -1,4 +1,3 @@
-import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
 import { passkeyTerm } from "@/features/access/application/access-terms";
@@ -10,7 +9,7 @@ import { seedPassword } from "@/testing/support/passwords";
 import { expectOk } from "@/testing/support/result";
 
 import { accessCopy } from "./access-copy";
-import { formatMoment, toAccountView } from "./account-view";
+import { toAccountView } from "./account-view";
 
 async function viewAfterSetup() {
   const time = testClock("2026-10-22T01:00:00Z");
@@ -19,12 +18,6 @@ async function viewAfterSetup() {
 
   return { time, seeded, app };
 }
-
-describe("formatMoment", () => {
-  it("given an instant, when formatted, then it reads in Vietnam's time, hour first", () => {
-    expect(formatMoment(Temporal.Instant.from("2026-10-22T09:02:00Z"))).toBe("16:02 22/10");
-  });
-});
 
 describe("toAccountView", () => {
   it("given an account just set up, when shown, then this device is marked and the passkey says when it came", async () => {
@@ -99,6 +92,16 @@ describe("toAccountView", () => {
       { title: "Lan (bạn)", detail: "lan, đăng nhập lần cuối 08:00 22/10", isYou: true },
       { title: "Minh", detail: "minh, chưa có cách đăng nhập", isYou: false },
     ]);
+    expect(view.canInvite).toBe(true);
+  });
+
+  it("given two people who each have a way in, when listed, then no one more can be invited", async () => {
+    const { time, seeded: lan, app } = await viewAfterSetup();
+    await seedPasskeyAccount(time, "minh");
+
+    const view = toAccountView(await app.accountOverview(lan.account.id), lan.session.id);
+
+    expect(view.canInvite).toBe(false);
   });
 
   it("given everything an account has, when shown, then nothing secret reaches the page", async () => {

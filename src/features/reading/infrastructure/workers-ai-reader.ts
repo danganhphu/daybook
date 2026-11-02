@@ -10,6 +10,8 @@ import type { Reader } from "@/features/reading/domain/interpretation";
 import { readingSchema } from "@/features/reading/domain/reading";
 import type { Content } from "@/shared/domain/content";
 import { err, ok, type Result } from "@/shared/domain/result";
+import { errorLines } from "@/shared/infrastructure/error-lines";
+import { logEvent } from "@/shared/infrastructure/log-event";
 
 import { promptVersion, responseFormat, systemPrompt } from "./reading-prompt";
 
@@ -99,7 +101,12 @@ async function readWith(
       { signal: AbortSignal.timeout(answerWithinMilliseconds) },
     );
   } catch (error) {
-    return err({ failure: failureOf(error), reader, neurons: undefined });
+    const failure = failureOf(error);
+    if (failure === "error") {
+      // An error the codes above do not name: its first lines, never the message read (errorLines keeps them short)
+      logEvent("reading_failed", { model: model.id, errors: errorLines(error) });
+    }
+    return err({ failure, reader, neurons: undefined });
   }
 
   const output = outputSchema.safeParse(raw);

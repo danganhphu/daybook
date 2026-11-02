@@ -1,14 +1,18 @@
 import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
+import type { LineInput } from "@/features/orders/application/order-input";
 import type { OrderFilter } from "@/features/orders/application/order-queries";
 import { paymentDetailsSchema } from "@/features/orders/domain/order";
-import { productIdSchema } from "@/features/products/domain/product";
+import { productIdSchema, productNameSchema } from "@/features/products/domain/product";
+import { moneySchema } from "@/shared/domain/money-schema";
 import { changeOf, testApp, testClock, theAuthor, thePartner } from "@/testing/support/app";
 import { aCustomer, aKind, anOrder, line, lineOf } from "@/testing/support/orders";
-import { expectOk } from "@/testing/support/result";
+import { expectDefined, expectOk } from "@/testing/support/result";
 
 const day = (text: string) => Temporal.PlainDate.from(text);
+
+const october = { from: day("2026-10-01"), to: day("2026-10-31") };
 
 function anApp() {
   return testApp(testClock("2026-10-23T01:00:00Z").clock);
@@ -82,9 +86,62 @@ describe("placing an order", () => {
         },
       }),
     ).toEqual({ ok: false, error: "product_not_found" });
-    expect(await app.listOrders({ from: day("2026-10-01"), to: day("2026-10-31") }, 50)).toEqual(
-      [],
+    expect(await app.listOrders(october, 50)).toEqual([]);
+  });
+
+  it("given products deleted or merged away while a form was open, when an order picks them, then it is refused", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = await aCustomer(app, "Hướng Dương");
+    const gone = expectOk(await app.addProduct({ by, name: productNameSchema.parse("Kim cũ") }));
+    const away = expectOk(await app.addProduct({ by, name: productNameSchema.parse("Gel tê") }));
+    const kept = expectOk(
+      await app.addProduct({ by, name: productNameSchema.parse("Gel gây tê") }),
     );
+    expectOk(await app.deleteProduct(changeOf(gone, by)));
+    expectOk(await app.mergeProducts({ ...changeOf(away, by), into: kept.id }));
+
+    const picked = await Promise.all(
+      [gone, away].map((product) =>
+        app.placeOrder({
+          by,
+          order: {
+            customerId: customer.id,
+            orderedOn: day("2026-10-23"),
+            lines: [lineOf(product.id, 1, 1_000)],
+            note: undefined,
+          },
+        }),
+      ),
+    );
+
+    expect(picked).toEqual([
+      { ok: false, error: "product_not_found" },
+      { ok: false, error: "product_not_found" },
+    ]);
+  });
+
+  it("given a product hidden after an order named it, when that order is revised keeping its line, then it is accepted, and a new order cannot pick it", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = await aCustomer(app, "Hướng Dương");
+    const placed = await anOrder(app, customer, [line("Thuốc tê", 1, 1_000)]);
+    const sold = expectDefined(await app.getProduct(expectDefined(placed.lines[0]).productId));
+    expectOk(await app.archiveProduct(changeOf(sold, by)));
+    const order = (lines: ReadonlyArray<LineInput>) => ({
+      customerId: customer.id,
+      orderedOn: day("2026-10-23"),
+      lines,
+      note: undefined,
+    });
+
+    expectOk(
+      await app.reviseOrder({ ...changeOf(placed, by), order: order([lineOf(sold.id, 2, 1_000)]) }),
+    );
+    expect(await app.placeOrder({ by, order: order([lineOf(sold.id, 1, 1_000)]) })).toEqual({
+      ok: false,
+      error: "product_not_found",
+    });
   });
 });
 
@@ -146,24 +203,32 @@ describe("changing an order", () => {
     expect((await app.getOrder(shown.id))?.payments).toHaveLength(1);
   });
 
-  it("given a payment, when removed, then it stays on record as removed and what is owed comes back", async () => {
+  it("given a payment, when removed, then it stays on record as removed and what is owed comes back everywhere it is read", async () => {
     const app = anApp();
     const by = await theAuthor();
-    const placed = await anOrder(app, await aCustomer(app, "Hướng Dương"), [
-      line("Thuốc tê", 1, 500_000),
-    ]);
+    const customer = await aCustomer(app, "Hướng Dương");
+    const placed = await anOrder(app, customer, [line("Thuốc tê", 1, 500_000)]);
     const paidPart = expectOk(
       await app.addPayment({ ...changeOf(placed, by), payment: payment(200_000) }),
     );
-    const [taken] = paidPart.payments;
+    const taken = expectDefined(paidPart.payments[0]);
 
     const removed = expectOk(
-      await app.removePayment({ ...changeOf(paidPart, by), paymentId: taken!.id }),
+      await app.removePayment({ ...changeOf(paidPart, by), paymentId: taken.id }),
     );
     const stored = await app.getOrder(placed.id);
 
     expect(removed.payments[0]?.removal?.deletedBy).toBe(by);
     expect(stored?.payments).toEqual(removed.payments);
+    expect(await app.orderTotals(october)).toEqual({
+      count: 1,
+      total: 500_000,
+      paid: 0,
+      owed: 500_000,
+    });
+    expect((await app.listOrders(october, 50)).map((row) => row.paid)).toEqual([0]);
+    expect((await app.owedByCustomer()).get(customer.id)).toBe(500_000);
+    expect(await app.customerAccount(customer.id)).toMatchObject({ owed: 500_000 });
   });
 
   it("given an order revised with fewer lines and a new product, when read back, then exactly the new lines are there", async () => {
@@ -181,7 +246,10 @@ describe("changing an order", () => {
         order: {
           customerId: placed.customerId,
           orderedOn: placed.orderedOn,
-          lines: [lineOf(placed.lines[2]!.productId, 4, 3_000), line("Kim nha khoa", 1, 50_000)],
+          lines: [
+            lineOf(expectDefined(placed.lines[2]).productId, 4, 3_000),
+            line("Kim nha khoa", 1, 50_000),
+          ],
           note: undefined,
         },
       }),
@@ -213,30 +281,80 @@ describe("changing an order", () => {
   });
 });
 
-describe("reading orders", () => {
-  async function aBook() {
+describe("a line whose amount does not divide by its quantity", () => {
+  // "3 hộp bông gòn 100k": 33.333đ a box, and 100.000đ in all, as she was told
+  const threeFor100k = { ...line("Bông gòn", 3, 33_333), total: moneySchema.parse(100_000) };
+
+  it("given such a line, when ordered and paid what she was told, then the order comes to exactly that and nothing is owed", async () => {
     const app = anApp();
     const by = await theAuthor();
-    const clinic = await aKind(app, "Nha khoa");
-    const sunflower = await aCustomer(app, "Hướng Dương", { kindId: clinic.id });
-    const morning = await aCustomer(app, "Sao Mai");
-    const october = await anOrder(app, sunflower, [line("Thuốc tê", 2, 400_000)], "2026-10-05");
-    const paidOff = await anOrder(app, morning, [line("Bông gòn", 10, 5_000)], "2026-10-20");
-    expectOk(await app.addPayment({ ...changeOf(paidOff, by), payment: payment(50_000) }));
-    const delivered = await anOrder(
-      app,
-      sunflower,
-      [line("Thuốc tê", 1, 420_000), line("Bông gòn", 2, 5_000)],
-      "2026-10-22",
-    );
-    expectOk(await app.deliverOrder({ ...changeOf(delivered, by), on: day("2026-10-23") }));
-    await anOrder(app, morning, [line("Thuốc tê", 1, 410_000)], "2026-09-30");
+    const customer = await aCustomer(app, "Hướng Dương");
+    const placed = await anOrder(app, customer, [threeFor100k]);
 
-    return { app, clinic, sunflower, morning, october, paidOff, delivered };
-  }
+    expectOk(await app.addPayment({ ...changeOf(placed, by), payment: payment(100_000) }));
 
-  const october = { from: day("2026-10-01"), to: day("2026-10-31") };
+    expect((await app.getOrder(placed.id))?.lines).toEqual([
+      expect.objectContaining({ quantity: 3, unitPrice: 33_333, total: 100_000 }),
+    ]);
+    expect(await app.orderTotals(october)).toEqual({
+      count: 1,
+      total: 100_000,
+      paid: 100_000,
+      owed: 0,
+    });
+    expect((await app.listOrders(october, 50)).map((row) => row.total)).toEqual([100_000]);
+    expect(await app.customerAccount(customer.id)).toMatchObject({ total: 100_000, owed: 0 });
+  });
 
+  it("given such a line, when the order is revised with the line as it was, then its total stays; when its quantity changes, then it is quantity × price", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = await aCustomer(app, "Hướng Dương");
+    const placed = await anOrder(app, customer, [threeFor100k]);
+    const { productId } = expectDefined(placed.lines[0]);
+    const revised = (shown: typeof placed, quantity: number) =>
+      app.reviseOrder({
+        ...changeOf(shown, by),
+        order: {
+          customerId: customer.id,
+          orderedOn: placed.orderedOn,
+          lines: [lineOf(productId, quantity, 33_333)],
+          note: "giao chiều",
+        },
+      });
+
+    const same = expectOk(await revised(placed, 3));
+    const more = expectOk(await revised(same, 6));
+
+    expect(same.lines[0]?.total).toBe(100_000);
+    expect(more.lines[0]?.total).toBeUndefined();
+    expect((await app.orderTotals(october)).total).toBe(6 * 33_333);
+  });
+});
+
+// Two customers' orders across two months, one paid off and one delivered
+async function aBook() {
+  const app = anApp();
+  const by = await theAuthor();
+  const clinic = await aKind(app, "Nha khoa");
+  const sunflower = await aCustomer(app, "Hướng Dương", { kindId: clinic.id });
+  const morning = await aCustomer(app, "Sao Mai");
+  const early = await anOrder(app, sunflower, [line("Thuốc tê", 2, 400_000)], "2026-10-05");
+  const paidOff = await anOrder(app, morning, [line("Bông gòn", 10, 5_000)], "2026-10-20");
+  expectOk(await app.addPayment({ ...changeOf(paidOff, by), payment: payment(50_000) }));
+  const delivered = await anOrder(
+    app,
+    sunflower,
+    [line("Thuốc tê", 1, 420_000), line("Bông gòn", 2, 5_000)],
+    "2026-10-22",
+  );
+  expectOk(await app.deliverOrder({ ...changeOf(delivered, by), on: day("2026-10-23") }));
+  await anOrder(app, morning, [line("Thuốc tê", 1, 410_000)], "2026-09-30");
+
+  return { app, clinic, sunflower, morning, early, paidOff, delivered };
+}
+
+describe("reading orders", () => {
   it("given orders across two months, when October is listed, then only October's come, newest first, with their products", async () => {
     const { app } = await aBook();
 
@@ -266,7 +384,7 @@ describe("reading orders", () => {
     const { app, clinic, morning, paidOff, delivered } = await aBook();
     const ids = async (filter: Partial<OrderFilter>) =>
       (await app.listOrders({ ...october, ...filter }, 50)).map((row) => row.id);
-    const paper = delivered.lines[0]!.productId;
+    const paper = expectDefined(delivered.lines[0]).productId;
 
     expect(await ids({ customerId: morning.id })).toEqual([paidOff.id]);
     expect(await ids({ kindId: clinic.id })).toHaveLength(2);
@@ -277,7 +395,7 @@ describe("reading orders", () => {
   });
 
   it("given a deleted order, when listed or summed, then it is left out", async () => {
-    const { app, october: first } = await aBook();
+    const { app, early: first } = await aBook();
     expectOk(await app.deleteOrder(changeOf(first, await theAuthor())));
 
     expect((await app.orderTotals(october)).count).toBe(2);
@@ -301,7 +419,7 @@ describe("reading orders", () => {
 
   it("given a product sold at different prices, when its last price is read, then this customer's latest comes first, else anyone's", async () => {
     const { app, sunflower, morning, delivered } = await aBook();
-    const paper = delivered.lines[0]!.productId;
+    const paper = expectDefined(delivered.lines[0]).productId;
 
     expect((await app.lastPrices([paper], sunflower.id)).get(paper)).toBe(420_000);
     expect((await app.lastPrices([paper], morning.id)).get(paper)).toBe(410_000);

@@ -13,6 +13,8 @@ const messages = {
   notAnOrder: "chị Lan lấy 2 hộp găng tay 90k",
   failing: "tin này đọc không được",
   quota: "hôm nay hết lượt đọc",
+  // telegram.feature's, sent to the bot
+  telegram: "bán 3 hộp găng tay cho đại lý Sao Mai 270k",
 } as const;
 
 // Days are counted from the day the server starts, as a model counts them from the day a message is sent
@@ -26,6 +28,7 @@ export function readingsFor(today: Temporal.PlainDate): Record<string, ReplayAns
     ),
     [messages.unknownCustomer]: anOrderReading("chị Lan", [aLine("kim nha khoa", 1, "400k")]),
     [messages.notAnOrder]: anOrderReading("chị Lan", [aLine("găng tay", 2, "90k")]),
+    [messages.telegram]: anOrderReading("đại lý Sao Mai", [aLine("găng tay", 3, "270k")]),
     [messages.failing]: "error",
     [messages.quota]: "quota",
   };

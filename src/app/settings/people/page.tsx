@@ -4,6 +4,7 @@ import { PeopleSection } from "@/app/settings/people-section";
 import { settingsCopy } from "@/app/settings/settings-copy";
 import { accountView, openedFrom, type SettingsPageProps } from "@/app/settings/settings-data";
 import { daybook } from "@/composition/daybook";
+import { setupLinkLifetime } from "@/features/access/domain/access-policy";
 import { requireSession } from "@/features/access/web/session-gate";
 import { settingsPath } from "@/shared/web/routes";
 
@@ -16,5 +17,11 @@ export default async function PeopleSettingsPage(props: SettingsPageProps) {
   const session = await requireSession(app);
   const [view, from] = await Promise.all([accountView(app, session), openedFrom(props)]);
 
-  return <PeopleSection view={view} back={settingsPath(from)} />;
+  return (
+    <PeopleSection
+      view={view}
+      back={settingsPath(from)}
+      linkMinutes={setupLinkLifetime.total("minutes")}
+    />
+  );
 }

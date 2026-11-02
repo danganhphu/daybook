@@ -5,11 +5,11 @@ import type {
 } from "@/features/notifications/application/notification-channel";
 import type { PushSubscriptionWrites } from "@/features/notifications/application/notification-writes";
 import type { PushSender } from "@/features/notifications/application/push-sender";
-import * as PushSubscriptions from "@/features/notifications/domain/push-subscription";
 import type { PushSubscriptionRepository } from "@/features/notifications/domain/push-subscription-repository";
 import { pushMessageFor } from "@/features/notifications/web/push-text";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
+import { logEvent } from "@/shared/infrastructure/log-event";
 
 export type PushChannelDeps = {
   readonly clock: Clock;
@@ -49,7 +49,7 @@ export function createPushChannel(deps: PushChannelDeps): NotificationChannel {
         switch (outcome.kind) {
           case "sent":
             reached += 1;
-            work.pushSubscriptions.update(PushSubscriptions.markSent(subscription, now));
+            work.pushSubscriptions.recordSent(subscription.id, now);
             break;
           case "gone":
             work.pushSubscriptions.remove(subscription.id);
@@ -59,13 +59,10 @@ export function createPushChannel(deps: PushChannelDeps): NotificationChannel {
             break;
           case "refused":
             // The host only: the rest of the address is the browser's capability
-            console.error(
-              JSON.stringify({
-                event: "push_refused",
-                status: outcome.status,
-                host: new URL(subscription.endpoint).host,
-              }),
-            );
+            logEvent("push_refused", {
+              status: outcome.status,
+              host: new URL(subscription.endpoint).host,
+            });
             break;
           default:
             outcome satisfies never;

@@ -13,9 +13,8 @@ async function keepShownLink(page: Page, remembered: Map<string, string>, title:
   remembered.set(linkKey, url);
 }
 
-When("tôi mời một người dùng mới", async ({ page, remembered }) => {
-  await page.getByRole("button", { name: "Mời người dùng", exact: true }).click();
-  await keepShownLink(page, remembered, "Link mời");
+Then("không có nút {string}", async ({ page }, name: string) => {
+  await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
 });
 
 When("tôi tạo link khôi phục cho {string}", async ({ page, remembered }, name: string) => {
@@ -34,19 +33,3 @@ When("người được mời mở link trên máy của họ", async ({ page, c
   await giveFaceId(page);
   await page.goto(url);
 });
-
-Then("họ được hỏi tên", async ({ page }) => {
-  await expect(page.getByRole("heading", { name: "Tạo tài khoản", level: 1 })).toBeVisible();
-});
-
-// Each run makes a new account, so the username is new every time
-When(
-  "họ chọn tên {string} và một tên đăng nhập chưa ai dùng",
-  async ({ page }, displayName: string) => {
-    await page.getByLabel("Tên", { exact: true }).fill(displayName);
-    await page
-      .getByLabel("Tên đăng nhập", { exact: true })
-      .fill(`khach.${Date.now().toString(36)}`);
-    await page.getByRole("button", { name: "Tiếp tục", exact: true }).click();
-  },
-);

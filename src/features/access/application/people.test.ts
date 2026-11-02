@@ -8,6 +8,7 @@ import { origin, rows, seedAccount, seedSetupLink } from "@/testing/support/acce
 import { testApp, testClock } from "@/testing/support/app";
 import { anAuthenticator, ceremonyIdIn, seedPasskeyAccount } from "@/testing/support/passkeys";
 import { expectOk } from "@/testing/support/result";
+import { seedTelegramLink } from "@/testing/support/telegram";
 
 const authenticator = anAuthenticator();
 
@@ -50,6 +51,27 @@ describe("inviting someone", () => {
         "select account_id, actor_id from access_event where kind = 'setup_link_issued' and json_extract(detail, '$.purpose') = 'invite'",
       ),
     ).toEqual([{ account_id: null, actor_id: lan.account.id }]);
+  });
+
+  it("given two people who each have a way in, when a third is invited, then it is refused and no link exists", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+    await seedPasskeyAccount(time, "minh");
+
+    expect(await testApp(time.clock).issueInvite(lan.session, origin())).toEqual({
+      ok: false,
+      error: "book_full",
+    });
+    expect(await rows("select id from setup_link where purpose = 'invite'")).toEqual([]);
+    expect((await testApp(time.clock).accountOverview(lan.account.id)).people).toHaveLength(2);
+  });
+
+  it("given the second person invited but stopped half-way, when an invite is made again, then it is allowed, as they cannot get in yet", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const { lan, app, ceremonyCookie } = await anOpenedInvite(time);
+    expectOk(await app.nameInvitedAccount({ ceremonyCookie, details: newcomer, origin: origin() }));
+
+    expect(await app.issueInvite(lan.session, origin())).toMatchObject({ ok: true });
   });
 
   it("given a session past the window, when an invite is made, then step-up is asked and no link exists", async () => {
@@ -298,6 +320,37 @@ describe("a recovery link for the other user", () => {
     );
     // Lan's own session is not touched
     expect(await rows("select id from session where id = ?", lan.session.id)).toHaveLength(1);
+  });
+
+  it("given a recovery for someone whose Telegram is connected, when the passkey is made, then their Telegram is disconnected with their devices, and it is logged", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+    const minh = await seedPasskeyAccount(time, "minh");
+    await seedTelegramLink(time.clock, minh.account.id, { id: 70_000_002, firstName: "Minh" });
+    const app = testApp(time.clock);
+    const issued = expectOk(await app.issueRecoveryLink(lan.session, minh.account.id, origin()));
+    const grant = expectOk(await app.redeemSetupLink(issued.token, origin("198.51.100.4")));
+    const options = expectOk(await app.startPasskeySetup(grant.cookie));
+    const { response } = await anAuthenticator().create(options);
+
+    expectOk(
+      await app.finishPasskeySetup({
+        ceremonyCookie: grant.cookie,
+        response,
+        origin: origin("198.51.100.4"),
+        replacing: undefined,
+      }),
+    );
+
+    expect(await rows("select account_id from telegram_link")).toEqual([]);
+    expect(
+      await rows("select account_id, detail from access_event where kind = 'telegram_unlinked'"),
+    ).toEqual([
+      {
+        account_id: minh.account.id,
+        detail: JSON.stringify({ via: "recovery", telegramUser: "70000002" }),
+      },
+    ]);
   });
 });
 

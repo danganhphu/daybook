@@ -11,14 +11,15 @@
 - [Commands](guides/commands.md) - every script, and the account commands
 - [Testing](guides/testing.md) - unit and use-case tests, end-to-end tests, CI
 - [Database](guides/database.md) - changing the schema, the rules the database keeps
-- [Deployment](guides/deployment.md) - the plan for the first deploy
+- [Deployment](guides/deployment.md) - every deploy, the ones that brought notifications, the trash and the bot,
+  rolling back, backups, the checks after
 - [Troubleshooting](guides/troubleshooting.md) - problems already met, and their fixes
 
 ## Product and design
 
 - [Product design](product/design.md) - what the product does and why, decision by decision
 - [Design system](ui/design-system.md) - principles, tokens, components, how styles are written
-- [Screenshots](ui/screenshots.md) - every screen on an Android phone, and one on a desktop
+- [Screenshots](ui/screenshots.md) - the main screens on an Android phone, and one on a desktop
 
 ## Architecture
 

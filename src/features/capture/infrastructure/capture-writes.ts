@@ -12,6 +12,7 @@ export function createCaptureWrites(db: Database, batch: Batch): CaptureWrites {
           id: capture.id,
           content: capture.content,
           source: capture.source,
+          sourceRef: capture.sourceRef ?? null,
           authorId: capture.authorId,
           receivedAt: capture.receivedAt.epochMilliseconds,
         }),

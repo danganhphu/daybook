@@ -1,7 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshed } from "@/app/refreshed";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import * as Customers from "@/features/customers/web/commands";
@@ -43,10 +42,4 @@ export async function deleteKind(id: string, version: number): Promise<KindResul
   const session = await requireSession(app);
 
   return refreshed(await Customers.deleteKind(app, session.accountId, id, version));
-}
-
-function refreshed(result: KindResult): KindResult {
-  refresh();
-
-  return result;
 }

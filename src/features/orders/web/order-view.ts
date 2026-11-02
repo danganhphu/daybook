@@ -29,6 +29,8 @@ export type OrderLineView = {
   readonly productName: string;
   readonly quantity: number;
   readonly unitPrice: number;
+  // What the line comes to: quantity × unit price, or the total a message gave when it does not divide
+  readonly amount: number;
 };
 
 export type PaymentView = {

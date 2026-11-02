@@ -63,6 +63,7 @@ export function toNotificationPreference(row: NotificationPreferenceRow): Notifi
     morningAt: optionalTime(row.morningAt),
     weeklyAt: optionalTime(row.weeklyAt),
     quietAfterDays: quietAfterDaysSchema.parse(row.quietAfterDays),
+    telegram: row.telegram,
     audit: toAudit(row),
   };
 }
@@ -110,6 +111,7 @@ export function toNotificationPreferenceRow(
     morningAt: preference.morningAt ?? null,
     weeklyAt: preference.weeklyAt ?? null,
     quietAfterDays: preference.quietAfterDays,
+    telegram: preference.telegram,
     ...toAuditRow(preference.audit),
   };
 }

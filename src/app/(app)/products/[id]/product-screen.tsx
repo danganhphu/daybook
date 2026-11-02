@@ -20,9 +20,9 @@ import {
   showProduct,
 } from "@/app/(app)/products/actions";
 import { mergingCopy, pickProductHint } from "@/features/merging/web/merging-copy";
-import type { DatedOrderRowView } from "@/features/orders/web/commands";
 import { shortDay } from "@/features/orders/web/day-text";
 import { describeProduct } from "@/features/orders/web/order-view";
+import type { DatedOrderRowView } from "@/features/orders/web/orders-list-commands";
 import { productNameMaxLength } from "@/features/products/domain/product-limits";
 import type { ProductScreenView } from "@/features/products/web/product-view";
 import { productsCopy } from "@/features/products/web/products-copy";

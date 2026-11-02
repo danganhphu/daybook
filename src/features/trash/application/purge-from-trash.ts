@@ -48,6 +48,7 @@ export async function purgeFromTrash(
   const records = await found(deps, items);
   const refused: TrashRefusal[] = [];
   const going = new Map<TrashKind, string[]>();
+  const sent: TrashItem[] = [];
   let done = 0;
   for (const item of items) {
     const record = records.get(item.id);
@@ -61,7 +62,7 @@ export async function purgeFromTrash(
       continue;
     }
     going.set(item.kind, [...(going.get(item.kind) ?? []), item.id]);
-    done += 1;
+    sent.push(item);
   }
 
   if (going.size > 0) {
@@ -76,6 +77,16 @@ export async function purgeFromTrash(
     await work.commit();
   }
 
+  // The statements leave alone whatever an order or a reminder still needs; read again to say which those were
+  const left = sent.length === 0 ? new Map<string, Found>() : await found(deps, sent);
+  for (const item of sent) {
+    if (left.has(item.id)) {
+      refused.push({ item, error: "trash_in_use" });
+    } else {
+      done += 1;
+    }
+  }
+
   return { done, refused };
 }
 
@@ -84,10 +95,28 @@ export type EmptyTrashDeps = {
   readonly startUnitOfWork: () => UnitOfWork<{ readonly trash: TrashWrites }>;
 };
 
-// The daily run: whatever has been in the trash longer than it keeps things leaves the database
-export async function emptyExpiredTrash(deps: EmptyTrashDeps): Promise<void> {
+export type TrashPurgeFailure = { readonly kind: TrashKind; readonly error: unknown };
+
+// The daily run: whatever has been in the trash longer than it keeps things leaves the database. A kind at a time, each
+// its own batch, so a row one kind cannot delete never keeps the others in the trash; a kind that failed is tried
+// again the next night. Answers the kinds that failed, for the caller to log.
+export async function emptyExpiredTrash(
+  deps: EmptyTrashDeps,
+): Promise<ReadonlyArray<TrashPurgeFailure>> {
   const now = deps.clock();
-  const work = deps.startUnitOfWork();
-  work.trash.purgeDeletedBefore(recentlyDeletedSince(now), now);
-  await work.commit();
+  const before = recentlyDeletedSince(now);
+  const outcomes = await Promise.all(
+    trashKinds.map(async (kind): Promise<TrashPurgeFailure | undefined> => {
+      const work = deps.startUnitOfWork();
+      work.trash.purgeDeletedBefore(kind, before, now);
+      try {
+        await work.commit();
+        return undefined;
+      } catch (error) {
+        return { kind, error };
+      }
+    }),
+  );
+
+  return outcomes.filter((failure) => failure !== undefined);
 }

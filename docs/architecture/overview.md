@@ -6,20 +6,22 @@ How the pieces fit. The rules for writing code against them are in [AGENTS.md](.
 ## One Worker, two doors
 
 ```
-Telegram (later) --webhook--+                             +-- D1 (SQLite)
-                            +--> Cloudflare Worker -------+-- Workers AI (reading notes)
-Browser / installed PWA ----+    (vinext + the core)      +-- queue `jobs` -> Web Push
-cron every 15 minutes ------+                             |
+Telegram ------------webhook--+                             +-- D1 (SQLite)
+                              +--> Cloudflare Worker -------+-- Workers AI (reading notes)
+Browser / installed PWA ------+    (vinext + the core)      +-- queue `jobs` -> Web Push, the bell, Telegram,
+cron every 15 minutes --------+                             |   the bot's replies
+                                                            +-- queue `jobs-dead` -> logs, the bell
 ```
 
 Everything runs in one Worker on Cloudflare's free plan. The web app is vinext - the Next.js App Router API on Vite -
-rendered on the Worker, and it does everything on its own. The Telegram bot, an optional second door, comes later and
-will share the same core.
+rendered on the Worker, and it does everything on its own. The Telegram bot is an optional second door over the same
+core (ADR 0014): with its two secrets unset it is off, and nothing else changes.
 
-`src/worker.ts` is the Worker's entry and has three ways in: `fetch` hands every request to vinext's handler,
-`scheduled` runs the notifications' scheduler, and `queue` consumes the `jobs` queue. vinext's handler is imported as
-vinext's own entry does - its build cannot split it into a chunk of its own - while the scheduler and the consumer load
-their code on first use, from `src/composition/jobs.ts`, so web requests never load it.
+`src/worker.ts` is the Worker's entry and has three ways in: `fetch` hands the bot's webhook path to the bot and every
+other request to vinext's handler, `scheduled` runs the notifications' scheduler, and `queue` consumes `jobs` and
+`jobs-dead`. vinext's handler is imported as vinext's own entry does - its build cannot split it into a chunk of its
+own - while the bot, the scheduler and the consumers load their code on first use, from `src/composition/bot.ts` and
+`src/composition/jobs.ts`, so web requests never load it and a bot message never reaches vinext.
 
 ## Feature slices
 
@@ -36,8 +38,11 @@ for good) - each in four layers:
 | `infrastructure/` | Drizzle tables, row mapping, repositories and writes over D1 | domain, application |
 | `web/` | What server actions call, view models, the feature's React components | the feature, `shared/ui` |
 
-Oxlint enforces the direction: domain or application code that imports Drizzle, Cloudflare APIs, infrastructure or
-UI fails lint.
+The doors - `src/app/`, a feature's `web/`, `src/bot/`, `src/jobs/` - call use cases on an `App`. Oxlint enforces
+the direction: domain or application code that imports Drizzle, Cloudflare APIs, infrastructure, UI or a door fails
+lint, a door that imports Drizzle or a feature's infrastructure fails too, and the bot and the jobs may not import
+React or Next. The words a screen and a bot card share - `*-copy.ts`, `*-text.ts` under `web/` - stay plain
+TypeScript for that.
 
 `src/composition/create-app.ts` is the one place that knows which implementation stands behind each port; it builds
 the `App` that adapters receive. `src/app/` holds routes only - pages and server actions stay thin and call into a
@@ -69,8 +74,24 @@ on the `jobs` queue - ids and a day only. The queue's consumer claims the delive
 one row per person, subject, day or event, and channel), reads what to say, and sends it to each of the person's
 browsers through Web Push: encrypted for the browser (RFC 8291), signed for the push service (RFC 8292). A failed send
 is retried by the queue; the ledger makes a repeat send nothing. The browser's service worker, `public/sw.js`, shows
-the notification and opens the app where it points. The rules are in [domain.md](domain.md#notifications), the
-reasons in ADR 0015.
+the notification and opens the app where it points. Every message also goes into the list behind the bell, and to
+Telegram for someone whose Telegram is linked with "Gửi qua Telegram" on; each channel finishes its ledger row before
+a fault in another is passed on, so a retry never sends twice. The rules are in
+[domain.md](domain.md#notifications), the reasons in ADR 0015.
+
+A job that fails every retry goes to `jobs-dead`, whose consumer writes a `job_dead` line in Workers Logs and, for a
+bot reply that never went out, puts "Bot chưa trả lời được một tin nhắn" in its sender's bell, opening the day of the
+message. The note itself was kept before the job was queued.
+
+## The Telegram bot
+
+Telegram posts each update to `/telegram/webhook` with the secret set by `pnpm telegram:setup`; nothing is read before
+it matches. A message from a linked Telegram user is kept as a note at once, its `(chat, message)` pair the capture's
+`source_ref`, so Telegram's resend of the same update finds it instead of keeping it twice (Idempotent Receiver). The
+reading and the reply go through the `jobs` queue, never `ctx.waitUntil`; the card it sends has Hoàn tác, answers to
+the reading's question, and a link into the web. Commands (`/today`, `/reminders`, `/week`, `/month`, `/web`,
+`/settings`, `/help`) answer from the same queries as the screens. A person links their Telegram in Settings: the web
+makes a one-time code that the bot's `/start` spends. The reasons are in ADR 0013 and ADR 0014.
 
 ## Merging two that are one
 

@@ -8,15 +8,12 @@ import * as InboxItems from "@/features/notifications/domain/inbox-item";
 import type { InboxItem } from "@/features/notifications/domain/inbox-item";
 import { err, ok, type Result } from "@/shared/domain/result";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
+import { clockText, dayMonthText } from "@/shared/web/time-text";
 
 import type { InboxRowView, InboxView } from "./inbox-view";
 import { keptFor, notificationsCopy } from "./notifications-copy";
 
 // What the list behind the bell does for each request, minus the framework
-
-function twoDigits(value: number): string {
-  return String(value).padStart(2, "0");
-}
 
 // The time today, "Hôm qua", or the day, with the year only when it is not this one
 function whenMade(at: Temporal.Instant, today: Temporal.PlainDate): string {
@@ -24,15 +21,14 @@ function whenMade(at: Temporal.Instant, today: Temporal.PlainDate): string {
   const day = moment.toPlainDate();
   const daysAgo = day.until(today, { largestUnit: "days" }).days;
   if (daysAgo === 0) {
-    return `${twoDigits(moment.hour)}:${twoDigits(moment.minute)}`;
+    return clockText(moment.hour, moment.minute);
   }
   if (daysAgo === 1) {
     return notificationsCopy.yesterday;
   }
+  const date = dayMonthText(day.day, day.month);
 
-  return day.year === today.year
-    ? `${day.day}/${day.month}`
-    : `${day.day}/${day.month}/${day.year}`;
+  return day.year === today.year ? date : `${date}/${day.year}`;
 }
 
 function rowOf(item: InboxItem, today: Temporal.PlainDate): InboxRowView {

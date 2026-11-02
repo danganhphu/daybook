@@ -3,6 +3,7 @@
 // first line (error-lines.ts).
 
 import { errorLines } from "@/shared/infrastructure/error-lines";
+import { logEvent } from "@/shared/infrastructure/log-event";
 
 type FailedRequest = { readonly method: string };
 
@@ -20,14 +21,11 @@ export function onRequestError(
   request: FailedRequest,
   context: FailureContext,
 ): void {
-  console.error(
-    JSON.stringify({
-      event: "request_failed",
-      route: context.routePath,
-      during: context.routeType,
-      method: request.method,
-      digest: digestOf(error),
-      errors: errorLines(error),
-    }),
-  );
+  logEvent("request_failed", {
+    route: context.routePath,
+    during: context.routeType,
+    method: request.method,
+    digest: digestOf(error),
+    errors: errorLines(error),
+  });
 }

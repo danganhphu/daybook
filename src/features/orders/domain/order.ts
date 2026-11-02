@@ -36,11 +36,28 @@ export const quantitySchema = z
 
 export type Quantity = z.infer<typeof quantitySchema>;
 
-export const orderLineSchema = z.object({
-  productId: productIdSchema,
-  quantity: quantitySchema,
-  unitPrice: moneySchema,
-});
+// A line's total kept as written stays within rounding of quantity × unit price, the unit price being that total
+// divided by the quantity to the nearest đồng: "3 hộp 100k" is 33.333đ a box and 100.000đ in all
+export function totalFits(line: {
+  readonly quantity: number;
+  readonly unitPrice: number;
+  readonly total: number;
+}): boolean {
+  return Math.abs(line.total - line.quantity * line.unitPrice) * 2 <= line.quantity;
+}
+
+export const orderLineSchema = z
+  .object({
+    productId: productIdSchema,
+    quantity: quantitySchema,
+    unitPrice: moneySchema,
+    // The line's total when it is not quantity × unit price: an amount read from a message that does not divide by
+    // its quantity, kept as written so the order sums to what she was told
+    total: moneySchema.optional(),
+  })
+  .refine((line) => line.total === undefined || totalFits({ ...line, total: line.total }), {
+    error: "Tổng dòng không khớp với số lượng và đơn giá",
+  });
 
 export type OrderLine = z.infer<typeof orderLineSchema>;
 
@@ -114,13 +131,35 @@ export type OrderRefusal =
   | "payment_not_found"
   | "delivered_before_ordered";
 
-function lineAmount(line: OrderLine): number {
-  return line.quantity * line.unitPrice;
+// What a line comes to: its kept total, or quantity × unit price
+export function lineAmount(line: OrderLine): number {
+  return line.total ?? line.quantity * line.unitPrice;
 }
 
 // Computed from the lines every time, never stored, so it cannot drift from them
 export function total(order: { readonly lines: ReadonlyArray<OrderLine> }): Money {
   return sum(order.lines.map((line) => moneySchema.parse(lineAmount(line))));
+}
+
+// A revised order keeps a line's written total while the line is unchanged - the same product, quantity and price -
+// and drops it once either is changed, since a person typing a price means quantity × that price
+export function keepTotals(
+  lines: ReadonlyArray<OrderLine>,
+  before: ReadonlyArray<OrderLine>,
+): ReadonlyArray<OrderLine> {
+  return lines.map((line) => {
+    const same = before.find(
+      (old) =>
+        old.total !== undefined &&
+        old.productId === line.productId &&
+        old.quantity === line.quantity &&
+        old.unitPrice === line.unitPrice,
+    );
+
+    return same?.total === undefined || line.total !== undefined
+      ? line
+      : { ...line, total: same.total };
+  });
 }
 
 export function paid(order: Order): Money {

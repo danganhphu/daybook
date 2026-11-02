@@ -11,10 +11,11 @@ Android phone and a desktop - the last two as real Chrome (`channel: "chromium"`
 
 ## Running
 
-- It tests the last `pnpm build`. Build first.
+- It tests the last `pnpm build:e2e`: the production build with a table of answers in place of Workers AI and a
+  stand-in for the Bot API. Build first.
 - `e2e/serve.ts` empties `.cloudflare/e2e-state`, migrates it, seeds it and serves the build over HTTPS on port
   4173; the dev database is never touched. Nothing else may hold that port while it runs.
-- One worker: scenarios share a database and empty the day through the screen. About three minutes.
+- One worker: scenarios share a database and empty the day through the screen. About fifteen minutes.
 - Tags: `@desktop-only`, `@phone-only`, `@chromium-only` (for steps that ask Chrome itself over CDP: install checks,
   and passkeys through `e2e/face-id.ts`, since Playwright's WebKit has none), `@iphone-later` (should pass on WebKit,
   does not yet; Android first, the owner's call). Never use `@chromium-only` to hide a WebKit failure.

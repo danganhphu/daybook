@@ -6,7 +6,7 @@ import { paymentDetailsSchema, type LiveOrder } from "@/features/orders/domain/o
 import { periodContaining } from "@/features/reports/domain/report-period";
 import { changeOf, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer, aKind, anOrder, line } from "@/testing/support/orders";
-import { expectOk } from "@/testing/support/result";
+import { expectDefined, expectOk } from "@/testing/support/result";
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -227,7 +227,7 @@ describe("other periods", () => {
     const customer = await aCustomer(app, "Hướng Dương");
     const order = await anOrder(app, customer, [line("Thuốc tê", 1, 400_000)], "2026-10-05");
     const paid = await pay(app, order, 400_000, "2026-10-06");
-    const paymentId = paid.payments[0]!.id;
+    const paymentId = expectDefined(paid.payments[0]).id;
     expectOk(await app.removePayment({ ...changeOf(paid, await theAuthor()), paymentId }));
 
     const report = await app.readReport({ period: october });

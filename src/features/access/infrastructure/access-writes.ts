@@ -8,8 +8,10 @@ import type {
   PasswordWrites,
   SessionWrites,
   SetupLinkWrites,
+  TelegramLinkCodeWrites,
+  TelegramLinkWrites,
 } from "@/features/access/application/access-writes";
-import { passwordLockAfter } from "@/features/access/domain/access-policy";
+import { passwordLockAfter } from "@/features/access/domain/password-policy";
 import type { Batch } from "@/shared/infrastructure/d1/batch";
 import type { Database } from "@/shared/infrastructure/d1/database";
 import { sqlNumber } from "@/shared/infrastructure/d1/sql-literals";
@@ -28,6 +30,9 @@ import { toSessionRow } from "./session-mapping";
 import { sessionTable } from "./session.table";
 import { toSetupLinkRow } from "./setup-link-mapping";
 import { setupLinkTable } from "./setup-link.table";
+import { telegramLinkCodeTable } from "./telegram-link-code.table";
+import { toTelegramLinkCodeRow, toTelegramLinkRow } from "./telegram-link-mapping";
+import { telegramLinkTable } from "./telegram-link.table";
 
 export function createAccountWrites(db: Database, batch: Batch): AccountWrites {
   return {
@@ -210,6 +215,54 @@ export function createAccessEventWrites(db: Database, batch: Batch): AccessEvent
   return {
     add(event) {
       batch.enlist(db.insert(accessEventTable).values(toAccessEventRow(event)));
+    },
+  };
+}
+
+export function createTelegramLinkWrites(db: Database, batch: Batch): TelegramLinkWrites {
+  return {
+    save(link) {
+      const row = toTelegramLinkRow(link);
+      batch.enlist(
+        db
+          .insert(telegramLinkTable)
+          .values(row)
+          .onConflictDoUpdate({
+            target: telegramLinkTable.accountId,
+            set: {
+              telegramUserId: row.telegramUserId,
+              telegramChatId: row.telegramChatId,
+              telegramName: row.telegramName,
+              linkedAt: row.linkedAt,
+            },
+          }),
+      );
+    },
+
+    remove(accountId) {
+      batch.enlist(db.delete(telegramLinkTable).where(eq(telegramLinkTable.accountId, accountId)));
+    },
+  };
+}
+
+export function createTelegramLinkCodeWrites(db: Database, batch: Batch): TelegramLinkCodeWrites {
+  return {
+    add(code) {
+      batch.enlist(db.insert(telegramLinkCodeTable).values(toTelegramLinkCodeRow(code)));
+    },
+
+    removeForAccount(accountId) {
+      batch.enlist(
+        db.delete(telegramLinkCodeTable).where(eq(telegramLinkCodeTable.accountId, accountId)),
+      );
+    },
+
+    removeExpired(now) {
+      batch.enlist(
+        db
+          .delete(telegramLinkCodeTable)
+          .where(lte(telegramLinkCodeTable.expiresAt, now.epochMilliseconds)),
+      );
     },
   };
 }

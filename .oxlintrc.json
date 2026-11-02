@@ -17,7 +17,7 @@
   "categories": {
     "correctness": "error",
     "suspicious": "error",
-    "perf": "warn"
+    "perf": "error"
   },
   "options": {
     "typeAware": true,
@@ -26,7 +26,9 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css", "**/*.scss"] }],
-    "import/no-relative-parent-imports": "error"
+    "import/no-relative-parent-imports": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error"
   },
   "overrides": [
     {
@@ -42,6 +44,67 @@
                 "name": "next/link",
                 "importNames": ["default"],
                 "message": "Use AppLink, so a slow navigation shows on the bar along the top."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The web's doors - pages, screens, their commands - reach storage through use cases and ports; logging and the
+      // clock are the infrastructure they use. Repeats the AppLink rule, which this list replaces for them.
+      "files": ["src/app/**", "src/features/*/web/**", "src/shared/web/**"],
+      "excludeFiles": ["**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "next/link",
+                "importNames": ["default"],
+                "message": "Use AppLink, so a slow navigation shows on the bar along the top."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "drizzle-kit",
+                  "@/features/*/infrastructure/**",
+                  "@/shared/infrastructure/d1/**"
+                ],
+                "message": "A door reaches storage through a use case, not the tables."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The bot, the queue and the cron: doors too, and none renders a page. They share the web's words - the copy,
+      // text and path modules under web/, which stay plain TypeScript for that - never its components.
+      "files": ["src/bot/**", "src/jobs/**"],
+      "excludeFiles": ["**/*.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "drizzle-kit",
+                  "@/features/*/infrastructure/**",
+                  "@/shared/infrastructure/d1/**"
+                ],
+                "message": "A door reaches storage through a use case, not the tables."
+              },
+              {
+                "group": ["react", "react-dom", "next", "next/*", "vinext", "vinext/*", "@/app/**"],
+                "message": "The bot and the jobs share the web's words, not its pages or components."
               }
             ]
           }
@@ -69,8 +132,12 @@
                 "group": [
                   "@/features/*/application/**",
                   "@/features/*/infrastructure/**",
+                  "@/features/*/web/**",
                   "@/shared/application/**",
                   "@/shared/infrastructure/**",
+                  "@/shared/web/**",
+                  "@/bot/**",
+                  "@/jobs/**",
                   "@/composition/**"
                 ],
                 "message": "The domain depends on nothing above it."
@@ -113,6 +180,10 @@
                   "@/composition/**"
                 ],
                 "message": "Use cases depend on ports; only src/composition wires infrastructure in."
+              },
+              {
+                "group": ["@/features/*/web/**", "@/shared/web/**", "@/bot/**", "@/jobs/**"],
+                "message": "Use cases know nothing about the doors that call them."
               },
               {
                 "group": [

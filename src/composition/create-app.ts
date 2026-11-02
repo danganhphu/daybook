@@ -47,6 +47,8 @@ import {
   startPasskeySignIn,
   type StartPasskeySignInRequest,
 } from "@/features/access/application/start-passkey-sign-in";
+import { startTelegramLink } from "@/features/access/application/start-telegram-link";
+import { unlinkTelegram } from "@/features/access/application/unlink-telegram";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import type { DisplayName, Username } from "@/features/access/domain/account";
 import type { Session } from "@/features/access/domain/session";
@@ -60,6 +62,7 @@ import { createPasswordRepository } from "@/features/access/infrastructure/passw
 import type { RelyingParty } from "@/features/access/infrastructure/relying-party";
 import { createSessionRepository } from "@/features/access/infrastructure/session-repository";
 import { createSetupLinkRepository } from "@/features/access/infrastructure/setup-link-repository";
+import { createTelegramLinkRepository } from "@/features/access/infrastructure/telegram-link-repository";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import {
   recordCapture,
@@ -115,6 +118,10 @@ import {
   changeNotificationQuietDays,
   type ChangeNotificationQuietDaysInput,
 } from "@/features/notifications/application/change-notification-quiet-days";
+import {
+  changeNotificationTelegram,
+  type ChangeNotificationTelegramInput,
+} from "@/features/notifications/application/change-notification-telegram";
 import {
   changeNotificationTimes,
   type ChangeNotificationTimesInput,
@@ -250,6 +257,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
   const setupLinks = createSetupLinkRepository(db);
   const rateLimiter = createRateLimiter(db);
   const accessEvents = createAccessEventRepository(db);
+  const telegramLinks = createTelegramLinkRepository(db);
   const verifier = createLazyPasskeyVerifier(bindings.relyingParty);
   const secrets = webCryptoSecrets;
   const startUnitOfWork = () => createUnitOfWork(db);
@@ -265,6 +273,7 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
     setupLinks,
     rateLimiter,
     accessEvents,
+    telegramLinks,
     verifier,
     startUnitOfWork,
   };
@@ -458,6 +467,10 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       issueRecoveryLink(access, session, accountId, origin),
     nameInvitedAccount: (request: NameInvitedAccountRequest) => nameInvitedAccount(access, request),
     resumeSetup: (ceremonyCookie: string | undefined) => resumeSetup(access, ceremonyCookie),
+    telegramLink: (accountId: AccountId) => telegramLinks.get(accountId),
+    startTelegramLink: (session: Session) => startTelegramLink(access, session),
+    unlinkTelegram: (session: Session, origin: RequestOrigin) =>
+      unlinkTelegram(access, session, origin),
 
     notificationSettings: (session: Session) => notificationSettings(notifications, session),
     subscribeDevice: (session: Session, input: SubscribeDeviceInput, origin: RequestOrigin) =>
@@ -468,6 +481,8 @@ export function createApp(bindings: AppBindings, clock: Clock = systemClock) {
       changeNotificationTimes(notifications, session, input),
     changeNotificationQuietDays: (session: Session, input: ChangeNotificationQuietDaysInput) =>
       changeNotificationQuietDays(notifications, session, input),
+    changeNotificationTelegram: (session: Session, input: ChangeNotificationTelegramInput) =>
+      changeNotificationTelegram(notifications, session, input),
     notificationInbox: (session: Session) => notificationInbox(inbox, session),
     unreadNotifications: (session: Session) => inbox.inbox.unreadCount(session.accountId),
     markInboxRead: (session: Session, upTo: Temporal.Instant) =>

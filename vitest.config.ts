@@ -6,8 +6,10 @@ import { configDefaults, defineConfig } from "vitest/config";
 import {
   compatibilityDate,
   compatibilityFlags,
+  deadJobsQueue,
   developmentPepper,
   developmentVapidKeys,
+  jobsQueue,
 } from "./cloudflare.config.ts";
 
 // Kept apart from vite.config.ts so vinext's plugins stay out of tests. Bindings are declared inline:
@@ -38,6 +40,9 @@ export default defineConfig({
           // The same for the push keys
           CONFIG_DEVELOPMENT_VAPID_PUBLIC_KEY: developmentVapidKeys.publicKey,
           CONFIG_DEVELOPMENT_VAPID_PRIVATE_KEY: developmentVapidKeys.privateKey,
+          // And the queues' names, which the Worker routes on
+          CONFIG_JOBS_QUEUE: jobsQueue,
+          CONFIG_DEAD_JOBS_QUEUE: deadJobsQueue,
         },
       },
     })),

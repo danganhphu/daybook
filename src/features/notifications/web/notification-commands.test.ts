@@ -17,14 +17,14 @@ describe("Settings > Thông báo, the days for quiet customers", () => {
   it("given nothing changed, when shown, then her notifications count 21 days", async () => {
     const { session, app } = await lan();
 
-    expect((await notificationsView(app, session, undefined)).quietAfterDays).toBe(21);
+    expect((await notificationsView(app, session, undefined, false)).quietAfterDays).toBe(21);
   });
 
   it("given 30 typed, when saved, then her screen shows 30 with the version to send next", async () => {
     const { session, app } = await lan();
 
     expect(await saveQuietDays(app, session, " 30 ", null)).toEqual({ ok: true, value: null });
-    const view = await notificationsView(app, session, undefined);
+    const view = await notificationsView(app, session, undefined, false);
 
     expect([view.quietAfterDays, view.version]).toEqual([30, 1]);
   });

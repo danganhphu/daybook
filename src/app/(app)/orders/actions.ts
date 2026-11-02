@@ -1,10 +1,10 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshed } from "@/app/refreshed";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
-import * as Orders from "@/features/orders/web/commands";
+import * as OrderForm from "@/features/orders/web/order-form-commands";
+import * as OrderPage from "@/features/orders/web/order-page-commands";
 import type { CustomerSuggestion, ProductSuggestion } from "@/features/orders/web/order-view";
 import type { Result } from "@/shared/domain/result";
 
@@ -17,7 +17,7 @@ export async function placeOrder(input: unknown): Promise<Result<string, string>
   const app = daybook();
   const session = await requireSession(app);
 
-  return Orders.placeOrder(app, session.accountId, input);
+  return OrderForm.placeOrder(app, session.accountId, input);
 }
 
 export async function reviseOrder(
@@ -28,71 +28,77 @@ export async function reviseOrder(
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.reviseOrder(app, session.accountId, id, version, input));
+  return refreshed(await OrderForm.reviseOrder(app, session.accountId, id, version, input));
 }
 
 export async function deliverOrder(
   id: string,
   version: number,
   on: string,
-): Promise<Orders.OrderChangeResult> {
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.deliverOrder(app, session.accountId, id, version, on));
+  return refreshed(await OrderPage.deliverOrder(app, session.accountId, id, version, on));
 }
 
 export async function undeliverOrder(
   id: string,
   version: number,
-): Promise<Orders.OrderChangeResult> {
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.undeliverOrder(app, session.accountId, id, version));
+  return refreshed(await OrderPage.undeliverOrder(app, session.accountId, id, version));
 }
 
 export async function takePayment(
   id: string,
   version: number,
   payment: unknown,
-): Promise<Orders.OrderChangeResult> {
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.takePayment(app, session.accountId, id, version, payment));
+  return refreshed(await OrderPage.takePayment(app, session.accountId, id, version, payment));
 }
 
 export async function removePayment(
   id: string,
   version: number,
   paymentId: string,
-): Promise<Orders.OrderChangeResult> {
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.removePayment(app, session.accountId, id, version, paymentId));
+  return refreshed(await OrderPage.removePayment(app, session.accountId, id, version, paymentId));
 }
 
-export async function deleteOrder(id: string, version: number): Promise<Orders.OrderChangeResult> {
+export async function deleteOrder(
+  id: string,
+  version: number,
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.deleteOrder(app, session.accountId, id, version));
+  return refreshed(await OrderPage.deleteOrder(app, session.accountId, id, version));
 }
 
-export async function restoreOrder(id: string, version: number): Promise<Orders.OrderChangeResult> {
+export async function restoreOrder(
+  id: string,
+  version: number,
+): Promise<OrderPage.OrderChangeResult> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshed(await Orders.restoreOrder(app, session.accountId, id, version));
+  return refreshed(await OrderPage.restoreOrder(app, session.accountId, id, version));
 }
 
 export async function findCustomers(typed: string): Promise<ReadonlyArray<CustomerSuggestion>> {
   const app = daybook();
   await requireSession(app);
 
-  return Orders.suggestCustomers(app, typed);
+  return OrderForm.suggestCustomers(app, typed);
 }
 
 export async function findProducts(
@@ -102,11 +108,5 @@ export async function findProducts(
   const app = daybook();
   await requireSession(app);
 
-  return Orders.suggestProducts(app, typed, customerId);
-}
-
-function refreshed<T>(result: Result<T, string>): Result<T, string> {
-  refresh();
-
-  return result;
+  return OrderForm.suggestProducts(app, typed, customerId);
 }

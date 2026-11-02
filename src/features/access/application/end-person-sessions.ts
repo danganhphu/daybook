@@ -3,23 +3,29 @@ import type { RequestOrigin } from "@/features/access/domain/access-event";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
+import type { TelegramLinkRepository } from "@/features/access/domain/telegram-link-repository";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import { accountIdSchema } from "@/shared/domain/account-id";
 import { err, ok, type Result } from "@/shared/domain/result";
 
 import type { AccessError } from "./access-errors";
+import type { TelegramLinkWrites } from "./access-writes";
 import type { SessionStores } from "./enlist-new-session";
+import { enlistTelegramUnlink } from "./enlist-telegram-unlink";
 import { isSteppedUp, type StepUpDeps } from "./step-up";
 
 export type EndPersonSessionsDeps = StepUpDeps & {
   readonly accounts: AccountRepository;
   readonly sessions: SessionRepository;
-  readonly startUnitOfWork: () => UnitOfWork<SessionStores>;
+  readonly telegramLinks: TelegramLinkRepository;
+  readonly startUnitOfWork: () => UnitOfWork<
+    SessionStores & { readonly telegramLinks: TelegramLinkWrites }
+  >;
 };
 
-// The other person's phone was lost or stolen: this user signs out every device of theirs, after step-up. Their
-// passkeys stay - the lost one is theirs to remove, once a recovery link lets them back in (ADR 0009, amended
-// 2026-10-26). Both users see it in their activity. Answers how many ended.
+// The other person's phone was lost or stolen: this user signs out every device of theirs, and unlinks their
+// Telegram, after step-up. Their passkeys stay - the lost one is theirs to remove, once a recovery link lets them back
+// in (ADR 0009, amended 2026-10-26). Both users see it in their activity. Answers how many devices ended.
 export async function endPersonSessions(
   deps: EndPersonSessionsDeps,
   session: Session,
@@ -39,8 +45,12 @@ export async function endPersonSessions(
   if (account === undefined) {
     return err("not_found");
   }
-  const ended = await deps.sessions.listForAccount(account.id);
+  const [ended, telegram] = await Promise.all([
+    deps.sessions.listForAccount(account.id),
+    deps.telegramLinks.get(account.id),
+  ]);
 
+  const now = deps.clock();
   const work = deps.startUnitOfWork();
   work.sessions.removeAll(account.id);
   work.accessEvents.add(
@@ -53,8 +63,15 @@ export async function endPersonSessions(
         detail: { by: "other_user", ended: String(ended.length) },
       },
       origin,
-      deps.clock(),
+      now,
     ),
+  );
+  enlistTelegramUnlink(
+    work,
+    telegram,
+    { actorId: session.accountId, sessionId: session.id, detail: { by: "other_user" } },
+    origin,
+    now,
   );
   await work.commit();
 

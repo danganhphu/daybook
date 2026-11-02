@@ -4,24 +4,24 @@ import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import type { DeletedReminder, LiveReminder, Reminder } from "@/features/reminders/domain/reminder";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
 import type { Database } from "@/shared/infrastructure/d1/database";
-import { d1MaxBoundParameters } from "@/shared/infrastructure/d1/limits";
+import { readInChunks } from "@/shared/infrastructure/d1/limits";
 
 import { toReminder } from "./reminder-mapping";
 import { reminderTable } from "./reminder.table";
 
 export function createReminderRepository(db: Database): ReminderRepository {
-  async function whereIn(column: SQLiteColumn, values: ReadonlyArray<string>) {
-    const reminders: Reminder[] = [];
-    for (let start = 0; start < values.length; start += d1MaxBoundParameters) {
-      // oxlint-disable-next-line no-await-in-loop -- one chunk per query, under D1's bound-parameter limit
-      const rows = await db
+  async function whereIn(
+    column: SQLiteColumn,
+    values: ReadonlyArray<string>,
+  ): Promise<ReadonlyArray<Reminder>> {
+    const rows = await readInChunks(values, (chunk) =>
+      db
         .select()
         .from(reminderTable)
-        .where(inArray(column, values.slice(start, start + d1MaxBoundParameters)));
-      reminders.push(...rows.map(toReminder));
-    }
+        .where(inArray(column, [...chunk])),
+    );
 
-    return reminders;
+    return rows.map(toReminder);
   }
 
   return {
@@ -121,15 +121,14 @@ export function createReminderRepository(db: Database): ReminderRepository {
     },
 
     async madeFrom(captureIds) {
-      if (captureIds.length === 0) {
-        return [];
-      }
-      const rows = await db
-        .select()
-        .from(reminderTable)
-        .where(
-          and(isNull(reminderTable.deletedAt), inArray(reminderTable.captureId, [...captureIds])),
-        );
+      const rows = await readInChunks(captureIds, (chunk) =>
+        db
+          .select()
+          .from(reminderTable)
+          .where(
+            and(isNull(reminderTable.deletedAt), inArray(reminderTable.captureId, [...chunk])),
+          ),
+      );
 
       return rows
         .map(toReminder)

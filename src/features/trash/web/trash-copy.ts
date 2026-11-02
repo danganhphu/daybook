@@ -1,3 +1,4 @@
+import { remindersCopy } from "@/features/reminders/web/reminders-copy";
 import type { TrashKind } from "@/features/trash/domain/trash";
 
 // What "Đã xoá gần đây" says beyond its title, in one place
@@ -10,7 +11,7 @@ export const trashCopy = {
   kinds: {
     order: "Đơn hàng",
     note: "Ghi chú",
-    reminder: "Việc cần nhắc",
+    reminder: remindersCopy.title,
     customer: "Khách",
     product: "Sản phẩm",
     kind: "Loại khách",

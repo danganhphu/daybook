@@ -1,7 +1,8 @@
+import * as Customers from "@/features/customers/domain/customer";
 import * as Reminders from "@/features/reminders/domain/reminder";
 import type { DeletedReminder, ReminderId } from "@/features/reminders/domain/reminder";
 import type { RecordChange } from "@/shared/application/record-change";
-import { ok } from "@/shared/domain/result";
+import { err, ok } from "@/shared/domain/result";
 
 import { changeReminder } from "./change-reminder";
 import type { ReminderDeps } from "./reminder-deps";
@@ -18,6 +19,17 @@ export async function deleteReminder(deps: ReminderDeps, input: RecordChange<Rem
   );
 }
 
-export function restoreReminder(deps: ReminderDeps, input: RecordChange<ReminderId>) {
-  return changeReminder(deps, input, (reminder, at) => Reminders.restore(reminder, input.by, at));
+// Never while its customer is in the trash, as for an order
+export async function restoreReminder(deps: ReminderDeps, input: RecordChange<ReminderId>) {
+  const reminder = await deps.reminders.get(input.id);
+  if (
+    reminder?.status === "deleted" &&
+    reminder.deletedWith === undefined &&
+    reminder.customerId !== undefined &&
+    Customers.isInTrash(await deps.customers.get(reminder.customerId))
+  ) {
+    return err("reminder_customer_deleted" as const);
+  }
+
+  return changeReminder(deps, input, (current, at) => Reminders.restore(current, input.by, at));
 }

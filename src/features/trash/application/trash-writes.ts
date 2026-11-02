@@ -7,6 +7,6 @@ import type { TrashKind } from "@/features/trash/domain/trash";
 export type TrashWrites = {
   // `at` stamps the customers a kind gone for good is taken off
   purge(kind: TrashKind, ids: ReadonlyArray<string>, at: Temporal.Instant): void;
-  // Every kind, everything deleted before `before`: the daily run
-  purgeDeletedBefore(before: Temporal.Instant, at: Temporal.Instant): void;
+  // Everything of one kind deleted before `before`: the daily run, a kind at a time
+  purgeDeletedBefore(kind: TrashKind, before: Temporal.Instant, at: Temporal.Instant): void;
 };

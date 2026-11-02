@@ -14,6 +14,7 @@ import { err, ok, type Result } from "@/shared/domain/result";
 import type { AccessError } from "./access-errors";
 import type { AccessEventWrites, CeremonyWrites, SetupLinkWrites } from "./access-writes";
 import { formatCeremonyCookie } from "./ceremony-cookie";
+import { overLimit } from "./over-limit";
 import { clientNetwork } from "./rate-limit-keys";
 import type { RateLimiter } from "./rate-limiter";
 import { hashSecretToken, newSecretToken } from "./secret-tokens";
@@ -50,18 +51,14 @@ export async function redeemSetupLink(
 
   if (
     origin.ip !== undefined &&
-    (await deps.rateLimiter.hit(
-      `setup-link:${clientNetwork(origin.ip)}`,
-      setupLinkAttempts.window,
+    (await overLimit(
+      deps,
+      [{ key: `setup-link:${clientNetwork(origin.ip)}`, ...setupLinkAttempts }],
+      "setup_link",
+      origin,
       now,
-    )) > setupLinkAttempts.limit
+    ))
   ) {
-    const work = deps.startUnitOfWork();
-    work.accessEvents.add(
-      AccessEvents.record("rate_limited", { detail: { on: "setup_link" } }, origin, now),
-    );
-    await work.commit();
-
     return err("rate_limited");
   }
 
@@ -69,13 +66,16 @@ export async function redeemSetupLink(
   const link = presented.success
     ? await deps.setupLinks.findByTokenHash(await hashSecretToken(deps.secrets, presented.data))
     : undefined;
-  const redeemed =
-    link === undefined ? err("setup_link_unusable" as const) : SetupLinks.redeem(link, now);
+  // A token that matches no link concerns no account and is not logged: junk cannot grow the log
+  if (link === undefined) {
+    return err("setup_link_unusable");
+  }
+  const redeemed = SetupLinks.redeem(link, now);
 
   if (!redeemed.ok) {
     const work = deps.startUnitOfWork();
     work.accessEvents.add(
-      AccessEvents.record("setup_link_refused", { accountId: link?.accountId }, origin, now),
+      AccessEvents.record("setup_link_refused", { accountId: link.accountId }, origin, now),
     );
     await work.commit();
 

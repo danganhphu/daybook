@@ -21,7 +21,7 @@ import {
   aReminderReading,
   readerOf,
 } from "@/testing/support/readings";
-import { expectOk } from "@/testing/support/result";
+import { expectDefined, expectOk } from "@/testing/support/result";
 
 // Monday 26 October, 09:00 in Vietnam
 const monday = "2026-10-26T02:00:00Z";
@@ -46,14 +46,6 @@ async function stateOf(app: App, note: LiveNote) {
   return (await app.readingStates([note.captureId])).get(note.captureId);
 }
 
-function defined<T>(value: T | undefined): T {
-  if (value === undefined) {
-    throw new Error("Expected a value");
-  }
-
-  return value;
-}
-
 describe("reading a note into an order", () => {
   it("given a customer named as the list has them, when read, then the order is placed on the message's day, with its capture, and a line total split per unit", async () => {
     const text = "bán 2 hộp thuốc tê cho nk Hướng Dương 500k";
@@ -66,7 +58,7 @@ describe("reading a note into an order", () => {
     const settled = expectOk(await read(app, note));
 
     expect(settled.interpretation).toMatchObject({ outcome: "order", reader: replayReader });
-    const order = defined(await app.getOrder(defined(settled.order).order.id));
+    const order = expectDefined(await app.getOrder(expectDefined(settled.order).order.id));
     expect(order).toMatchObject({
       customerId: customer.id,
       captureId: note.captureId,
@@ -99,7 +91,7 @@ describe("reading a note into an order", () => {
 
     const settled = expectOk(await read(app, note));
 
-    expect(defined(settled.order).order.lines).toEqual([
+    expect(expectDefined(settled.order).order.lines).toEqual([
       { productId: earlier.lines[0]?.productId, quantity: 50, unitPrice: 30_000 },
       { productId: expect.any(String), quantity: 3, unitPrice: 0 },
       { productId: earlier.lines[1]?.productId, quantity: 1, unitPrice: 5_000 },
@@ -188,7 +180,7 @@ describe("asking whose order it is", () => {
     });
     const settled = expectOk(await answer(app, note, { kind: "new_customer" }));
 
-    const customer = defined(settled.customer);
+    const customer = expectDefined(settled.customer);
     expect(await app.getCustomer(customer.id)).toMatchObject({ name: "chị Lan", status: "active" });
     expect(settled.order?.order.customerId).toBe(customer.id);
   });
@@ -244,7 +236,7 @@ describe("reading a note into a reminder", () => {
     const customer = await aCustomer(app, "Nha khoa Hướng Dương");
     const note = await recordNote(app, text);
 
-    const reminder = defined(expectOk(await read(app, note)).reminder);
+    const reminder = expectDefined(expectOk(await read(app, note)).reminder);
 
     expect(reminder).toMatchObject({ text, customerId: customer.id, captureId: note.captureId });
     expect(reminder.dueOn.toString()).toBe(expected);
@@ -257,7 +249,7 @@ describe("reading a note into a reminder", () => {
     await aCustomer(app, "Phương Lan");
     const note = await recordNote(app, text);
 
-    const reminder = defined(expectOk(await read(app, note)).reminder);
+    const reminder = expectDefined(expectOk(await read(app, note)).reminder);
 
     expect(reminder.customerId).toBeUndefined();
   });

@@ -1,7 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshedOnSuccess } from "@/app/refreshed";
 import { appOrigin, daybook } from "@/composition/daybook";
 import type { PasswordPromptView } from "@/features/access/web/access-commands";
 import { ceremonyCookieName } from "@/features/access/web/cookie-names";
@@ -18,21 +17,14 @@ import type { SettingsResult } from "@/features/access/web/settings-commands";
 import { ok } from "@/shared/domain/result";
 
 // The account settings' actions. Each checks the session first; the security ones are checked for step-up again by
-// the use case, whatever the page asked before. A success refreshes the page so it shows what changed.
-
-function refreshOnSuccess<T>(result: SettingsResult<T>): SettingsResult<T> {
-  if (result.ok) {
-    refresh();
-  }
-
-  return result;
-}
+// the use case, whatever the page asked before. A success refreshes the page so it shows what changed; a refusal -
+// a wrong password, a step-up asked for - leaves the dialog as it is.
 
 export async function renameAccount(displayName: unknown): Promise<SettingsResult<null>> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.renameAccount(app, session, displayName, await requestOrigin()),
   );
 }
@@ -41,7 +33,7 @@ export async function renameUsername(username: unknown): Promise<SettingsResult<
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.renameUsername(app, session, username, await requestOrigin()),
   );
 }
@@ -70,14 +62,14 @@ export async function finishAddingPasskey(response: unknown): Promise<SettingsRe
   });
   await clearCeremonyCookie();
 
-  return refreshOnSuccess(added);
+  return refreshedOnSuccess(added);
 }
 
 export async function removePasskey(passkeyId: unknown): Promise<SettingsResult<null>> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.deletePasskey(app, session, passkeyId, await requestOrigin()),
   );
 }
@@ -104,28 +96,30 @@ export async function finishSettingPassword(key: unknown): Promise<SettingsResul
   });
   await clearCeremonyCookie();
 
-  return refreshOnSuccess(saved);
+  return refreshedOnSuccess(saved);
 }
 
 export async function endDevice(sessionId: unknown): Promise<SettingsResult<null>> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(await Settings.endDevice(app, session, sessionId, await requestOrigin()));
+  return refreshedOnSuccess(
+    await Settings.endDevice(app, session, sessionId, await requestOrigin()),
+  );
 }
 
 export async function endOtherDevices(): Promise<SettingsResult<null>> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(await Settings.endOtherDevices(app, session, await requestOrigin()));
+  return refreshedOnSuccess(await Settings.endOtherDevices(app, session, await requestOrigin()));
 }
 
 export async function endPersonDevices(accountId: unknown): Promise<SettingsResult<null>> {
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.endPersonDevices(app, session, accountId, await requestOrigin()),
   );
 }
@@ -135,7 +129,7 @@ export async function createInvite(): Promise<SettingsResult<Settings.IssuedLink
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.inviteSomeone(app, session, await requestOrigin(), appOrigin()),
   );
 }
@@ -146,7 +140,7 @@ export async function createRecoveryLink(
   const app = daybook();
   const session = await requireSession(app);
 
-  return refreshOnSuccess(
+  return refreshedOnSuccess(
     await Settings.recoveryLinkFor(app, session, accountId, await requestOrigin(), appOrigin()),
   );
 }

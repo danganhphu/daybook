@@ -3,15 +3,20 @@ import { Temporal } from "temporal-polyfill/implementation";
 import { describe, expect, it } from "vitest";
 
 import { paymentDetailsSchema } from "@/features/orders/domain/order";
+import { productNameSchema } from "@/features/products/domain/product";
 import { changeOf, testApp, testClock, theAuthor } from "@/testing/support/app";
 import { aCustomer, anOrder, line } from "@/testing/support/orders";
 import { expectOk } from "@/testing/support/result";
 
-// "uards the hand-written parts of the orders migration that the use cases never exercise: the rows a hand-written
+// Guards the hand-written parts of the orders migrations that the use cases never exercise: the rows a hand-written
 // query could otherwise rewrite
 
+function anApp() {
+  return testApp(testClock("2026-10-23T01:00:00Z").clock);
+}
+
 async function anOrderWithAPayment() {
-  const app = testApp(testClock("2026-10-23T01:00:00Z").clock);
+  const app = anApp();
   const placed = await anOrder(app, await aCustomer(app, "Hướng Dương"), [
     line("Thuốc tê", 1, 500_000),
   ]);
@@ -80,5 +85,48 @@ describe("sales_order table", () => {
         .bind(orderId)
         .run(),
     ).rejects.toThrow(/sales_order_delivered_on_day/);
+  });
+
+  it("given an order deleted before its customer, when a write brings it back while the customer is deleted, then the trigger refuses", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const customer = await aCustomer(app, "Hướng Dương");
+    const order = await anOrder(app, customer, [line("Thuốc tê", 1, 500_000)]);
+    expectOk(await app.deleteOrder(changeOf(order, by)));
+    expectOk(await app.deleteCustomer(changeOf(customer, by)));
+
+    await expect(
+      env.DB.prepare(
+        "update sales_order set deleted_at = null, deleted_by = null, version = version + 1 where id = ?",
+      )
+        .bind(order.id)
+        .run(),
+    ).rejects.toThrow(/stale_version/);
+  });
+});
+
+describe("order_line table", () => {
+  it("given a line, when its total strays from quantity × price by more than rounding, then the check refuses", async () => {
+    const { orderId } = await anOrderWithAPayment();
+
+    await expect(
+      env.DB.prepare("update order_line set total = 400000 where order_id = ?").bind(orderId).run(),
+    ).rejects.toThrow(/order_line_total_fits/);
+  });
+
+  it("given a deleted product, when a line naming it is written, then the trigger refuses", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const { orderId } = await anOrderWithAPayment();
+    const product = expectOk(await app.addProduct({ by, name: productNameSchema.parse("Kim cũ") }));
+    expectOk(await app.deleteProduct(changeOf(product, by)));
+
+    await expect(
+      env.DB.prepare(
+        "insert into order_line (order_id, position, product_id, quantity, unit_price) values (?, 1, ?, 1, 1000)",
+      )
+        .bind(orderId, product.id)
+        .run(),
+    ).rejects.toThrow(/stale_version/);
   });
 });

@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { App } from "@/composition/create-app";
 import type { RequestOrigin } from "@/features/access/domain/access-event";
 import type { Session } from "@/features/access/domain/session";
-import { formatMoment } from "@/features/access/web/account-view";
 import type { NotificationPreference } from "@/features/notifications/domain/notification-preference";
 import { timeOfDaySchema } from "@/features/notifications/domain/notification-preference";
 import {
@@ -13,6 +12,8 @@ import {
 import { parseQuietAfterDays, typedDays } from "@/features/reports/domain/gone-quiet";
 import { versionSchema } from "@/shared/domain/audit";
 import { err, ok, type Result } from "@/shared/domain/result";
+import { logEvent } from "@/shared/infrastructure/log-event";
+import { momentText } from "@/shared/web/time-text";
 
 import type { NotificationTimesView, NotificationsView } from "./notification-view";
 import { notificationErrorMessages, notificationsCopy } from "./notifications-copy";
@@ -39,10 +40,16 @@ export async function notificationsView(
   app: App,
   session: Session,
   publicKey: string | undefined,
+  // Whether this deploy has a bot at all
+  telegram: boolean,
 ): Promise<NotificationsView> {
-  const settings = await app.notificationSettings(session);
+  const [settings, link] = await Promise.all([
+    app.notificationSettings(session),
+    telegram ? app.telegramLink(session.accountId) : undefined,
+  ]);
 
   return {
+    telegramOn: link === undefined ? undefined : settings.preference.telegram,
     ...timesView(settings.preference),
     quietAfterDays: settings.preference.quietAfterDays,
     available: settings.pushAvailable && publicKey !== undefined,
@@ -55,7 +62,7 @@ export async function notificationsView(
         ? notificationsCopy.thisDevice
         : subscription.lastSentAt === undefined
           ? notificationsCopy.neverSent
-          : `${notificationsCopy.lastSent} ${formatMoment(subscription.lastSentAt)}`,
+          : `${notificationsCopy.lastSent} ${momentText(subscription.lastSentAt)}`,
       current,
     })),
   };
@@ -75,12 +82,7 @@ export async function turnOn(
   if (!subscribed.ok) {
     if (subscribed.error === "push_service_unknown") {
       // The host only, to see when a browser starts handing out a new one; the rest is the browser's capability
-      console.error(
-        JSON.stringify({
-          event: "push_service_unknown",
-          host: new URL(parsed.data.endpoint).host,
-        }),
-      );
+      logEvent("push_service_unknown", { host: new URL(parsed.data.endpoint).host });
     }
     return err(notificationErrorMessages[subscribed.error]);
   }
@@ -118,6 +120,25 @@ export async function saveTimes(
   });
 
   return changed.ok ? ok(timesView(changed.value)) : err(notificationErrorMessages[changed.error]);
+}
+
+// "Gửi qua Telegram" on or off, against the version the screen showed
+export async function saveTelegram(
+  app: App,
+  session: Session,
+  on: unknown,
+  version: unknown,
+): Promise<Result<null, string>> {
+  const shown = versionSchema.nullable().safeParse(version);
+  if (typeof on !== "boolean" || !shown.success) {
+    return err(notificationErrorMessages.telegram_changed_elsewhere);
+  }
+  const changed = await app.changeNotificationTelegram(session, {
+    on,
+    shown: shown.data ?? undefined,
+  });
+
+  return changed.ok ? ok(null) : err(notificationErrorMessages[changed.error]);
 }
 
 // The days the person typed, against the version the screen showed

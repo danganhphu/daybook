@@ -8,9 +8,11 @@ import type {
 import type { AccessEvent, AccessEventKind } from "@/features/access/domain/access-event";
 import type { SessionId } from "@/features/access/domain/session";
 import { setupLinkPurposes, type SetupLinkPurpose } from "@/features/access/domain/setup-link";
+import { bookPeople } from "@/features/access/domain/way-in";
 import type { AccountId } from "@/shared/domain/account-id";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
 import { midSentence } from "@/shared/web/sentence-case";
+import { clockText, momentText } from "@/shared/web/time-text";
 
 import { accessCopy } from "./access-copy";
 import { providerName } from "./passkey-providers";
@@ -58,19 +60,9 @@ export type AccountView = {
   readonly activity: ReadonlyArray<ActivityRow>;
   readonly moreActivity: boolean;
   readonly people: ReadonlyArray<PersonRow>;
+  // Fewer than two people can sign in, so a link for someone new is offered
+  readonly canInvite: boolean;
 };
-
-function twoDigits(value: number): string {
-  return String(value).padStart(2, "0");
-}
-
-// "16:02 22/10", in Vietnam's time whatever the server's. Put together by hand: the Worker's ICU writes vi-VN's
-// day and month as "22-10", which is not how anyone here writes a date.
-export function formatMoment(instant: Temporal.Instant): string {
-  const { hour, minute, day, month } = instant.toZonedDateTimeISO(vietnamTimeZone);
-
-  return `${twoDigits(hour)}:${twoDigits(minute)} ${twoDigits(day)}/${twoDigits(month)}`;
-}
 
 const linkNames: Readonly<Record<SetupLinkPurpose, string>> = {
   first_setup: "link cài đặt",
@@ -159,7 +151,7 @@ function eventTitle(
 }
 
 function lastUsed(instant: Temporal.Instant): string {
-  return `Dùng lần cuối ${formatMoment(instant)}`;
+  return `Dùng lần cuối ${momentText(instant)}`;
 }
 
 function personStatus(person: PersonSummary): string {
@@ -169,7 +161,7 @@ function personStatus(person: PersonSummary): string {
 
   return person.lastSignInAt === undefined
     ? "chưa đăng nhập lần nào"
-    : `đăng nhập lần cuối ${formatMoment(person.lastSignInAt)}`;
+    : `đăng nhập lần cuối ${momentText(person.lastSignInAt)}`;
 }
 
 export function toAccountView(overview: AccountOverview, current: SessionId): AccountView {
@@ -185,7 +177,7 @@ export function toAccountView(overview: AccountOverview, current: SessionId): Ac
       title: providerName(passkey.aaguid) ?? passkey.name,
       detail:
         passkey.lastUsedAt === undefined
-          ? `Thêm lúc ${formatMoment(passkey.createdAt)}`
+          ? `Thêm lúc ${momentText(passkey.createdAt)}`
           : lastUsed(passkey.lastUsedAt),
     })),
     password:
@@ -196,7 +188,7 @@ export function toAccountView(overview: AccountOverview, current: SessionId): Ac
             locked: overview.password.locked,
             detail: overview.password.locked
               ? "Đang bị khoá vì nhập sai nhiều lần. Hãy đặt mật khẩu mới."
-              : `Đổi lúc ${formatMoment(overview.password.changedAt)}`,
+              : `Đổi lúc ${momentText(overview.password.changedAt)}`,
           },
     devices: overview.sessions.map((session) => ({
       id: session.id,
@@ -210,7 +202,7 @@ export function toAccountView(overview: AccountOverview, current: SessionId): Ac
       return {
         id: event.id,
         title: eventTitle(event, viewer, nameOf),
-        detail: `${twoDigits(moment.hour)}:${twoDigits(moment.minute)}, ${event.deviceLabel}`,
+        detail: `${clockText(moment.hour, moment.minute)}, ${event.deviceLabel}`,
         day: moment.toPlainDate().toString(),
       };
     }),
@@ -226,5 +218,6 @@ export function toAccountView(overview: AccountOverview, current: SessionId): Ac
         isYou,
       };
     }),
+    canInvite: overview.people.filter((person) => person.hasWayIn).length < bookPeople,
   };
 }

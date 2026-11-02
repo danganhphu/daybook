@@ -6,79 +6,69 @@ import type { Peppers } from "@/features/access/application/peppers";
 import { pepperFitsOrigin } from "@/features/access/infrastructure/development-pepper";
 import { pepperSchema, peppersFrom } from "@/features/access/infrastructure/pepper-keys";
 import { relyingPartyFor } from "@/features/access/infrastructure/relying-party";
-import {
-  vapidBindingsSchema,
-  vapidPairFrom,
-} from "@/features/notifications/infrastructure/vapid-config";
-import type { MessageReader } from "@/features/reading/application/message-reader";
-import {
-  createReplayReader,
-  replayTableSchema,
-} from "@/features/reading/infrastructure/replay-reader";
-import {
-  createWorkersAiReader,
-  type ModelRunner,
-} from "@/features/reading/infrastructure/workers-ai-reader";
+import { vapidPairOrOff } from "@/features/notifications/infrastructure/vapid-config";
 
-import { createApp } from "./create-app";
+import { appOriginBinding, d1Binding } from "./binding-schemas";
+import { createApp, type App } from "./create-app";
+import { readerBindingsSchema, readerFrom } from "./message-reader";
+import { botUsername } from "./telegram-bot-name";
+import { telegramConfigOrOff, type TelegramConfig } from "./telegram-config";
 
+// What the web cannot run without; the optional parts (push, the bot) are read apart, so a mistake in one of them
+// turns only that part off
 const bindingsSchema = z
-  .object({
-    DB: z.custom<D1Database>(
-      (value) => typeof value === "object" && value !== null && "prepare" in value,
-      { error: "The D1 binding DB is missing" },
-    ),
-    APP_ORIGIN: z.url({ error: "The APP_ORIGIN secret is missing or not a URL" }),
-    PASSWORD_PEPPER: pepperSchema,
-    // Workers AI, bound everywhere but in the end-to-end build
-    AI: z
-      .custom<ModelRunner>((value) => typeof value === "object" && value !== null && "run" in value)
-      .optional(),
-    // The end-to-end build's stand-in for a model, as JSON: each message its tests send, and what it says
-    REPLAY_READINGS: z.string().optional(),
-  })
-  .extend(vapidBindingsSchema.shape)
+  .object({ DB: d1Binding, APP_ORIGIN: appOriginBinding, PASSWORD_PEPPER: pepperSchema })
+  .extend(readerBindingsSchema.shape)
   .refine((parsed) => pepperFitsOrigin(parsed.PASSWORD_PEPPER, parsed.APP_ORIGIN), {
     error: "PASSWORD_PEPPER is the development pepper, which only localhost may use",
   });
 
-type Bindings = Pick<z.infer<typeof bindingsSchema>, "DB"> & {
+type Bindings = {
   readonly appOrigin: URL;
-  readonly peppers: Peppers;
-  readonly reader: MessageReader | undefined;
   // What a browser subscribes with; undefined when push is not configured
   readonly pushPublicKey: string | undefined;
+  readonly telegram: TelegramConfig | undefined;
+  readonly app: App;
 };
 
 let checked: Bindings | undefined;
 
-function readerFrom(parsed: z.infer<typeof bindingsSchema>): MessageReader | undefined {
-  if (parsed.AI !== undefined) {
-    return createWorkersAiReader(parsed.AI);
-  }
-  if (parsed.REPLAY_READINGS !== undefined) {
-    const table = replayTableSchema.parse(JSON.parse(parsed.REPLAY_READINGS));
-    return createReplayReader(new Map(Object.entries(table)));
-  }
-
-  return undefined;
-}
-
 // Read on first use, not when the module loads: the build imports this module to prerender pages, and there are no
-// bindings then. A missing one still fails the first request loudly rather than half-working.
+// bindings then. A missing one still fails the first request loudly rather than half-working. The App holds nothing
+// per request, so one serves the isolate.
 function bindings(): Bindings {
   if (checked === undefined) {
     const parsed = bindingsSchema.parse(env);
+    const origin = new URL(parsed.APP_ORIGIN);
+    const publicKey = vapidPairOrOff(env, parsed.APP_ORIGIN)?.publicKey;
+    const peppers: Peppers = peppersFrom(parsed.PASSWORD_PEPPER);
     checked = {
-      DB: parsed.DB,
-      appOrigin: new URL(parsed.APP_ORIGIN),
-      peppers: peppersFrom(parsed.PASSWORD_PEPPER),
-      reader: readerFrom(parsed),
-      pushPublicKey: vapidPairFrom(parsed, parsed.APP_ORIGIN)?.publicKey,
+      appOrigin: origin,
+      pushPublicKey: publicKey,
+      telegram: telegramConfigOrOff(env, parsed.APP_ORIGIN),
+      app: createApp({
+        db: parsed.DB,
+        relyingParty: relyingPartyFor(origin, appName),
+        peppers,
+        reader: readerFrom(parsed),
+        pushAvailable: publicKey !== undefined,
+      }),
     };
   }
 
   return checked;
+}
+
+// Whether this deploy has a bot, so Settings offers Telegram only where it works
+export function telegramAvailable(): boolean {
+  return bindings().telegram !== undefined;
+}
+
+// The bot's username, for a t.me link; undefined where there is no bot or Telegram does not answer
+export async function telegramBotUsername(): Promise<string | undefined> {
+  const { telegram } = bindings();
+
+  return telegram === undefined ? undefined : botUsername(telegram);
 }
 
 // The key a browser subscribes to push with, or undefined where push is not set up
@@ -92,14 +82,6 @@ export function appOrigin(): URL {
 }
 
 // The app over the Worker's real bindings, for server code: pages and server actions
-export function daybook() {
-  const { DB, appOrigin: origin, peppers, reader, pushPublicKey: publicKey } = bindings();
-
-  return createApp({
-    db: DB,
-    relyingParty: relyingPartyFor(origin, appName),
-    peppers,
-    reader,
-    pushAvailable: publicKey !== undefined,
-  });
+export function daybook(): App {
+  return bindings().app;
 }

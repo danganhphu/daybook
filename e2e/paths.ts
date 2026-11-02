@@ -11,5 +11,9 @@ export const hoaStaleSessionsUsedFile = `${persistTo}/hoa-stale-sessions-used`;
 
 export const seedMigrations = `${persistTo}/seed`;
 
+// What the stand-in for the Bot API was asked, a line of JSON per call; and the webhook's secret for this run
+export const telegramCallsFile = `${persistTo}/telegram-calls.jsonl`;
+export const telegramFile = `${persistTo}/telegram.json`;
+
 // The database's own SQLite file is in here, under a name miniflare picks
 export const databaseFolder = `${persistTo}/v3/d1/miniflare-D1DatabaseObject`;

@@ -6,6 +6,7 @@ import { testApp, testClock } from "@/testing/support/app";
 import { anAuthenticator, seedPasskeyAccount } from "@/testing/support/passkeys";
 import { seedPassword } from "@/testing/support/passwords";
 import { expectOk } from "@/testing/support/result";
+import { seedTelegramLink } from "@/testing/support/telegram";
 
 const stepUp = { ok: false, error: "step_up_required" };
 const authenticator = anAuthenticator();
@@ -282,6 +283,28 @@ describe("signing out the other person's devices", () => {
       },
     ]);
     expect(await rows("select id from passkey where id = ?", minh.stored.id)).toHaveLength(1);
+  });
+
+  it("given the other person's phone lost with their Telegram connected, when this user signs out every device of theirs, then their Telegram is disconnected too, and it is logged", async () => {
+    const time = testClock("2026-10-22T01:00:00Z");
+    const lan = await seedPasskeyAccount(time, "lan");
+    const minh = await seedPasskeyAccount(time, "minh");
+    await seedTelegramLink(time.clock, minh.account.id, { id: 70_000_002, firstName: "Minh" });
+
+    expectOk(await testApp(time.clock).endPersonSessions(lan.session, minh.account.id, origin()));
+
+    expect(await rows("select account_id from telegram_link")).toEqual([]);
+    expect(
+      await rows(
+        "select account_id, actor_id, detail from access_event where kind = 'telegram_unlinked'",
+      ),
+    ).toEqual([
+      {
+        account_id: minh.account.id,
+        actor_id: lan.account.id,
+        detail: JSON.stringify({ by: "other_user", telegramUser: "70000002" }),
+      },
+    ]);
   });
 
   it("given this user's own account, when its devices are to be signed out this way, then nothing is found", async () => {

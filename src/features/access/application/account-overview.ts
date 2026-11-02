@@ -7,10 +7,10 @@ import type { AccountRepository } from "@/features/access/domain/account-reposit
 import type { Passkey } from "@/features/access/domain/passkey";
 import type { PasskeyRepository } from "@/features/access/domain/passkey-repository";
 import * as Passwords from "@/features/access/domain/password";
-import type { Password } from "@/features/access/domain/password";
 import type { PasswordRepository } from "@/features/access/domain/password-repository";
 import type { Session } from "@/features/access/domain/session";
 import type { SessionRepository } from "@/features/access/domain/session-repository";
+import { hasWayIn } from "@/features/access/domain/way-in";
 import type { Clock } from "@/shared/application/clock";
 import type { AccountId } from "@/shared/domain/account-id";
 
@@ -71,10 +71,6 @@ function summarize(session: Session): SessionSummary {
     lastSeenAt: session.lastSeenAt,
     deviceLabel: session.deviceLabel,
   };
-}
-
-function hasWayIn(passkeys: ReadonlyArray<Passkey>, password: Password | undefined): boolean {
-  return passkeys.length > 0 || (password !== undefined && !Passwords.isLocked(password));
 }
 
 // Everyone's passkeys and passwords are read once, and each person's taken from them: a query per person grew the

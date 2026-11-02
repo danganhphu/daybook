@@ -31,7 +31,7 @@ describe("InboxItems.create", () => {
     ]);
   });
 
-  it.each(["https://evil.example/", "//evil.example/", "reminders"])(
+  it.each(["https://evil.example/", "//evil.example/", "/\\evil.example/", "reminders"])(
     "given the path %s, when kept, then it is refused: a tap only ever opens the app",
     (path) => {
       expect(() => InboxItems.create(details({ path }), at)).toThrow(/a path in the app/);

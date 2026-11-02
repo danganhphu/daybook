@@ -3,38 +3,24 @@
 [![ci](https://github.com/danganhphu/daybook/actions/workflows/ci.yml/badge.svg)](https://github.com/danganhphu/daybook/actions/workflows/ci.yml)
 
 A notebook for a salesperson on the move: orders, customers and follow-ups, typed the way you would text a friend.
-A web app, installable as a PWA, does everything; a Telegram bot, still to come, will be an optional second way in.
-Both run on one Cloudflare Worker, on the free plan. The interface is in Vietnamese.
+A web app, installable as a PWA, does everything; a Telegram bot is an optional second way in. Both run on one
+Cloudflare Worker, on the free plan. The interface is in Vietnamese.
 
-What it looks like: [screenshots](docs/ui/screenshots.md).
+| Today | An order | Reports |
+| --- | --- | --- |
+| ![Notes read into an order and a reminder](docs/images/today.png) | ![One order: total, paid, owed, its lines](docs/images/order.png) | ![A month's sales, money in, what is owed](docs/images/reports.png) |
 
-## Features
+More: [screenshots](docs/ui/screenshots.md).
 
-- **Quick capture.** Today's notes as a chat: type, send, saved at once. Edit in place, delete with one tap and Undo.
-- **Reading.** A note like "bán 2 hộp thuốc tê cho nk Hướng Dương 500k" becomes the order, and "mai gọi nk Sao Mai"
-  a reminder, a second after it is saved, with Undo. A name the customer list does not hold is asked about on the
-  note. Read by a model on Workers AI's free allowance; the model only extracts the words, the code matches them.
-- **History.** Any past day, and a search across every note, with or without diacritics.
-- **Customers, products and orders.** Customers by kind; products with their latest price; orders with their lines,
-  delivery and payments; what each customer owes; every change to an order logged. A customer or a product can have
-  other names ("chị Lan" for a clinic), which the reading understands, and two that turn out to be one are merged,
-  after the screen says what will move.
-- **Reminders.** What to do and when, for a customer or not; what is due sits on Today. Done with one tap and Undo;
-  the finished ones are listed, each one tap from open again.
-- **Nothing lost to a delete.** What was deleted in the last 30 days - orders, notes, reminders - is listed, to
-  restore, after the Undo toast is gone.
-- **Reports.** A week, month, quarter, year or any range: sales, money in and what customers owe, against the period
-  before; sales over time, by kind of customer, by product and by customer; customers gone quiet. Tapping a product
-  or a customer narrows the whole report to it.
-- **Installable.** Adds to a phone's home screen as an app, with its own icon.
-- **Passkeys.** Sign in with Face ID or a fingerprint; a password is the fallback, hashed with Argon2id in the
-  browser and checked against known breaches.
-- **Two people, one book.** No roles. Invites and recovery links from inside the app, shown once, valid ten minutes.
-- **Settings.** Name and username, passkeys, the password, signed-in devices, recent activity. Security settings ask
-  to confirm again.
-- **Accessible.** Every screen is checked against WCAG 2.2 AA on an iPhone, an Android phone and a desktop.
+## What it does
 
-**Status:** early, and not deployed yet. The Telegram bot and the first deploy come next.
+- **Write it like a note.** "bán 2 hộp thuốc tê cho nk Hướng Dương 500k" becomes the order, "mai gọi nk Sao Mai" a
+  reminder, with Undo. The words are kept as typed; a model on Workers AI only sorts them.
+- **Orders, customers, products, reminders.** Payments and delivery, what each customer owes, every change logged.
+- **Reports.** Any week, month, quarter, year or range, against the one before.
+- **It speaks first.** A morning list and a Friday summary by Web Push, in a bell on every tab, and on Telegram.
+- **A trash.** Deleted things stay 30 days to restore, then go for good.
+- **Two people, one book.** Passkeys (Face ID or a fingerprint), a password as the fallback.
 
 ## Quick start
 
@@ -48,8 +34,8 @@ pnpm access:account --username lan --name "Lan" --origin http://localhost:5173 -
 pnpm dev
 ```
 
-Open the printed link in Chrome or Edge to turn on a passkey, then http://localhost:5173. The details, and the
-one-time setup for Cloudflare and the test browsers, are in [installation](docs/getting-started/installation.md).
+Open the printed link in Chrome or Edge to make a passkey, then http://localhost:5173. More in
+[installation](docs/getting-started/installation.md).
 
 ## Documentation
 
@@ -58,20 +44,14 @@ one-time setup for Cloudflare and the test browsers, are in [installation](docs/
 | Getting started | [Installation](docs/getting-started/installation.md), [development](docs/getting-started/development.md) |
 | Guides | [Configuration](docs/guides/configuration.md), [commands](docs/guides/commands.md), [testing](docs/guides/testing.md), [database](docs/guides/database.md), [deployment](docs/guides/deployment.md), [troubleshooting](docs/guides/troubleshooting.md) |
 | Product and design | [Product design](docs/product/design.md), [design system](docs/ui/design-system.md), [screenshots](docs/ui/screenshots.md) |
-| Architecture | [Overview](docs/architecture/overview.md), [domain](docs/architecture/domain.md) |
+| Architecture | [Overview](docs/architecture/overview.md), [domain](docs/architecture/domain.md), [security](docs/architecture/security.md) |
 | Conventions | [AGENTS.md](AGENTS.md), for people and coding agents alike |
-
-All of it: [docs/README.md](docs/README.md).
 
 ## Stack
 
 TypeScript 7, [vinext](https://github.com/cloudflare/vinext) (the Next.js API on Vite) on Cloudflare Workers, D1
-through Drizzle ORM, Workers AI, Zod, Base UI under a design system written in SCSS, SimpleWebAuthn for passkeys. Tests: Vitest
+through Drizzle ORM, Workers AI, Queues, Zod, Base UI under a design system in SCSS, SimpleWebAuthn. Tests: Vitest
 inside workerd, Playwright with playwright-bdd and axe. Tooling: pnpm, Oxlint, Oxfmt, Stylelint, the `cf` CLI.
-
-## Contributing
-
-A personal project with one maintainer; outside pull requests are not expected.
 
 ## Security
 
@@ -79,4 +59,5 @@ Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 ## License
 
-None. The source is public to read; all rights are reserved.
+None. The source is public to read; all rights are reserved. A personal project with one maintainer; outside pull
+requests are not expected.

@@ -10,7 +10,9 @@ import type { NoteId } from "@/features/notes/domain/note";
 import { paymentDetailsSchema, type OrderId } from "@/features/orders/domain/order";
 import { productNameSchema, type ProductId } from "@/features/products/domain/product";
 import type { ReminderId } from "@/features/reminders/domain/reminder";
-import type { TrashItem } from "@/features/trash/domain/trash";
+import type { TrashWrites } from "@/features/trash/application/trash-writes";
+import { trashKinds, type TrashItem, type TrashKind } from "@/features/trash/domain/trash";
+import type { UnitOfWork } from "@/shared/application/unit-of-work";
 import type { Audit } from "@/shared/domain/audit";
 import { createDatabase } from "@/shared/infrastructure/d1/database";
 import {
@@ -22,7 +24,7 @@ import {
   theAuthor,
 } from "@/testing/support/app";
 import { aCustomer, aKind, anOrder, line } from "@/testing/support/orders";
-import { expectOk } from "@/testing/support/result";
+import { expectDefined, expectOk } from "@/testing/support/result";
 
 import { emptyExpiredTrash } from "./purge-from-trash";
 
@@ -85,6 +87,84 @@ const trashed = {
 // How many rows each table holds, read side by side
 function rowsIn(tables: ReadonlyArray<string>) {
   return Promise.all(tables.map((table) => rows(table)));
+}
+
+async function productNow(app: App, id: ProductId) {
+  return expectDefined(await app.getProduct(id));
+}
+
+// The table each kind is kept in
+const tableOf: Readonly<Record<TrashKind, string>> = {
+  order: "sales_order",
+  note: "note",
+  reminder: "reminder",
+  customer: "customer",
+  product: "product",
+  kind: "customer_kind",
+};
+
+type OneOfEach = Readonly<Record<TrashKind, string>>;
+
+// One of each kind, made and deleted at the clock's time; the order's customer and product stay
+async function oneOfEachDeleted(app: App, label: string): Promise<OneOfEach> {
+  const by = await theAuthor();
+  const order = await anOrder(app, await aCustomer(app, `Khách đơn ${label}`), [
+    line(`Kim ${label}`, 1, 1_000),
+  ]);
+  const note = await recordNote(app, `ghi chú ${label}`);
+  const reminder = await aReminder(app, `Gọi ${label}`, undefined);
+  const customer = await aCustomer(app, `Khách ${label}`);
+  const product = expectOk(
+    await app.addProduct({ by, name: productNameSchema.parse(`Bông ${label}`) }),
+  );
+  const kind = await aKind(app, `Nhóm ${label}`);
+  await Promise.all([
+    app.deleteOrder(changeOf(order, by)).then(expectOk),
+    app.deleteNote(changeOf(note, by)).then(expectOk),
+    app.deleteReminder(changeOf(reminder, by)).then(expectOk),
+    app.deleteCustomer(changeOf(customer, by)).then(expectOk),
+    app.deleteProduct(changeOf(product, by)).then(expectOk),
+    app.deleteCustomerKind(changeOf(kind, by)).then(expectOk),
+  ]);
+
+  return {
+    order: order.id,
+    note: note.id,
+    reminder: reminder.id,
+    customer: customer.id,
+    product: product.id,
+    kind: kind.id,
+  };
+}
+
+// Whether each one's row is still there, 1 or 0, in trashKinds' order
+function stillThere(each: OneOfEach) {
+  return Promise.all(trashKinds.map((kind) => rows(tableOf[kind], "id = ?", each[kind])));
+}
+
+// A unit of work whose commit fails when it carries the daily run of one kind
+function failingFor(
+  failing: TrashKind,
+  work: ReturnType<typeof createUnitOfWork>,
+  refusal: Error,
+): UnitOfWork<{ readonly trash: TrashWrites }> {
+  let carries: TrashKind | undefined;
+
+  return {
+    trash: {
+      purge: (kind, ids, at) => work.trash.purge(kind, ids, at),
+      purgeDeletedBefore(kind, before, at) {
+        carries = kind;
+        work.trash.purgeDeletedBefore(kind, before, at);
+      },
+    },
+    commit: async () => {
+      if (carries === failing) {
+        throw refusal;
+      }
+      await work.commit();
+    },
+  };
 }
 
 describe("deleting a customer", () => {
@@ -193,6 +273,30 @@ describe("deleting a customer", () => {
       expectOk(await app.restoreFromTrash(by, [trashed.order(order), trashed.customer(deleted)])),
     ).toEqual({ done: 2, refused: [] });
     expect(await app.getOrder(order.id)).toMatchObject({ status: "live" });
+  });
+
+  it("given an order and a reminder deleted before their customer, when each is restored on its own, as Undo on an old card would, then both are refused while the customer is deleted", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const lan = await aCustomer(app, "Nha khoa Lan Anh");
+    const order = expectOk(
+      await app.deleteOrder(changeOf(await anOrder(app, lan, [line("Kim", 1, 100_000)]), by)),
+    );
+    const reminder = expectOk(
+      await app.deleteReminder(changeOf(await aReminder(app, "Gọi lại", lan.id), by)),
+    );
+    expectOk(await app.deleteCustomer(changeOf(lan, by)));
+
+    expect(await app.restoreOrder(changeOf(order, by))).toEqual({
+      ok: false,
+      error: "order_customer_deleted",
+    });
+    expect(await app.restoreReminder(changeOf(reminder, by))).toEqual({
+      ok: false,
+      error: "reminder_customer_deleted",
+    });
+    expect(await app.getOrder(order.id)).toMatchObject({ status: "deleted" });
+    expect(await app.getReminder(reminder.id)).toMatchObject({ status: "deleted" });
   });
 });
 
@@ -367,6 +471,30 @@ describe("deleting for good", () => {
     expect(await rows("note")).toBe(1);
   });
 
+  it("given a deleted product another was merged into, and an older order line still naming the one merged away, when deleted for good, then both stay and it is said", async () => {
+    const app = anApp();
+    const by = await theAuthor();
+    const order = await anOrder(app, await aCustomer(app, "Sao Mai"), [line("Gel tê", 1, 50_000)]);
+    const away = expectDefined(order.lines[0]).productId;
+    const into = expectOk(
+      await app.addProduct({ by, name: productNameSchema.parse("Gel gây tê") }),
+    );
+    expectOk(
+      await app.mergeProducts({ ...changeOf(await productNow(app, away), by), into: into.id }),
+    );
+    // A line saved from a form open during the merge, before the database refused such lines
+    await env.DB.prepare("update order_line set product_id = ? where order_id = ?")
+      .bind(away, order.id)
+      .run();
+    const deleted = expectOk(await app.deleteProduct(changeOf(await productNow(app, into.id), by)));
+
+    expect(await app.purgeFromTrash([trashed.product(deleted)])).toEqual({
+      done: 0,
+      refused: [{ item: trashed.product(deleted), error: "trash_in_use" }],
+    });
+    expect(await rows("product")).toBe(2);
+  });
+
   it("given things deleted more than thirty days ago and lately, when the daily run empties the trash, then only the old ones go", async () => {
     const time = testClock("2026-09-01T02:00:00Z");
     const app = testApp(time.clock);
@@ -382,5 +510,44 @@ describe("deleting for good", () => {
 
     expect(await rows("note", "id = ?", old.id)).toBe(0);
     expect(await rows("note", "id = ?", recent.id)).toBe(1);
+  });
+
+  it("given one of each kind deleted a millisecond either side of thirty days ago, when the daily run empties the trash, then only those past thirty days go", async () => {
+    const time = testClock(monday);
+    const app = testApp(time.clock);
+    const cutoff = Temporal.Instant.from(monday).subtract({ hours: 30 * 24 });
+    time.setTo(cutoff.subtract({ milliseconds: 1 }).toString());
+    const old = await oneOfEachDeleted(app, "cũ");
+    time.setTo(cutoff.add({ milliseconds: 1 }).toString());
+    const recent = await oneOfEachDeleted(app, "mới");
+    time.setTo(monday);
+
+    expect(
+      await emptyExpiredTrash({
+        clock: time.clock,
+        startUnitOfWork: () => createUnitOfWork(createDatabase(env.DB)),
+      }),
+    ).toEqual([]);
+
+    expect(await stillThere(old)).toEqual(trashKinds.map(() => 0));
+    expect(await stillThere(recent)).toEqual(trashKinds.map(() => 1));
+  });
+
+  it("given one kind that cannot be deleted tonight, when the daily run empties the trash, then the others still go and that kind is answered", async () => {
+    const time = testClock("2026-09-01T02:00:00Z");
+    const app = testApp(time.clock);
+    const note = await recordNote(app, "cũ");
+    expectOk(await app.deleteNote(changeOf(note, await theAuthor())));
+    time.setTo(monday);
+    const db = createDatabase(env.DB);
+    const refusal = new Error("D1 refused the batch");
+
+    const failed = await emptyExpiredTrash({
+      clock: time.clock,
+      startUnitOfWork: () => failingFor("product", createUnitOfWork(db), refusal),
+    });
+
+    expect(failed).toEqual([{ kind: "product", error: refusal }]);
+    expect(await rows("note")).toBe(0);
   });
 });

@@ -10,7 +10,10 @@ export type AccessError =
   | "username_taken"
   | "last_way_in"
   | "not_found"
-  | "rate_limited";
+  | "rate_limited"
+  | "telegram_link_unusable"
+  | "telegram_user_taken"
+  | "book_full";
 
 // Phrased for the person signing in, the same in every adapter. None says why a link, a session or a passkey failed,
 // so none helps someone probing them; the reason goes to the access log instead.
@@ -27,4 +30,8 @@ export const accessErrorMessages = {
   last_way_in: "Không thể xoá vì đây là cách đăng nhập duy nhất. Bạn có muốn thêm cách khác không?",
   not_found: "Không tìm thấy mục này.",
   rate_limited: "Bạn đã thử quá nhiều lần. Hãy đợi vài phút rồi thử lại.",
+  // Said in the chat, where the link was opened
+  telegram_link_unusable: "Link này không dùng được nữa. Mở Cài đặt để lấy link mới.",
+  telegram_user_taken: "Telegram này đang kết nối với tài khoản khác.",
+  book_full: "Sổ này đã đủ hai người dùng.",
 } as const satisfies Record<AccessError, string>;

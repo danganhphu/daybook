@@ -2,7 +2,8 @@ import type { AccessEvent, AccessEventKind } from "@/features/access/domain/acce
 import type { AccountId } from "@/shared/domain/account-id";
 
 // The changes to how someone signs in that reach that person on every channel, whoever made them (ADR 0009): a way in
-// added or taken away, a recovery link, devices signed out by the other person, a new device receiving notifications
+// added or taken away, a recovery link, devices signed out by the other person, a new device receiving notifications,
+// a Telegram user writing as them
 export const noticeKinds = [
   "passkey_added",
   "passkey_removed",
@@ -14,6 +15,8 @@ export const noticeKinds = [
   "setup_link_redeemed",
   "sessions_revoked",
   "push_subscribed",
+  "telegram_linked",
+  "telegram_unlinked",
 ] as const satisfies ReadonlyArray<AccessEventKind>;
 
 export type NoticeKind = (typeof noticeKinds)[number];

@@ -76,10 +76,14 @@ async function openSettingsFrom(page: Page, path: string | undefined) {
   await expect(page.getByRole("heading", { name: "Cài đặt", level: 1 })).toBeVisible();
 }
 
+// Waits for the server's answer: a toast of the same words may still be on screen from a change before, and a
+// scenario ending before the answer leaves the change unmade for every scenario after it
 When("tôi sửa {string} thành {string}", async ({ page }, label: string, value: string) => {
   await editButton(page, label).click();
   await page.getByRole("textbox", { name: label, exact: true }).fill(value);
+  const answered = page.waitForResponse((response) => response.request().method() === "POST");
   await page.getByRole("button", { name: "Lưu", exact: true }).click();
+  await answered;
 });
 
 When("tôi bắt đầu sửa {string} rồi nhấn Esc", async ({ page }, label: string) => {

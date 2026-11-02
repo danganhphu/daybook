@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
-import { orderScreen } from "@/features/orders/web/commands";
+import { orderScreen } from "@/features/orders/web/order-page-commands";
 
 import { OrderScreen } from "./order-screen";
 

@@ -1,12 +1,9 @@
 import { sql } from "drizzle-orm";
 import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-import {
-  digestByteLength,
-  passwordSaltByteLength,
-  secretByteLength,
-} from "@/features/access/domain/access-policy";
+import { digestByteLength, secretByteLength } from "@/features/access/domain/access-policy";
 import { ceremonyKinds } from "@/features/access/domain/ceremony";
+import { passwordSaltByteLength } from "@/features/access/domain/password-policy";
 import { base64UrlLength } from "@/shared/domain/base64url";
 import { sqlNumber, sqlTextList } from "@/shared/infrastructure/d1/sql-literals";
 

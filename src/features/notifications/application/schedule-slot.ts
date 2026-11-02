@@ -1,18 +1,18 @@
 import { Temporal } from "temporal-polyfill/implementation";
 
-import type {
-  AccessEventRepository,
-  AccessLogPosition,
+import {
+  isAfter,
+  type AccessEventRepository,
+  type AccessLogPosition,
 } from "@/features/access/domain/access-event-repository";
 import type { AccountRepository } from "@/features/access/domain/account-repository";
 import { deliveryRetentionDays } from "@/features/notifications/domain/delivery";
-import { isNotice } from "@/features/notifications/domain/notice";
+import { isNotice, noticeKinds } from "@/features/notifications/domain/notice";
 import type { NoticeCursorRepository } from "@/features/notifications/domain/notice-cursor-repository";
 import * as NotificationPreferences from "@/features/notifications/domain/notification-preference";
 import { digestKinds } from "@/features/notifications/domain/notification-preference";
 import type { NotificationPreferenceRepository } from "@/features/notifications/domain/notification-preference-repository";
-import { slotAt, type Slot } from "@/features/notifications/domain/slot";
-import { timesOfDay } from "@/features/notifications/domain/time-of-day";
+import { isDailySlot, slotAt, type Slot } from "@/features/notifications/domain/slot";
 import type { Clock } from "@/shared/application/clock";
 import type { UnitOfWork } from "@/shared/application/unit-of-work";
 
@@ -62,8 +62,14 @@ async function relayNotices(deps: ScheduleSlotDeps, upTo: Temporal.Instant): Pro
     };
   }
 
-  const events = await deps.accessEvents.listAfter(cursor, upTo, noticesPerRun);
-  const last = events.at(-1);
+  // Only the kinds people are told about: the rest of the log - sign-ins, refusals - never uses a run's room
+  const events = await deps.accessEvents.listAfter(cursor, upTo, noticesPerRun, noticeKinds);
+  // A run that read every notice there was moves past the rest of the log too, so the next one starts there
+  const last =
+    events.length < noticesPerRun
+      ? ((await deps.accessEvents.latest(upTo)) ?? events.at(-1))
+      : events.at(-1);
+  const movedTo = last === undefined ? undefined : { occurredAt: last.occurredAt, id: last.id };
 
   return {
     jobs: events.filter(isNotice).map((event): NotificationJob => ({
@@ -71,7 +77,7 @@ async function relayNotices(deps: ScheduleSlotDeps, upTo: Temporal.Instant): Pro
       accountId: event.accountId,
       eventId: event.id,
     })),
-    movedTo: last === undefined ? undefined : { occurredAt: last.occurredAt, id: last.id },
+    movedTo: movedTo !== undefined && isAfter(movedTo, cursor) ? movedTo : undefined,
   };
 }
 
@@ -109,7 +115,7 @@ export async function scheduleSlot(
     work.noticeCursor.save(relay.movedTo);
     await work.commit();
   }
-  if (slot.time === timesOfDay[0]) {
+  if (isDailySlot(slot)) {
     const before = now.subtract({ hours: deliveryRetentionDays * hoursPerDay });
     await deps.ledger.forget(before);
     const work = deps.startUnitOfWork();

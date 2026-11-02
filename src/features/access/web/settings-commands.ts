@@ -13,6 +13,7 @@ import {
 } from "./access-commands";
 import { fieldFallbacks, firstIssue } from "./field-issues";
 import { setupLinkUrl } from "./setup-link-url";
+import { telegramStartUrl } from "./telegram-link-url";
 
 // What the account settings do for each request, minus the framework. A refusal carries its code as well as its
 // sentence, so the page knows when to ask for step-up and try again.
@@ -178,6 +179,29 @@ export async function recoveryLinkFor(
   return issued.ok
     ? ok({ url: setupLinkUrl(appOrigin, issued.value.token) })
     : err(problem(issued.error));
+}
+
+// The t.me link the page shows once; only its code's hash is kept
+export type TelegramStartView = { readonly url: string };
+
+export async function connectTelegram(
+  app: App,
+  session: Session,
+  botUsername: string,
+): Promise<SettingsResult<TelegramStartView>> {
+  const started = await app.startTelegramLink(session);
+
+  return started.ok
+    ? ok({ url: telegramStartUrl(botUsername, started.value.code) })
+    : err(problem(started.error));
+}
+
+export async function disconnectTelegram(
+  app: App,
+  session: Session,
+  origin: RequestOrigin,
+): Promise<SettingsResult<null>> {
+  return settle(await app.unlinkTelegram(session, origin));
 }
 
 // Step-up: a passkey sign-in scoped to this account, which replaces the session with a fresh one

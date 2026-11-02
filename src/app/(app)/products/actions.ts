@@ -1,7 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshed } from "@/app/refreshed";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import * as Merging from "@/features/merging/web/commands";
@@ -14,12 +13,6 @@ import type { Result } from "@/shared/domain/result";
 
 // Anyone can call a server action, so each one checks the session first and the commands parse every argument. A
 // change refreshes the page, which then shows it - or, after a refusal, what the other person did.
-
-function refreshed<T>(result: Result<T, string>): Result<T, string> {
-  refresh();
-
-  return result;
-}
 
 // The new product's id, for the page to open it
 export async function addProduct(name: string): Promise<Result<string, string>> {

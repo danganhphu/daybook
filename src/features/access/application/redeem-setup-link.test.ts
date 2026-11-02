@@ -86,6 +86,26 @@ describe("redeemSetupLink", () => {
     ).toEqual([{ account_id: account.id, ip: "198.51.100.4" }]);
   });
 
+  it("given a token no link was made with, when redeemed, then nothing is recorded, as it concerns no account", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+
+    await testApp(time.clock).redeemSetupLink(newSecretToken(webCryptoSecrets), origin());
+
+    expect(await rows("select kind from access_event")).toEqual([]);
+  });
+
+  it("given an address over the limit, when it keeps trying, then being limited is recorded once", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+    const app = testApp(time.clock);
+    await Promise.all(
+      Array.from({ length: 13 }, () => app.redeemSetupLink("guess", origin("198.51.100.4"))),
+    );
+
+    expect(await rows("select kind from access_event where kind = 'rate_limited'")).toEqual([
+      { kind: "rate_limited" },
+    ]);
+  });
+
   it("given ten attempts from one address, when an eleventh comes, then it is refused as rate limited even with a good link", async () => {
     const time = testClock("2026-10-21T01:00:00Z");
     const app = testApp(time.clock);

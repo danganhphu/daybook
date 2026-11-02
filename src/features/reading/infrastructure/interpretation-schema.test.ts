@@ -100,4 +100,14 @@ describe("interpretation table", () => {
       ).resolves.toBeDefined();
     },
   );
+
+  it("given an unsure reading stored first under a later id, then one settling it under an earlier id, when a third comes, then the trigger refuses it", async () => {
+    const capture = await aCapture();
+    await insert({ outcome: "unsure" }, "019a0000-0000-7000-8000-0000000000e3", capture);
+    await insert({ outcome: "order" }, "019a0000-0000-7000-8000-0000000000e1", capture);
+
+    await expect(insert({}, "019a0000-0000-7000-8000-0000000000e2", capture)).rejects.toThrow(
+      /stale_version/,
+    );
+  });
 });

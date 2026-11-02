@@ -1,5 +1,6 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
+import type { CaptureId } from "@/features/capture/domain/capture";
 import type { SearchTerm } from "@/shared/domain/search-term";
 import type { DayBounds } from "@/shared/domain/vietnam-day";
 
@@ -9,6 +10,8 @@ import type { DeletedNote, LiveNote, Note, NoteId } from "./note";
 export type NoteRepository = {
   get(id: NoteId): Promise<Note | undefined>;
   getMany(ids: ReadonlyArray<NoteId>): Promise<ReadonlyArray<Note>>;
+  // The note a capture was filed as; every capture has one
+  findByCapture(captureId: CaptureId): Promise<Note | undefined>;
   // Newest first
   listLiveCreatedWithin(bounds: DayBounds): Promise<ReadonlyArray<LiveNote>>;
   // Live notes containing every word of the term, newest first, at most `limit`

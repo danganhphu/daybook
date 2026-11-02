@@ -1,21 +1,23 @@
 import type { Temporal } from "temporal-polyfill/implementation";
 
 import { backupPasswordTerm, passkeyTerm } from "@/features/access/application/access-terms";
-import { formatMoment } from "@/features/access/web/account-view";
 import type {
   DueItem,
   MorningContent,
   NoticeContent,
   NotificationContent,
+  PeriodSummary,
   WeeklyContent,
 } from "@/features/notifications/application/notification-content";
 import type { PushDelivery, PushMessage } from "@/features/notifications/application/push-sender";
 import type { NoticeKind } from "@/features/notifications/domain/notice";
-import { overdueBy } from "@/features/reminders/web/reminders-copy";
+import { moreDue, overdueBy } from "@/features/reminders/web/reminders-copy";
+import { reportsCopy } from "@/features/reports/web/reports-copy";
 import { reportsPath } from "@/features/reports/web/reports-path";
 import { moneyText } from "@/shared/web/money-text";
 import { routes } from "@/shared/web/routes";
 import { midSentence } from "@/shared/web/sentence-case";
+import { momentText } from "@/shared/web/time-text";
 
 // What a push notification says. The phone shows a few lines of it, so it names what to do first and counts the rest.
 
@@ -35,19 +37,25 @@ function shortened(text: string): string {
   return line.length > lineLength ? `${line.slice(0, lineLength - 3).trimEnd()}...` : line;
 }
 
-function reminderLine(item: DueItem, day: Temporal.PlainDate): string {
+// "gọi lại nha khoa Hoa Mai, Hoa Mai (quá hạn 2 ngày)": what the morning list says of one reminder
+export function reminderLine(item: DueItem, day: Temporal.PlainDate): string {
   const late = item.dueOn.until(day, { largestUnit: "days" }).days;
   const customer = item.customerName === undefined ? "" : `, ${item.customerName}`;
 
   return `${shortened(item.text)}${customer}${late > 0 ? ` (${midSentence(overdueBy(late))})` : ""}`;
 }
 
+// "Lâu không đặt: Hoa Mai, Minh Châu"
+export function quietNames(names: ReadonlyArray<string>): string {
+  return `Lâu không đặt: ${names.join(", ")}`;
+}
+
 // The words and where a tap goes; the tag comes from the delivery
-type PushText = Omit<PushMessage, "tag">;
+export type PushText = Omit<PushMessage, "tag">;
 
 function morning(content: MorningContent): PushText {
   const { due, quiet, day } = content;
-  const quietLine = quiet.length === 0 ? [] : [`Lâu không đặt: ${quiet.join(", ")}`];
+  const quietLine = quiet.length === 0 ? [] : [quietNames(quiet)];
   if (due.length === 0) {
     return {
       title: `${quiet.length} khách lâu không đặt`,
@@ -61,21 +69,26 @@ function morning(content: MorningContent): PushText {
     title: `Hôm nay có ${due.length} việc`,
     body: [
       ...due.slice(0, namedReminders).map((item) => reminderLine(item, day)),
-      ...(rest > 0 ? [`và ${rest} việc nữa`] : []),
+      ...(rest > 0 ? [moreDue(rest)] : []),
       ...quietLine,
     ].join("\n"),
     path: routes.reminders,
   };
 }
 
-function weekly(content: WeeklyContent): PushText {
-  const quiet = content.quiet > 0 ? ` ${content.quiet} khách lâu không đặt.` : "";
+// The Friday summary's words, which the bot's /week and /month say too
+export function summaryText(summary: PeriodSummary): PushText {
+  const quiet = summary.quiet > 0 ? ` ${summary.quiet} khách lâu không đặt.` : "";
 
   return {
-    title: `Tuần này: ${content.orders} đơn, ${moneyText(content.sales)}`,
-    body: `Thu về ${moneyText(content.received)}. Còn nợ ${moneyText(content.owed)}.${quiet}`,
-    path: reportsPath({ period: "week", on: content.day.toString() }),
+    title: `${reportsCopy.current[summary.period]}: ${summary.orders} đơn, ${moneyText(summary.sales)}`,
+    body: `Thu về ${moneyText(summary.received)}. Còn nợ ${moneyText(summary.owed)}.${quiet}`,
+    path: reportsPath({ period: summary.period, on: summary.day.toString() }),
   };
+}
+
+function weekly({ kind: _kind, ...summary }: WeeklyContent): PushText {
+  return summaryText({ period: "week", ...summary });
 }
 
 const noticeTitles = {
@@ -89,6 +102,8 @@ const noticeTitles = {
   setup_link_redeemed: "Link khôi phục của bạn vừa được mở",
   sessions_revoked: "Tài khoản vừa đăng xuất khỏi mọi thiết bị",
   push_subscribed: "Có thêm một thiết bị nhận thông báo",
+  telegram_linked: "Vừa kết nối Telegram",
+  telegram_unlinked: "Vừa ngắt kết nối Telegram",
 } as const satisfies Record<NoticeKind, string>;
 
 // Where a tap goes: the screen that shows what changed
@@ -103,6 +118,8 @@ const noticePaths = {
   setup_link_redeemed: routes.settingsActivity,
   sessions_revoked: routes.settingsDevices,
   push_subscribed: routes.settingsNotifications,
+  telegram_linked: routes.settingsTelegram,
+  telegram_unlinked: routes.settingsTelegram,
 } as const satisfies Record<NoticeKind, string>;
 
 function notice({ notice: event, byOther }: NoticeContent): PushText {
@@ -110,7 +127,7 @@ function notice({ notice: event, byOther }: NoticeContent): PushText {
 
   return {
     title: noticeTitles[event.kind],
-    body: `${who}Lúc ${formatMoment(event.occurredAt)}, trên ${event.deviceLabel}. Nếu bạn không biết việc này, hãy mở Cài đặt.`,
+    body: `${who}Lúc ${momentText(event.occurredAt)}, trên ${event.deviceLabel}. Nếu bạn không biết việc này, hãy mở Cài đặt.`,
     path: noticePaths[event.kind],
   };
 }

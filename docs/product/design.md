@@ -38,9 +38,9 @@ the web app, the bot, or both, so **the web app does everything on its own** - a
 customers, products, reports - and the bot is optional. Anything the bot can do, the web can do; nothing exists only
 in the bot, and the app runs whole with no bot configured. The reasons for Telegram over Zalo still hold for the bot.
 
-The web app is therefore built and shipped first, and the bot after real use shows whether she wants it. Speaking
-first is not the bot's alone either: the morning list and the Friday summary go out through whichever channels each
-person chooses - the installed app's notifications, or Telegram once linked.
+The web app was therefore built and shipped first, and the bot after it; real use will show which she prefers.
+Speaking first is not the bot's alone either: the morning list and the Friday summary go out through every channel a
+person has - the installed app's notifications, the bell, and Telegram once linked.
 
 ## Decision: no confirmation per message
 
@@ -54,24 +54,27 @@ unsure - a name that matches two customers.
 The bot and the app speak Vietnamese. The examples are the bot's; the web app's Hôm nay box takes the same words and
 answers the same way, on the note.
 
-Recording an order:
+Recording an order, as the bot answers it:
 
 ```
 Người dùng:  bán 2 hộp thuốc tê cho chị Lan 500k
 
-Bot:     Đã lưu đơn
-         Nha khoa Lan Anh - Thuốc tê x2 - 500.000đ
-
+Bot:     Đã ghi đơn
+         Nha khoa Lan Anh: thuốc tê x2, 500.000đ
          Đơn thứ 12 tháng này, tổng 8.450.000đ
-         [Sửa]  [Xoá]
+         [Hoàn tác]  [Mở đơn]
 ```
 
-The running total confirms the numbers add up and shows progress. When unsure:
+The running total confirms the numbers add up and shows progress. Changing an order is done on the web, where it
+opens. When the name matches two customers:
 
 ```
-Bot:     Thuốc tê x2 - 500.000đ. Nhưng "chị Lan" là chỗ nào?
-         [Nha khoa Lan Anh]  [Hương Lan]  [Thêm mới]
+Bot:     Đơn này của khách nào?
+         [Nha khoa Lan Anh]  [Hương Lan]
+         [Chọn khách]  [Không phải đơn]
 ```
+
+A name that matches nobody offers [Thêm khách "chị Lan"] instead.
 
 One box takes everything; the bot sorts it:
 
@@ -84,9 +87,15 @@ One box takes everything; the bot sorts it:
 
 What it cannot sort is kept as a note, with [Ghi thành đơn] [Đặt nhắc nhở] [Để vậy].
 
+An amount that does not divide by its quantity - "3 hộp 100k" - stays the line's total: the order comes to the
+100.000đ she was told and was paid, and 33.333đ shows as the unit price. Split and rounded, it came to 99.999đ and
+refused the 100.000đ payment (the owner chose this, 2026-11-02, over asking each time). Changing the line's quantity
+or price on the web makes it quantity × price again.
+
 The app speaks first: a morning list (follow-ups due, and customers who went quiet that day) and a Friday summary
 (orders, revenue, money in, what is owed, who has gone quiet), sent as notifications to every phone or browser where
-the person turned them on - and to Telegram once the bot exists. Each person picks their own times in Settings, in
+the person turned them on - and to Telegram for whoever linked it, unless they switch "Gửi qua Telegram" off in
+Settings, where it sits beside the times. Each person picks their own times in Settings, in
 quarter hours, or turns either off; 07:30 and Friday 17:00 are guesses until she says otherwise. A morning with nothing
 to say sends nothing, and a customer is named the day they go quiet rather than every morning after: a notification
 that repeats itself is soon ignored. The "gone quiet" threshold is a guess too - three weeks to start, 7 to 180 days -
@@ -104,7 +113,8 @@ Every notification also stays behind a bell at the top of each tab, as apps do, 
 that had push off, or a notification swiped away, loses nothing. Opening the list reads it. It keeps 30 days. Nhắc việc,
 which the bell used to open, has its own checklist icon on Hôm nay.
 
-Typing a customer's name shows their card: contact, last order, totals, notes.
+Typing a customer's name should show their card: contact, last order, totals, notes (not built yet; the customer's
+page has it).
 
 ## Slash commands
 
@@ -112,15 +122,17 @@ Telegram's menu lists the commands, which answers the empty chat box's question 
 
 | Command | Does |
 |---|---|
-| `/start` | a first greeting and example messages |
-| `/today` | today's orders and follow-ups |
+| `/start` | a first greeting and example messages; with a link code from Settings, links this Telegram |
+| `/today` | today's orders and follow-ups, each follow-up with its Xong |
 | `/week`, `/month` | the summaries |
-| `/customer <name>` | a customer's card |
 | `/reminders` | open follow-ups |
-| `/edit` | edit the last entry |
 | `/web` | a link to the web app |
 | `/settings` | a link to the app's Settings, where the times and the "gone quiet" days are set |
 | `/help` | examples |
+
+`/customer <name>` and `/edit` were planned and are not built: a customer's card is one tap away on the web, and a
+message is corrected on the web, where the note and what it made sit together. Editing a message in Telegram changes
+nothing, and the bot says so.
 
 Names are English: Telegram allows only Latin letters, digits and `_` in command names. Their menu descriptions are
 Vietnamese. **Everything a command does can also be typed in plain words** - a command is never the only way.
@@ -134,7 +146,7 @@ Nothing in the model is tied to one trade; another business needs only different
 | `customer` | customers, with the other names people use for them |
 | `product` | name, other names, latest price; created as typed, or added on its page |
 | `order`, `order_line` | orders and their lines |
-| `interaction` | calls, visits, messages |
+| `interaction` | calls, visits, messages (planned) |
 | `reminder` | what, when, done |
 | `capture` | **every message word for word**, never edited; deleted only with the last thing made from it |
 | `note` | an entry in the list, made from a capture; editable, deletable, restorable |
@@ -186,7 +198,9 @@ installed; an iPhone needs the app on its home screen (iOS 16.4 or later).
 ## Sign-in
 
 Two people share one book: both see and edit the same data, and each message records who typed it. No roles. Nobody
-signs up: the first account comes from the command line, the second by invitation from inside the app.
+signs up: the first account comes from the command line, the second by invitation from inside the app, and there is
+no third: once two people can sign in, no invite is offered (the owner, 2026-11-02). With no roles, a third account
+would read and write everything, and nobody would be told.
 
 Signing in is a button and Face ID or a fingerprint - a **passkey**. Nothing to remember, no third-party account, and
 a fake page cannot use it because a passkey is bound to the site.
@@ -203,19 +217,20 @@ a fake page cannot use it because a passkey is bound to the site.
   other user, in the app; so does someone on a new phone whose passkey did not sync. Either user can sign out every
   device of the other - a phone lost on the road. The command line is for the first account and for when both are
   locked out.
-- The bot knows the two people by their Telegram user ids; there is no sign-in in the chat.
+- The bot knows each person by the Telegram they linked from Settings: a one-time code in a `t.me` link, opened on
+  the same phone. There is no sign-in in the chat. Signing a person out everywhere, or a recovery, unlinks it too: a
+  lost phone's Telegram writes into the book as surely as its browser.
 
 Rejected: hosted sign-in services (Supabase pauses free projects after a week idle, Auth0 deletes idle free tenants
 after 150 days, Clerk's free plan has no passkeys), Cloudflare Access (needs a card), and signing in with Telegram or
 Google (a plain sign-in screen was wanted).
 
-## First release
+## Where it stands (2026-11-02)
 
-1. Telegram takes any message, an LLM parses it, it is saved at once, the result card has Edit and Delete
-2. Look-up by typing a customer's name
-3. The bot speaks first: mornings and Friday afternoons
-4. Web: the chat box, an editable order table, a page of numbers
-5. The slash commands above
+Built: the web app above, live since 2026-10-26; notifications by Web Push and in the bell; the trash; and the bot -
+messages read into orders and reminders with Undo, the commands above, the notifications on Telegram - live with its
+first deploy. Not built: a customer's card from typing their name into the box, `/customer` and `/edit`, and
+`interaction` (calls, visits).
 
 Deferred, with reasons:
 

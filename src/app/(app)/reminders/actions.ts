@@ -1,7 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshed } from "@/app/refreshed";
 import { daybook } from "@/composition/daybook";
 import { requireSession } from "@/features/access/web/session-gate";
 import * as Reminders from "@/features/reminders/web/commands";
@@ -66,10 +65,4 @@ export async function restoreReminder(
   const session = await requireSession(app);
 
   return refreshed(await Reminders.restoreReminder(app, session.accountId, id, version));
-}
-
-function refreshed<T>(result: Result<T, string>): Result<T, string> {
-  refresh();
-
-  return result;
 }

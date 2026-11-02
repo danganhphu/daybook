@@ -129,6 +129,11 @@ function shown(customer: ArchivedCustomer, by: AccountId, at: Temporal.Instant):
   return { ...fields, status: "active", audit: Audits.change(customer.audit, by, at) };
 }
 
+// In the trash, waiting to be restored or deleted for good
+export function isInTrash(customer: Customer | undefined): boolean {
+  return customer?.status === "archived" && customer.deletion !== undefined;
+}
+
 // Into the trash, hidden by the same act; their orders and reminders go with them (the trash slice's deleteCustomer).
 // One merged into another is already gone into it.
 export function markDeleted(
