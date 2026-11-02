@@ -11,8 +11,9 @@ description: Running and configuring the Worker - the cf CLI rather than Wrangle
   Wrangler commands from memory.
 - `cf d1 query` has no local mode. Locally, D1 is reached through the dev server, the tests, or
   `cf d1 migrations apply --local --persist-to .cloudflare/state`.
-- `cf` cannot set a single secret yet: `npx wrangler secret put <NAME> --name daybook`, without adding Wrangler to the
-  project. Secret values are write-only once set.
+- `cf` cannot set a single secret, tail logs or export D1 yet: `pnpm dlx wrangler@<lockfile version> secret put <NAME>
+  --name daybook`, without adding Wrangler to the project. Not `npx wrangler`, which fails here; with no Wrangler
+  config a D1 command takes the database id, not its name. Secret values are write-only once set.
 - Keep `compatibilityDate` at the newest date the local `workerd` supports; above it the dev server refuses to start
   and `build` does not notice.
 - Deploying, deleting a resource or changing a secret reaches the live app: only when asked.
