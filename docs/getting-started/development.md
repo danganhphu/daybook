@@ -41,7 +41,8 @@ $env:PASSWORD_PEPPER = node -e "console.log(crypto.randomBytes(32).toString('bas
 pnpm start
 ```
 
-This is what the end-to-end tests run, on HTTPS and a database of their own; see [testing](../guides/testing.md).
+The end-to-end tests run the same build made with `pnpm build:e2e`, on HTTPS and a database of their own; see
+[testing](../guides/testing.md).
 
 ## Before calling a change done
 
@@ -51,7 +52,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm test:e2e      # when a screen changed
+pnpm build:e2e && pnpm test:e2e      # when a screen or the bot changed; about 15 minutes
 ```
 
 CI runs the same on every pull request. Conventions - layout, naming, errors, tests - are in

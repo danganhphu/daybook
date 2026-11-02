@@ -53,8 +53,8 @@ development pepper is in this repository and the Worker refuses it anywhere but 
 | Level | What | Where | Who sees it | Leaves the system |
 | --- | --- | --- | --- | --- |
 | Secret - a loss is an account taken | session secrets, setup tokens, ceremony bindings, the pepper, the password | cookies, a URL fragment, a Worker secret; D1 keeps only hashes and HMACs | nobody | a setup link goes person to person; five hex characters of the password's SHA-1 go to Pwned Passwords |
-| Personal or business | customers (names, phones, addresses), orders, payments, debts, notes and captures, reminders, readings, IP addresses | D1 | both users; IPs only through the D1 console | the text of a note to Workers AI, which neither keeps nor trains on it; search words in the browser's history |
-| Internal | usernames, display names, passkey labels, product names, ids, device labels | D1 | both users | username and display name to the phone's password manager when a passkey is made |
+| Personal or business | customers (names, phones, addresses), orders, payments, debts, notes and captures, reminders, readings, IP addresses | D1 | both users; IPs only through the D1 console | the text of a note to Workers AI, which neither keeps nor trains on it; search words in the browser's history; for someone who links Telegram, what they send the bot and what it answers - totals, debts, customer names - through Telegram's servers |
+| Internal | usernames, display names, passkey labels, product names, ids, device labels, a linked Telegram user's id, name and chat | D1 | both users | username and display name to the phone's password manager when a passkey is made |
 
 Every page and server action answers `Cache-Control: private, no-store`; sign-out tells the browser to drop the
 site's cookies, cache and storage. Search words travel as `?q=` so a search can be shared and reloaded; Workers Logs
@@ -64,8 +64,10 @@ drops the query.
 
 | Rows | Kept now | Rule |
 | --- | --- | --- |
-| Customers, products, orders, payments, notes, reminders, readings, captures, merges | forever; a delete hides, and is listed for 30 days | The book is the point. Captures, readings, order history and merges are append-only by trigger |
-| `access_event` | forever | Meant to be kept a year: a purge comes with the scheduled job the bot brings, and needs the append-only trigger to allow rows past that age |
+| Customers, products, orders, payments, notes, reminders, readings, captures, merges | until deleted: a delete goes to the trash for 30 days, then the rows are deleted for real, at once when deleted for good (ADR 0017) | The book is the point. Captures, readings, order history and merges are append-only by trigger, and leave only with what they belong to |
+| `access_event` | forever | Meant to be kept a year: the daily run could purge it, once the append-only trigger allows rows past that age |
+| `telegram_link` | until unlinked: in Settings, by signing a person out everywhere, by a recovery, or by `pnpm access:revoke` | - |
+| `telegram_link_code` | ten minutes, spent on use; a new one replaces it | - |
 | `session` | until it ends and is next presented, or signed out | Swept by the same job once it exists |
 | `setup_link` | spent and expired links stay | Swept by the same job |
 | `ceremony` | until the next prompt starts | Swept on write |
@@ -77,9 +79,9 @@ drops the query.
 
 | Log | Holds | Who reads it | Protected by |
 | --- | --- | --- | --- |
-| `access_event` | every sign-in, refusal, rate limit, lock, session end, passkey and password change, link: who, what, when (UTC), IP, device label, a small JSON detail; never a secret, token, challenge or key | each user, their 20 latest without the IP; the operator all of it | triggers refusing update and delete |
+| `access_event` | every sign-in, refusal that concerns an account, the first request over a rate limit in its window, lock, session end, passkey and password change, link, Telegram link and unlink (with the Telegram user's id): who, what, when (UTC), IP, device label, a small JSON detail; never a secret, token, challenge or key | each user, their 20 latest without the IP; the operator all of it | triggers refusing update and delete |
 | `order_change`, `capture`, `interpretation`, `customer_merge`, `product_merge` | the book's history | both users, on their screens | the same triggers |
-| Workers Logs | each request's method, URL without query, status; one JSON line per fault from `src/instrumentation.ts` (route pattern, digest, each error's name and first line); vinext's own line for a failed server action | the Cloudflare account | the Worker can write, never edit |
+| Workers Logs | each request's method, URL without query, status; one JSON line per fault from `src/instrumentation.ts` (route pattern, digest, each error's name and first line); one JSON line per event through `logEvent` - a retried or dead job, an outbound call that failed, a push or bot setting turned off as misconfigured - with ids and counts only; vinext's own line for a failed server action | the Cloudflare account | the Worker can write, never edit |
 
 vinext writes a failed server action's whole error, and a failed query's error from Drizzle carries its parameters -
 customer names, search words. That line is vinext's, so it stays; Workers Logs keeps it 3 days and only the Cloudflare
@@ -101,4 +103,5 @@ ASVS asks for these to be written down; each is a choice, not an oversight.
 | 6.2 | The password policy runs in the browser | The server never sees the password, only its Argon2id key |
 | 6.4 | No recovery codes | Recovery is a link from the other user, in the app |
 | 16.3.2, 16.3.3 | A refused authorization or a bypass attempt writes no event | A new event kind rebuilds `access_event`; after the first deploy |
+| 16.3.1 | A setup token or Telegram code that matches nothing, and every request over a rate limit after the first in its window, write no event | Each concerns no account, or repeats the first; logging them let anyone grow an append-only log and push real notices back in the relay's queue |
 | 16.4.3 | The security log lives in the database it describes | Logpush and Tail Workers need the paid plan (ADR 0005) |

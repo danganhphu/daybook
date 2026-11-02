@@ -25,6 +25,8 @@ does; this file says how the data is shaped and which rules it keeps. A change t
 | Invite | link mời | A setup link for someone new, made by a signed-in user; the newcomer names the account |
 | Recovery link | link khôi phục | A setup link for the other user's account, when they lost every way in |
 | Access event | hoạt động đăng nhập | A record of who signed in, what changed, and from where. Never edited |
+| Telegram link | kết nối Telegram | One account's Telegram user and the private chat the bot answers in. An account has one Telegram, and a Telegram user writes as one account |
+| Link code | | A one-time, ten-minute code in the `t.me` link Settings makes, spent by the bot's `/start`; only its hash is kept |
 
 | Customer kind | loại khách | The owner's own grouping of customers, typed into Settings. The code names none of them |
 | Customer | khách | Someone orders are for: a name, and optionally a kind, an area, a phone, an address, a note. Hidden, or deleted with their orders and reminders |
@@ -70,6 +72,9 @@ its capture made - an order, a reminder - shows beneath it.
   leaves the trash for good, a trigger takes the capture and its interpretations too. Another trigger refuses deleting
   one while anything still points at it.
 - `source` is a known value and `content` is not blank, checked by the type and again by `CHECK` constraints.
+- A message from the bot keeps Telegram's chat and message ids as its `source_ref`, unique with the source: Telegram
+  sends an update again when it did not see the answer, and the second finds the capture the first made. Once found,
+  it is never recorded again, even when its note is gone for good.
 
 ## Note
 
@@ -169,11 +174,21 @@ version, so "paid never exceeds the total" is kept in one place and two people c
 
 - **Money is a whole number of đồng** (`src/shared/domain/money.ts`), at most a trillion. The total is computed from
   the lines every time and never stored.
+- **A line comes to quantity × unit price**, unless it keeps a total: an amount read from a message that does not
+  divide by its quantity - "3 hộp 100k" - keeps 100.000đ as the line's total and 33.333đ as its unit price, so the
+  order sums to what she was told and that exact payment is accepted (`lineAmount`, `totalFits`: the two stay within
+  rounding, in the database too). A revision keeps the total while the line is unchanged and drops it once its
+  product, quantity or price changes (`keepTotals`).
 - **Business days are Vietnam calendar days**, `YYYY-MM-DD`: ordered, delivered, paid. A delivery is never before the
   order.
 - **Products come from the order form**, or the products screen. A line names a known product by id or a new one by
   name; a name matching a shown product's name or one of its other names, ignoring case and diacritics, is that
-  product. New ones are written in the order's batch.
+  product. New ones are written in the order's batch. A product picked by id must be shown or hidden, never deleted
+  or merged away - a form open meanwhile is answered `product_not_found` - unless the order being revised already
+  names it; the database refuses such a line too (`order_line_names_kept_product`).
+- **An order or a reminder deleted on its own stays deleted while its customer is in the trash**
+  (`order_customer_deleted`, `reminder_customer_deleted`): it comes back with the customer, or after them. Live under
+  a deleted customer, it would keep that customer from ever going for good. The database refuses it too.
 - **A product's last price is read, not stored**: the latest live line, this customer's first.
 - **Every change is logged** (`order_change`, ADR 0011 decision 10): `placed`, `revised`, `delivered`, `undelivered`,
   `payment_added`, `payment_removed`, `deleted`, `restored`, with the order before and after as JSON. `OrderWrites`
@@ -211,8 +226,9 @@ current words.
   exactly one active customer's is them; otherwise one customer holding every word is them; none or several, and an
   order waits for a person. Products are matched by any of their names the same way.
 - **An amount is a line's total** unless the message says it is for one unit, or the product's last price is nearer
-  the amount than the amount split per unit (`line-price.ts`). A line without an amount takes its last price, or 0
-  until someone fills it in. A line without a quantity is one.
+  the amount than the amount split per unit (`line-price.ts`); a total that does not divide is kept as the line's
+  total (Orders). A line without an amount takes its last price, or 0 until someone fills it in. A line without a
+  quantity is one.
 - **An order is placed through the order's own checks** (`prepareOrder`), on the day the message was sent, with its
   `capture_id`, in the same batch as the interpretation. Refused - a product name too long, say - nothing is made and
   the interpretation is `failed` with `refused`.
@@ -270,10 +286,13 @@ customer ("kèm 2 đơn"), not on its own.
 - **Delete for good** is a `DELETE`, after a question that says it cannot be undone: an order with its lines,
   payments and log; a customer with every order and reminder of theirs still in the trash, their other names, the
   customers merged into them (a recursive CTE on `merged_into_id`) and the merge records; a product with its other
-  names and the products merged into it, never while an order line names it; a kind after its customers are set to
-  none. Each statement picks only rows still deleted, so one restored meanwhile stays whole.
+  names and the products merged into it; a kind after its customers are set to none. Each statement picks only rows
+  still deleted, so one restored meanwhile stays whole. What something still uses stays, and is said
+  (`trash_in_use`): a product an order line names, or one merged into it; a customer with a live order or reminder,
+  or with one merged into them that still has any.
 - **Thirty days** after it was deleted, a thing goes for good by itself: the scheduler's first run of each day
-  (`emptyExpiredTrash`).
+  (`emptyExpiredTrash`), each kind in a batch of its own, so a row one kind cannot delete keeps only that kind waiting;
+  it is tried again the next night, and logged (`trash_purge_failed`).
 - **About a dozen reads**, whatever is chosen, and one batch: inside D1's 50 queries per request.
 - Known gap: a restore and a delete for good of the same thing at the same moment from two devices can leave the
   restore answered as done with nothing restored (an update of a row already gone changes nothing). The window is the
@@ -289,8 +308,12 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
 - **A digest is due in a slot** when the person's time is the slot's time - on a Friday, for the summary - whether or
   not a browser of theirs receives push. The slot is worked out from the cron run's scheduled time, not the clock, so a
   late run serves its own slot.
-- **Channels**: every notification goes to the list behind the bell (`inbox`), always, and by push to each browser
-  receiving. The ledger claims each channel apart, so one that fails is retried while the others stay done.
+- **Channels**: every notification goes to the list behind the bell (`inbox`), always; by push to each browser
+  receiving; and to Telegram for someone whose Telegram is linked, unless they turned "Gửi qua Telegram" off. The
+  ledger claims each channel apart, so one that fails is retried while the others stay done, and every channel
+  finishes its row before a fault in another is passed on: Telegram has no tag to replace a message sent twice.
+- **A bot reply that never went out** - the job failed every retry - is told to its sender in the bell
+  (`reply_failed`, "Bot chưa trả lời được một tin nhắn"), opening the day of the message, once per message.
 - **The list behind the bell** keeps each notification in the words it was sent with, once per person and subject and
   day or event, newest first, the last 50 shown, for 30 days. A tap opens where the notification opens. The bell on
   every tab counts what is unread; opening the list marks read everything up to its newest item, by a request of its
@@ -303,8 +326,9 @@ their sign-in, sent to their browsers by Web Push. The reasons are in ADR 0015.
   **The Friday summary** is the week's orders and sales, money in, what is owed, and how many customers are quiet.
 - **A notice** is one of a closed list of access events (`notice.ts`): a passkey added or removed, a password set,
   changed or locked, the username changed, a recovery link made or used, devices signed out by the other person, a new
-  browser receiving notifications. It goes to the account it concerns, whoever made the change, and cannot be turned
-  off. The access log is read in order behind a cursor; an event is relayed once it is a minute old.
+  browser receiving notifications, a Telegram linked or unlinked. It goes to the account it concerns, whoever made the
+  change, and cannot be turned off. The access log's notice kinds are read in order behind a cursor, 50 a run, so
+  sign-ins and refusals never use a run's room; an event is relayed once it is a minute old.
 - **A subscription belongs to a session.** It is sent to only while that session runs. When the session ends it stays,
   asleep, so the same browser signing in again hands it over and wakes it without counting as a new device; a browser
   new to the account is recorded as `push_subscribed`. Only known push services' addresses are kept (`googleapis.com`,
@@ -344,8 +368,16 @@ design.md, "Sign-in". The rules the code keeps:
   the account is made then, and the setup ceremony carries it to the passkey. The redeemed link row is never touched
   (`setup_link_redeemed_once` refuses any update), and `account_created` records which link and who invited. An
   account left without a passkey shows as "chưa có cách đăng nhập" until the other user sends a recovery link.
+- **The book is for two.** No roles, so an account reads and writes everything; once two accounts have a way in, an
+  invite is refused (`book_full`) and Settings offers none. An account invited but never set up does not count.
 - **A recovery link is for the other user**, never for oneself: signed in, one adds a passkey from Settings. Using it
-  adds a passkey and ends every other session of that account; old passkeys stay for their owner to remove.
+  adds a passkey and ends every other session of that account, and unlinks its Telegram; old passkeys stay for their
+  owner to remove.
+- **A Telegram is linked from Settings**, after step-up: the web makes a link code and opens `t.me/<bot>?start=<code>`;
+  the bot's `/start` spends it for the Telegram user who sent it, in their private chat. Used, expired and unknown codes
+  get the same answer; one Telegram user sends at most 10 codes in 10 minutes, and words that are no code are not
+  counted. A Telegram user already linked to the other account is refused. Linking and unlinking are logged with the
+  Telegram user's id.
 - **The fallback password never leaves the browser.** The browser normalises it (NFKC), counts code points (15 to
   128), checks Pwned Passwords by k-anonymity with padding, and derives a key with Argon2id (19 MiB, 2 passes, 1 lane,
   a salt the server chose). The server keeps `HMAC-SHA256(pepper, key)` with the pepper's version and compares in
@@ -362,16 +394,18 @@ design.md, "Sign-in". The rules the code keeps:
 - **The last way in stays.** A passkey can be removed only while another passkey or an unlocked password remains.
   Removing one signs out the other devices it signed in; after a removal or a password change, the page offers to
   sign out every other device.
-- **Either user can sign out every device of the other**, after step-up - a phone lost on the road. The other's
-  passkeys stay; they remove the lost one themselves, after a recovery link if need be.
+- **Either user can sign out every device of the other**, after step-up - a phone lost on the road - and that
+  unlinks the other's Telegram too, since a lost phone's Telegram writes into the book as surely as its browser. The
+  other's passkeys stay; they remove the lost one themselves, after a recovery link if need be.
 - **Each account sees its own activity**: what happened to it, and what it did to the other account. A recovery link
   shows on both lists, each from its own side.
 - **The signature counter is a signal, not a lock.** One that did not move forward is noted on the session's
   `session_opened` event and accepted: synced passkeys always report 0.
-- **Every attempt is counted and recorded.** Redeeming a link is limited to 10 tries per client in 10 minutes, and
-  asking for a sign-in prompt to 30, a client being an IPv4 address or an IPv6 /64. Successes, refusals and limits
-  land in `access_event`, with the reason a passkey was refused. A request with no prompt behind it is refused
-  without an entry.
+- **Every attempt is counted, and what concerns an account recorded.** Redeeming a link is limited to 10 tries per
+  client in 10 minutes, and asking for a sign-in prompt to 30, a client being an IPv4 address or an IPv6 /64.
+  Successes and refusals land in `access_event`, with the reason a passkey was refused; a limit reached is recorded
+  once per window. A request with no prompt behind it, and a link or code that matches nothing, is refused without an
+  entry: it concerns no account, and anyone could otherwise grow the log.
 
 ## Use cases
 
@@ -403,17 +437,17 @@ through `createApp` in `src/composition/create-app.ts`.
 | `customerMergePreview`, `productMergePreview` | How many live orders and reminders a merge would move | - |
 | `placeOrder`, `reviseOrder` | An order, making the products it names first | `customer_unavailable`, `product_not_found`, the order's own refusals |
 | `deliverOrder`, `undeliverOrder`, `addPayment`, `removePayment` | One change, logged | `order_not_found`, `order_changed_elsewhere`, the order's own refusals |
-| `deleteOrder`, `restoreOrder` | Soft delete with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere`, `order_deleted_with_customer` |
+| `deleteOrder`, `restoreOrder` | Into the trash with Undo; deleting twice writes nothing | `order_not_found`, `order_changed_elsewhere`, `order_deleted_with_customer`, `order_customer_deleted` |
 | `addReminder` | A reminder, from the form or from a live note | `customer_unavailable`, `note_unavailable` |
 | `reviseReminder` | New words, day or customer | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `customer_unavailable` |
 | `completeReminder`, `reopenReminder` | Done, by whom and when; open again | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_deleted`, `reminder_done`, `reminder_open` |
-| `deleteReminder`, `restoreReminder` | Soft delete with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted`, `reminder_deleted_with_customer` |
+| `deleteReminder`, `restoreReminder` | Into the trash with Undo; deleting twice writes nothing | `reminder_not_found`, `reminder_changed_elsewhere`, `reminder_not_deleted`, `reminder_deleted_with_customer`, `reminder_customer_deleted` |
 | `listDoneReminders` | Finished ones, latest first, a page after a cursor of (done at, id) rather than an offset, so a reminder reopened between pages shifts nothing | - |
 | `listDeletedNotes`, `listDeletedOrders`, `listDeletedReminders`, `listDeletedCustomers`, `listDeletedProducts`, `listDeletedCustomerKinds` | Deleted since a moment (the screen asks for 30 days), latest first, 50 at most each; orders and reminders deleted with a customer left out | - |
 | `deletedWithCounts` | How many orders and reminders each deleted customer took with them | - |
 | `restoreFromTrash` | Many things back at once, a customer with what went with them; says each that could not | `trash_changed_elsewhere` for the batch; per thing `trash_not_found`, `trash_changed_elsewhere`, `trash_not_deleted`, `trash_customer_deleted`, `trash_name_taken` |
-| `purgeFromTrash` | Many things gone from the database for good; says each that was restored meanwhile | per thing `trash_changed_elsewhere`, `trash_not_deleted` |
-| `emptyExpiredTrash` | The daily run: everything deleted more than 30 days ago goes for good | - |
+| `purgeFromTrash` | Many things gone from the database for good; says each that was restored meanwhile or is still used | per thing `trash_changed_elsewhere`, `trash_not_deleted`, `trash_in_use` |
+| `emptyExpiredTrash` | The daily run: everything deleted more than 30 days ago goes for good, a kind at a time; answers the kinds that failed | - |
 | `readNote` | Reads a note's message and makes the order or reminder it describes, or asks, or keeps the failure | `note_unavailable`, `reader_unavailable`, `already_read` |
 | `answerReading` | Settles an unsure reading with a customer, a new customer, or as a note | `note_unavailable`, `not_asked`, `customer_unavailable`, `customer_unnamed` |
 | `readingStates` | What each of a day's notes shows about its message, in four queries | - |
@@ -429,7 +463,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `signOut` | Ends this session | - |
 | `endSession` | Ends one other session of the account | `step_up_required`, `not_found` |
 | `endOtherSessions` | Ends every other session of the account | `step_up_required` |
-| `endPersonSessions` | Ends every session of the other account, its passkeys left alone | `step_up_required`, `not_found` |
+| `endPersonSessions` | Ends every session of the other account and unlinks its Telegram, its passkeys left alone | `step_up_required`, `not_found` |
 | `listSessions` | The account's sessions still running, most recently used first | - |
 | `accountOverview` | What Settings and its account sections show: account, passkeys, password status, sessions, the sign-in history of the last 30 days 30 rows at a time, people | - |
 | `changeDisplayName` | Renames the account | - |
@@ -440,7 +474,7 @@ through `createApp` in `src/composition/create-app.ts`.
 | `finishAddingPasskey` | Stores it | `step_up_required`, `passkey_not_accepted` |
 | `removePasskey` | Removes one, never the last way in, and ends the other sessions it opened | `step_up_required`, `not_found`, `last_way_in` |
 | `issueSetupLink` | A setup link and its token, shown once; the command line's first setup and break-glass | - |
-| `issueInvite` | An invite from a signed-in user | `step_up_required` |
+| `issueInvite` | An invite from a signed-in user, while fewer than two people have a way in | `step_up_required`, `book_full` |
 | `issueRecoveryLink` | A recovery link for the other account | `step_up_required`, `not_found` |
 | `nameInvitedAccount` | Makes the invited account from the newcomer's name and username | `setup_link_unusable`, `username_taken` |
 | `resumeSetup` | Where a setup stands, from its ceremony cookie, after a reload | `setup_link_unusable` |
@@ -454,6 +488,12 @@ through `createApp` in `src/composition/create-app.ts`.
 | `markInboxRead` | Marks the person's unread items read, up to the newest one shown | - |
 | `deleteInboxItems`, `clearInbox` | Some of the person's items, or all, gone for good; another's ids change nothing | - |
 | `changeNotificationQuietDays` | The person's days after which the morning list names a customer as gone quiet | `days_changed_elsewhere` |
+| `changeNotificationTelegram` | Whether the person's notifications also go to their Telegram | `telegram_changed_elsewhere` |
+| `startTelegramLink` | A link code for this account, the one before it spent | `step_up_required` |
+| `linkTelegram` | The bot's `/start`: spends a code and links the Telegram user who sent it | `telegram_link_unusable`, `telegram_user_taken`, `rate_limited` |
+| `unlinkTelegram` | Settings: the account's Telegram writes and hears nothing more | `step_up_required`, `not_found` |
+| `recordMessage` | The bot: a linked user's message kept as a capture and its note, once per Telegram message | - |
+| `reportUnanswered` | A bot reply that failed every retry, told to its sender in the bell | - |
 
 Reads for screens - an order list, its totals, what each customer owes, a customer's account, last prices, an
 order's log - are SQL in `order-queries.ts`, one or two statements a screen, inside D1's 50 queries per request on
@@ -476,6 +516,7 @@ Each feature's codes form one closed set - `NoteError` in `src/features/notes/ap
 | `id` | text | primary key, UUIDv7 |
 | `content` | text | not blank |
 | `source` | text | `web` or `telegram` |
+| `source_ref` | text | Telegram's chat and message ids, exactly when the source is `telegram`; unique with the source (`capture_source_ref_once`) |
 | `author_id` | text | foreign key to `account.id`: who typed it |
 | `received_at` | integer | epoch milliseconds |
 
@@ -514,12 +555,12 @@ The book's tables, all `STRICT`, every one but the lines and the log with the au
 | `product` | name, search name, merged into, deleted at and by | shown names unique by search name; deleted only while hidden; triggers `product_merged_only_hidden_on_insert` and `_on_update` |
 | `product_alias` | product, name, search name, who and when | no audit: removed outright; search name unique across all |
 | `customer_merge`, `product_merge` | from, into, the ids moved as JSON, who and when | not itself; valid JSON; trigger `*_merge_no_update`; `customer_merge_goes_only_with_its_customers` and `product_merge_goes_only_with_its_products` refuse a delete while the one kept is neither deleted nor merged away |
-| `sales_order` | customer, ordered on, delivered on, note, capture, deleted with | days are `YYYY-MM-DD`; delivered on or after ordered; deleted with a customer only while deleted |
-| `order_line` | order, position, product, quantity, unit price | quantity 1-100,000; price 0 to a trillion; no audit, replaced whole on a revision |
+| `sales_order` | customer, ordered on, delivered on, note, capture, deleted with | days are `YYYY-MM-DD`; delivered on or after ordered; deleted with a customer only while deleted; trigger `sales_order_comes_back_with_its_customer` refuses bringing one back while its customer is deleted. Indexed by capture |
+| `order_line` | order, position, product, quantity, unit price, total | quantity 1-100,000; price 0 to a trillion; a total, when kept, within rounding of quantity × price (`order_line_total_fits`); trigger `order_line_names_kept_product` refuses a line naming a product deleted or merged away; no audit, replaced whole on a revision |
 | `payment` | order, amount, paid on, method, note, who and when recorded, removal | amount 1 to a trillion; method `cash`, `transfer` or none; trigger `payment_only_removal`; `payment_goes_only_with_its_order` refuses a delete while the order is not deleted |
 | `order_change` | order, kind, who and when, before and after as JSON | known kinds, `customer_merged` and `product_merged` among them; valid JSON; trigger `order_change_no_update`; `order_change_goes_only_with_its_order` refuses a delete while the order is not deleted |
-| `reminder` | text, due on, customer, capture, done at and by, deleted with | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither; deleted with a customer only while deleted |
-| `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_goes_only_with_its_capture` (no delete while a note, order or reminder points at the capture), and `interpretation_once_settled`, which refuses a row after an `order`, `reminder` or `note` one of the same capture with `stale_version` |
+| `reminder` | text, due on, customer, capture, done at and by, deleted with | text not blank, at most 4,000; due on `YYYY-MM-DD`; done at and by both or neither; deleted with a customer only while deleted; trigger `reminder_comes_back_with_its_customer`, as for orders. Indexed by capture |
+| `interpretation` | capture, model, prompt version, outcome, result as JSON, failure, Neurons, who and when | no audit: never changed; known outcomes and failures; a result exactly when not failed, valid JSON; triggers `interpretation_no_update`, `interpretation_goes_only_with_its_capture` (no delete while a note, order or reminder points at the capture), and `interpretation_once_settled`, which refuses with `stale_version` a row for a capture that has an `order`, `reminder` or `note` one, whatever order the ids fall in |
 
 The access tables, all `STRICT`, ids UUIDv7, times epoch milliseconds, secrets as the base64url of their SHA-256.
 Every number a `CHECK` holds - lengths, the Argon2id floor, the algorithms - is the domain's own constant, written
@@ -533,18 +574,20 @@ into the statement by `src/shared/infrastructure/d1/sql-literals.ts`, so the two
 | `setup_link` | purpose, account, author, token hash, expiry, redemption | an unredeemed invite names no account; a first-setup link has no author; trigger `setup_link_redeemed_once` |
 | `password` | one fallback password per account: salt, Argon2id cost, verifier, pepper version, failures, lock, change time | the cost never below OWASP's minimum; salt and verifier of their exact lengths |
 | `ceremony` | kind, browser binding, account, setup link, the challenge waiting for an answer, the salt handed out, expiry | a setup ceremony names its link; challenge and salt of their exact lengths; deleted when finished |
-| `access_event` | kind, whose account, who acted, session, passkey, IP, device, small JSON detail | known kinds only (the bot's three among them, ahead of it); triggers `access_event_no_update` and `access_event_no_delete` |
-| `rate_limit` | attempts per key and fixed window | windows long over are dropped on the next hit |
+| `access_event` | kind, whose account, who acted, session, passkey, IP, device, small JSON detail | known kinds only; triggers `access_event_no_update` and `access_event_no_delete` |
+| `rate_limit` | attempts per key and fixed window | a key's ended windows, and any row a day old, are dropped on the next hit |
+| `telegram_link` | per account, the Telegram user's id and name, the private chat's id, when linked | the Telegram user unique; deleted on unlinking, the log keeps the history |
+| `telegram_link_code` | account, the code's hash, when made, when it expires | hash unique and of its exact length; expires after it is made; spent by deleting it |
 
 The notifications' tables, all `STRICT`:
 
 | Table | Holds | Rules the database keeps |
 | --- | --- | --- |
 | `push_subscription` | account, session, the push service's address, the browser's two keys, the device label, when made, when last sent | session unique, set null when the session is deleted; address unique and `https`, at most 2,048; keys of their exact lengths |
-| `notification_preference` | per account, the morning and Friday times or null, the days after which a customer has gone quiet | quarter hours only; days 7 to 180, 21 by default; audited and versioned, with both triggers |
-| `notification_delivery` | account, subject, ref (a day or an event id), channel (`inbox` or `push`), status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects, channels and statuses |
+| `notification_preference` | per account, the morning and Friday times or null, the days after which a customer has gone quiet, whether Telegram gets them too | quarter hours only; days 7 to 180, 21 by default; Telegram on by default; audited and versioned, with both triggers; trigger `notification_preference_added_once` makes the second of two first changes stale, not a fault |
+| `notification_delivery` | account, subject, ref (a day, an event id or a note id), channel (`inbox`, `push` or `telegram`), status, attempts, claimed and finished | unique (account, subject, ref, channel); finished exactly when not claimed; known subjects (`morning`, `weekly`, `notice`, `reply_failed`), channels and statuses |
 | `notice_cursor` | where the relay of notices has read the access log to | a single row |
-| `inbox_item` | account, subject, ref, title, body, path, when made, when read | unique (account, subject, ref); a path in the app (`/`, never `//`); title not blank, at most 200; body at most 2,000; read never before made. No audit columns: the system writes it, its person only reads it. Indexes: by account and time for the list, and a partial one on unread items for the bell's count |
+| `inbox_item` | account, subject, ref, title, body, path, when made, when read | unique (account, subject, ref); a path in the app (`/`, never `//` or `/\`); title not blank, at most 200; body at most 2,000; read never before made. No audit columns: the system writes it, its person only reads it. Indexes: by account and time for the list, and a partial one on unread items for the bell's count |
 
 ## Consistency
 
@@ -567,8 +610,8 @@ newer words in front of them.
 ## How reading attaches
 
 - Recording does not change: the capture and its note are stored first, always. The page then asks for the note to
-  be read, and the bot will do the same after it answers. Reading writes the interpretation and what it made in one
-  unit of work.
+  be read; the bot queues a reply job that reads it and answers. Reading writes the interpretation and what it made in
+  one unit of work.
 - A `CaptureReceived` domain event arrives when a capture has two things reacting to it. With one, an event would be
   indirection with nothing to show for it.
 - Re-reading old captures with a newer model or prompt adds interpretations; the model and prompt version on each

@@ -22,6 +22,12 @@ pnpm test:watch     # while working
 - **No test calls a model** (ADR 0012). Reading is tested with a replay reader that answers from a table of messages
   (`readerOf` in `src/testing/support/readings.ts`); the Workers AI adapter with a fake binding that answers as the
   real one did in step 0 of the plan.
+- **No test calls Telegram.** The bot runs over `recordingBotApi` (`src/testing/support/telegram.ts`), which records
+  each call and answers as told; the webhook is posted the updates Telegram would send.
+- **Migrations are tried on rows**, not only on an empty database: `src/shared/infrastructure/d1/migrations.test.ts`
+  puts a book written by the app through each of the three newest migrations.
+- An architecture test (`src/testing/browser-imports.test.ts`) follows every client module's imports and fails when
+  the browser would load Zod outside the passkey screens, or anything only the server runs.
 
 ## End-to-end tests
 
@@ -38,8 +44,11 @@ pnpm test:e2e
 - They test **the production build** over HTTPS on port 4173, on a database of their own in `.cloudflare/e2e-state`,
   made fresh by `e2e/serve.ts` for every run. Nothing else may hold the port.
 - **The build is made with `--mode e2e`**: the same code, without the Workers AI binding, which has no local stand-in.
-  In its place `REPLAY_READINGS` holds the answers for the messages `e2e/reading.feature` sends (`e2e/readings.ts`);
-  any other message reads as a plain note, so the other scenarios see no reading at all.
+  In its place `REPLAY_READINGS` holds the answers for the messages the scenarios send (`e2e/readings.ts`); any other
+  message reads as a plain note, so the other scenarios see no reading at all. The bot calls a stand-in for the Bot
+  API that the run starts (`e2e/telegram-stub.ts`), which `TELEGRAM_API_ORIGIN` points at; the app takes that only on
+  localhost.
+- **About fifteen minutes**, one scenario at a time.
 - **The seed** (`e2e/seed.ts`) makes random rows with the app's own code: Lan signed in, sessions old enough to need
   step-up, Lan's fallback password, and setup links for Minh. The pepper is random per run.
 - Passkeys come from Chrome's virtual authenticator (`e2e/face-id.ts`), so passkey scenarios are tagged
@@ -54,15 +63,16 @@ pnpm test:e2e
   iPhone but fails on WebKit for now; Android is supported first, the iPhone after.
 
 A failed test keeps its trace in `test-results/` (open it with `pnpm exec playwright show-trace <file>`). In CI the
-HTML report, traces included, is kept as an artifact for 14 days.
+HTML report and `test-results/` are kept as an artifact for 14 days.
 
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every pull request and on `main`:
 
-- `check`: `pnpm audit`, format, lint, typecheck, unit tests, build, and a check that the committed
-  `*.module.scss.d.ts` files match what the build wrote.
-- `e2e`: installs Chromium and WebKit, makes the end-to-end build, runs the end-to-end suite.
+- `check`: `pnpm audit`, format, lint, typecheck, unit tests, build, a check that the committed
+  `*.module.scss.d.ts` files match what the build wrote, and one that `pnpm db:generate` writes nothing.
+- `e2e`: installs Chromium and WebKit, makes the end-to-end build, runs the end-to-end suite. The job has 30 minutes;
+  Playwright stops itself at 25, so a stuck run fails with its report rather than being cancelled without one.
 
 Pull requests also check their title against Conventional Commits and refuse a new dependency with a known
 vulnerability.

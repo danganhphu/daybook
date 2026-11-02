@@ -15,11 +15,20 @@ Tables live in each feature's `infrastructure/*.table.ts`. Migrations are genera
 3. Open `migrations/<timestamp>_<name>/migration.sql` and add by hand:
    - `STRICT` after every `CREATE TABLE (...)`,
    - triggers - `capture` and `access_event` are append-only; a `setup_link` is redeemed once,
+   - take out drizzle-kit's `PRAGMA foreign_keys=OFF/ON` pair (it does nothing in D1, below),
    - a header comment naming what was hand-edited.
-4. Extend the schema test for the feature (`src/shared/infrastructure/d1/schema.test.ts`,
-   `src/features/access/infrastructure/access-schema.test.ts`): text in an integer column refused, each new check and
-   trigger refusing what it should.
+   Where drizzle-kit rebuilds a table only to add a column with its check, write `ALTER TABLE ... ADD ... CONSTRAINT
+   ... CHECK(...)` instead: SQLite tests the check against the rows already there. A rule across tables is a new
+   trigger, which needs no rebuild (`20261102035854_audit_fixes`).
+4. Extend the schema test beside the feature's tables (`*-schema.test.ts`): text in an integer column refused, each
+   new check and trigger refusing what it should. `src/shared/infrastructure/d1/migrations.test.ts` already puts a
+   book written by the app through each of the newest migrations; add a row of what the new migration touches to its
+   `writeBook` when nothing there has one.
 5. `pnpm db:migrate` applies it to the dev database. Tests apply every migration to an empty database before each test.
+
+Removing a table or a column waits one release after the code stops using it: the version running while the
+migration is applied, and the one a rollback returns to, still read it. A migration that breaks rollback says so in
+its header.
 
 ## Traps
 

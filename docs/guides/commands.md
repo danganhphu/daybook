@@ -8,11 +8,12 @@ Every script in `package.json`. Run them from the repository root.
 | --- | --- |
 | `pnpm dev` | Dev server on http://localhost:5173, on workerd, with hot reload. Notes are read by the account's real Workers AI ([configuration](configuration.md)) |
 | `pnpm build` | Production build into `.cloudflare/output` |
-| `pnpm build:e2e` | The same build for the end-to-end tests: a table of answers in place of Workers AI |
+| `pnpm build:e2e` | The same build for the end-to-end tests: a table of answers in place of Workers AI, a stand-in for the Bot API |
 | `pnpm start` | Serve the production build locally; needs `APP_ORIGIN` and `PASSWORD_PEPPER` ([configuration](configuration.md)) |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`; commit the output |
 | `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx` ([icons](../ui/design-system.md#icons)); commit the output |
-| `pnpm run deploy` | Build for production and deploy the Worker ([deployment](deployment.md)). `pnpm deploy` is pnpm's own command, not this script |
+| `pnpm run deploy` | Check that this is `main` as pulled and all committed (`scripts/release-check.ts`), then build for production and deploy the Worker ([deployment](deployment.md)). `pnpm deploy` is pnpm's own command, not this script |
+| `pnpm smoke <app URL>` | After a deploy: a page's security headers, the service worker's, and the bot's webhook refusing a request without its secret. Reads only |
 
 ## Check
 
@@ -58,6 +59,11 @@ pnpm access:revoke --username lan --remote
 
 `pnpm notifications:keys` prints a new Web Push key pair as JSON, for a deploy's two secrets; the deployment guide
 pipes it straight into them. It touches no database.
+
+`pnpm telegram:setup --origin <app URL>` tells Telegram where the bot's webhook is, with its secret, and sets the
+bot's commands and descriptions ([the bot](deployment.md#the-deploy-that-brings-the-telegram-bot)). It reads the two
+bot secrets from the shell. Telegram keeps updates it could not deliver until then; `--drop-pending` drops them, only
+when that is wanted. `--dry-run` prints the calls instead.
 
 A link is shown once and works once, for ten minutes; only its hash is stored. The commands run the app's own use
 cases (`src/composition/operator-console.ts`), so they keep every rule the app keeps and log to `access_event` like it.

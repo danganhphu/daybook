@@ -15,4 +15,9 @@ Problems already met, and what fixed them.
 | A setup link says "Link này không còn dùng được" | It was used, is older than ten minutes, or was mistyped; they all answer the same on purpose | Ask for a new one: from the other user's settings, or with `pnpm access:setup-link` |
 | "Bạn đã thử quá nhiều lần" | Sign-in and setup links are rate limited per network | Wait a few minutes |
 | Setting a password says "Không kiểm tra được mật khẩu" | The breach check (Have I Been Pwned) could not be reached; the password is refused rather than accepted unchecked | Check the connection and try again |
+| Settings has no Telegram, and `/telegram/webhook` answers 404 | The bot is off: its two secrets are unset, or one is missing or malformed (`telegram_misconfigured` in Workers Logs) | Set both in one deploy ([deployment](deployment.md#the-deploy-that-brings-the-telegram-bot)) |
+| The bot never answers | Telegram does not know the webhook, or the secret changed since | `pnpm telegram:setup --origin <app URL>` |
+| Settings offers no notifications | The Web Push keys are unset, or half-set (`push_misconfigured` in Workers Logs) | Set both in one deploy |
+| "Sổ này đã đủ hai người dùng" | Two people can already sign in; the book is for two | Nothing to fix |
+| `pnpm run deploy` stops with "Not deploying" | Not on `main`, changes not committed, or not pulled | Do what it says, then deploy again |
 | `NO_COLOR` warnings in test output | The shell sets `NO_COLOR` while Playwright sets `FORCE_COLOR` | Harmless |

@@ -20,8 +20,10 @@ delivery, payments and history; reminders, open and finished; reports; a trash t
 days, to restore or delete for good, one or many at once; and
 sign-in with passkeys, a password as the fallback, and Settings for the account, its devices and the people. It
 installs to a phone's home screen, and speaks first: a morning list and a Friday summary at each person's times, and
-notices about their sign-in, by Web Push (its service worker shows notifications and caches nothing). The Telegram bot
-comes next.
+notices about their sign-in, by Web Push (its service worker shows notifications and caches nothing) and in a list
+behind a bell. The Telegram bot takes a message as a note, reads it like the web and answers with a card to undo or
+answer it; it has `/today`, `/reminders`, `/week`, `/month`, and can carry the notifications too. Each person links
+their own Telegram from Settings.
 
 ## Hard constraint: $0, no card
 
@@ -58,8 +60,8 @@ The free-plan limits that shape the code:
 | Cloudflare CLI | `cf` with a typed `cloudflare.config.ts`. Not Wrangler |
 | Database | D1, through Drizzle ORM (1.0 release candidate, pinned to an exact version) |
 | Validation | Zod 4. One schema drives input validation, the LLM's `response_format` and the check on what it returns |
-| LLM | Workers AI binding, with Groq as the fallback |
-| Telegram | grammY in webhook mode, verified with `secret_token` |
+| LLM | Workers AI binding: one model reads, a second when the first fails. Groq, once the planned fallback, was not added (ADR 0012) |
+| Telegram | The Bot API over `fetch`, behind the `BotApi` port (`src/bot/fetch-bot-api.ts`); `@grammyjs/types` for its types only. A webhook, checked by its `secret_token` |
 | Tests | Vitest 4.1 with `@cloudflare/vitest-plugin`, running inside workerd against a real local D1; Playwright with axe for the few end-to-end flows that matter. Not Vitest 5: with plugin 1.4.2 every suite fails before running ("File path must be a file: URL") |
 | Language | TypeScript 7 |
 | Tooling runtime | Node 26 |
@@ -77,11 +79,19 @@ the fallback stays inside the same toolchain: `output: "export"`, served as stat
 - **No logic in an adapter.** The Telegram adapter and the web pages call the core; the core never imports from
   them. A third entrance - Zalo, Messenger - has to be a thin layer, not a rewrite.
 - **The Worker's entry is `src/worker.ts`**, with `fetch` (vinext's handler, imported statically: vinext 1.2's build
-  cannot split it out), `scheduled` and `queue`. The scheduler and the consumer load their code with `import()` on
-  first use, from `src/composition/jobs.ts`, never `createApp`. The bot's webhook will be routed there, before vinext.
+  cannot split it out), `scheduled` and `queue`. The scheduler and the consumers load their code with `import()` on
+  first use, from `src/composition/jobs.ts`, never `createApp`. The bot's webhook (`/telegram/webhook`) is routed
+  there too, before vinext, and loads the bot from `src/composition/bot.ts`.
 - **Slow work goes through the `jobs` queue**, with an idempotent consumer: a job carries ids, the consumer claims a
   ledger row before it sends, and a failure is retried with backoff, then dead-lettered (ADR 0013, ADR 0015). Not
-  `ctx.waitUntil`: a reply lost there is lost for good.
+  `ctx.waitUntil`: a reply lost there is lost for good. `jobs-dead` has a consumer of its own: each job that failed
+  every retry leaves a `job_dead` line in Workers Logs, and a bot reply that never went out is told to its sender in
+  the bell.
+- **Optional parts turn off, never take the app down.** Push and the bot each need a pair of secrets; one of a pair
+  missing, or set wrongly, turns that part off with a line in Workers Logs (`vapidPairOrOff`, `telegramConfigOrOff`),
+  as `wrangler secret put` deploys at once and setting a pair one at a time runs a version with half of it.
+- **Logs are one JSON line per event** through `logEvent` (`src/shared/infrastructure/log-event.ts`): an event name,
+  ids and counts, an error's name and first line. Never a person's words, a secret, a header or a query string.
 - **Web Push goes through the `PushSender` port**; only `web-push-sender.ts` imports `@block65/webcrypto-web-push`, and
   only the consumer loads it. A subscription's address is kept only on a known push service's domain, since the Worker
   posts to it, and never logged. `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are secrets outside development, set
@@ -113,7 +123,9 @@ src/
                     the list behind the bell
     trash/        "Đã xoá gần đây": deleting a customer with their orders, restoring and deleting for good across every
                   kind, the daily run that empties what is older than thirty days
-  jobs/           the scheduler's and the queue consumer's adapters: what `src/worker.ts` hands a cron run and a message
+  bot/            the Telegram adapter: the webhook, its cards and buttons, the Bot API port and its fetch adapter, the
+                  bot as a notification channel
+  jobs/           the scheduler's and the queues' consumers: what `src/worker.ts` hands a cron run and a message
   shared/
     domain/       Result, Content, the Vietnamese day
     application/  Clock, the UnitOfWork type
@@ -131,11 +143,13 @@ Inside a slice:
 | Domain | `domain/` | Types, state transitions as pure functions, branded value schemas, repository interfaces | other domains and `shared/domain`, plus Zod, uuid, Temporal |
 | Application | `application/` | One use case per file, dependencies as its first argument. The ports it owns: what it writes (`NoteWrites`), its error codes | domains and `shared/application` |
 | Infrastructure | `infrastructure/` | Drizzle tables (`*.table.ts`), row mapping, the repository and writes over D1 | anything but `app`, `composition` |
-| Web | `web/` | The feature's web adapter: the commands server actions call, its view model, its React components | the feature, the `App` type, `shared/ui` |
+| Web | `web/` | The feature's web adapter: the commands server actions call, its view model, its React components, and its words (`*-copy.ts`, `*-text.ts`), which the bot and the notifications share | the feature, the `App` type, `shared/ui` |
 
-- **Oxlint enforces the first two rows** (`overrides` in `.oxlintrc.json`): domain or application code that imports
-  Drizzle, `cloudflare:*`, infrastructure, `composition` or UI fails lint. Application tests are exempt; they run the
-  real app.
+- **Oxlint enforces the layers** (`overrides` in `.oxlintrc.json`): domain or application code that imports Drizzle,
+  `cloudflare:*`, infrastructure, `composition`, UI or a door (`web/`, `bot/`, `jobs/`) fails lint, and so does a
+  door that imports Drizzle or a feature's infrastructure (logging and the clock are allowed). The bot and the jobs
+  may not import React, Next or `src/app/`: they share the web's words, which stay plain TypeScript for that, never
+  its components. Application tests are exempt; they run the real app.
 - **A new feature is a new folder** in `src/features/`, with the same layers, wired up in `src/composition/`.
   Routes in `src/app/` stay thin: a page or a server action calls into the feature's `web/`.
 - **Writes go through the unit of work.** Each feature declares what it writes (`CaptureWrites`, `NoteWrites`); a
@@ -148,15 +162,18 @@ Inside a slice:
   (`LiveNote | DeletedNote`), so a function that needs a live note says so in its type.
 - **Checked values are branded Zod types** (`Content`, `NoteId`): they can only be had by parsing, so nothing
   downstream receives unchecked input. Rows read back from D1 are parsed into them too.
-- **The browser does not load Zod** outside the passkey screens. A value it checks as well (`Content`, `Money`) has
-  its rule in plain code and its schema built from that rule (`checkedSchema`, `content-schema.ts`); a limit a form
-  shows sits in a `*-limits.ts` beside the aggregate. `src/testing/browser-imports.test.ts` holds the line.
+- **The browser does not load Zod** outside the passkey screens, nor anything only the server runs: Drizzle,
+  `cloudflare:*`, `composition`, infrastructure, the Temporal polyfill. A value it checks as well (`Content`, `Money`)
+  has its rule in plain code and its schema built from that rule (`checkedSchema`, `content-schema.ts`); a limit a
+  form shows sits in a `*-limits.ts` beside the aggregate, and a number the server keeps as a duration reaches a
+  screen as a plain number. `src/testing/browser-imports.test.ts` holds the line.
 - The model, its vocabulary and its rules are in [docs/architecture/domain.md](docs/architecture/domain.md).
   Propose a change to the data model there before writing it.
 - **A value used twice has one name.** Paths are `routes` (`src/shared/web/routes.ts`); words every screen shares
   are `actionLabels` (`src/shared/ui/action-labels.ts`); a feature's terms and copy sit with it (`access-terms.ts`,
-  `access-copy.ts`); limits and lengths live in the domain (`access-policy.ts`, `usernameLength`) and the tables'
-  `CHECK`s read them through `sqlNumber`/`sqlTextList`. Grep before typing a literal a second time.
+  `access-copy.ts`); limits and lengths live in the domain (`access-policy.ts`, `password-policy.ts`,
+  `usernameLength`) and the tables' `CHECK`s read them through `sqlNumber`/`sqlTextList`; times and dates are written
+  one way, by `src/shared/web/time-text.ts` and `day-label.ts`. Grep before typing a literal a second time.
 
 ## Errors
 
@@ -228,10 +245,18 @@ Two people share one book and sign in with passkeys, a password being the fallba
   `pnpm db:migrate` to apply it to the local database the dev server uses. The drizzle-kit skills cover the commands.
 - **Added by hand: `STRICT` on every table, and the triggers**: the logs and records that are append-only (`capture`,
   `access_event`, `order_change`, `interpretation`, the merge records), a `setup_link` redeemed once, the audit
-  triggers, and a merged customer or product only while hidden. Drizzle cannot emit either and its snapshot does not
-  know about them, so a migration that rebuilds a table drops them silently. `src/shared/infrastructure/d1/schema.test.ts` and
-  `src/features/access/infrastructure/access-schema.test.ts` fail when that happens. Say what was hand-edited at the
-  top of the file.
+  triggers, a merged customer or product only while hidden, a message settled once, an order line never naming a
+  product deleted or merged away, an order or reminder never back while its customer is in the trash, a person's
+  notification settings added once. Drizzle cannot emit either and its snapshot does not know about them, so a
+  migration that rebuilds a table drops them silently. The schema tests beside each feature's tables fail when that
+  happens. Say what was hand-edited at the top of the file, and take out drizzle-kit's `PRAGMA foreign_keys` pair: D1
+  runs a migration in a transaction with foreign keys on, where it does nothing.
+- **A migration must keep a live book's rows.** `src/shared/infrastructure/d1/migrations.test.ts` writes a book with
+  the app, puts it back into the schema as it was before each of the newest migrations and migrates again, row for
+  row. Prefer `ALTER TABLE ... ADD` and a new trigger to a rebuild.
+- **Removing a table or a column waits one release** after the code stops using it: the version running while a
+  migration is applied, and the one a rollback goes back to, still read it. A migration that breaks rollback says so
+  in its header.
 - **Rules that matter are kept by the database too**, not only by code: `CHECK` for known values and non-blank
   content, foreign keys, the triggers.
 - **`capture` is never updated or deleted**, by code or by hand. Corrections go to the note.
@@ -240,7 +265,11 @@ Two people share one book and sign in with passkeys, a password being the fallba
   mapping. Import Temporal from `temporal-polyfill/implementation`, never the bare package, so a broken native
   Temporal in the runtime is never picked up.
 - **Ids are UUIDv7**, so they also sort by creation time.
-- **Deletes are soft** (`deleted_at`); Undo is an update.
+- **A delete goes to the trash first** (`deleted_at`), and Undo is an update. After thirty days, or when deleted for
+  good, the rows are deleted for real (ADR 0017); D1's Time Travel, seven days on the free plan, is the only way back
+  after that.
+- **A list of ids is read in chunks** under D1's 100 bound parameters (`readInChunks` in
+  `src/shared/infrastructure/d1/limits.ts`).
 - Applying migrations to the remote database is a deploy-grade action: only when asked.
 
 ## Tests
@@ -268,10 +297,11 @@ End-to-end tests cover the flows a user would notice breaking; everything else i
   iPhone but does not yet: Android comes first, and each one is in the project's known gaps.
 - **Chromium is real Chrome** in its new headless mode (`channel: "chromium"`). Playwright's default headless shell
   is not full Chrome: asked whether a page installs, it reports no errors even for a page with no manifest.
-- **They run the production build** over HTTPS on a D1 of their own in `.cloudflare/e2e-state`: `e2e/serve.ts`
-  empties and migrates it, seeds it (`e2e/seed.ts`, with the app's own code for secrets and a random pepper per run),
-  then serves `pnpm build`'s output, so the dev database is never touched. Each scenario starts by emptying the day
-  through the screen, which is why they run one at a time.
+- **They run the production build** made by `pnpm build:e2e` - the same code, with a table of answers in place of
+  Workers AI and a stand-in for the Bot API - over HTTPS on a D1 of their own in `.cloudflare/e2e-state`:
+  `e2e/serve.ts` empties and migrates it, seeds it (`e2e/seed.ts`, with the app's own code for secrets and a random
+  pepper per run), then serves the build, so the dev database is never touched. Each scenario starts by emptying the
+  day through the screen, which is why they run one at a time: about fifteen minutes.
 - **The seed** signs Lan in (fresh, and several sessions old enough to need step-up), gives her a password, and gives
   Minh setup links. What can be spent - setup links, stale sessions - is counted in a file, so a retry never gets a
   used one. A step that finds something for a later step keeps it in the scenario's `remembered` fixture.
@@ -402,28 +432,32 @@ typing a line into notes will lose, no matter how good the rest is. Weigh every 
 | `pnpm lint` | Oxlint, type-aware, then Stylelint |
 | `pnpm format` / `pnpm format:check` | Oxfmt |
 | `pnpm test` / `pnpm test:watch` | Vitest inside workerd, configured in `vitest.config.ts` |
-| `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build` |
+| `pnpm build:e2e` | The production build for the end-to-end tests: a table of answers for Workers AI, a stand-in for the Bot API |
+| `pnpm test:e2e` | Specs from `e2e/*.feature`, then Playwright on three devices. Tests the last `pnpm build:e2e`; about fifteen minutes |
 | `pnpm icons` | Redraw the app icon from `scripts/generate-icons.ts` into `src/app/` and `public/icons/`. Commit the output |
 | `pnpm symbols` | Write the UI icons listed in `scripts/generate-symbols.ts` into `src/shared/ui/icon/icons.tsx`. Commit the output |
 | `pnpm access:account` | The first account and its setup link: `--username`, `--name`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:setup-link` | Break-glass recovery link for an account: `--username`, `--origin`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm access:revoke` | Ends every session of an account: `--username`, then one of `--local`, `--remote`, `--dry-run` |
 | `pnpm notifications:keys` | A new Web Push key pair as JSON, for a deploy's `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` secrets. Only when asked |
+| `pnpm telegram:setup` | Register the bot's webhook, commands and description with Telegram. `--drop-pending` also drops the updates Telegram still holds; only when asked |
 | `pnpm db:generate` | Generate a migration from the `*.table.ts` files |
 | `pnpm db:migrate` | Apply migrations to the local D1 the dev server uses |
-| `pnpm run deploy` | Deploy to Cloudflare. Only when asked. `pnpm deploy` is pnpm's own command, not this script |
+| `pnpm run deploy` | Deploy to Cloudflare, after `scripts/release-check.ts` refuses anything but `main` as pulled and committed. Only when asked. `pnpm deploy` is pnpm's own command, not this script |
+| `pnpm smoke <origin>` | After a deploy: reads a page's headers, the service worker's and the webhook's answer, and says what is off |
 
 Before calling a change done: `format:check`, `lint`, `typecheck`, `test` and `build` all pass. When a screen
-changed, `test:e2e` too, after `build`.
+changed, `test:e2e` too, after `build:e2e`.
 
 ## CI
 
 `.github/workflows/ci.yml` runs on every pull request and on `main`, in two jobs side by side:
 
-- `check`: `pnpm audit`, the five commands above, then a check that the committed `*.module.scss.d.ts` files match
-  what the build wrote.
-- `e2e`: installs Chromium (without the headless shell) and WebKit, builds, runs `pnpm test:e2e`. When it fails, the
-  Playwright report, traces included, is kept as an artifact for 14 days.
+- `check`: `pnpm audit`, the five commands above, then checks that the committed `*.module.scss.d.ts` files match
+  what the build wrote and that `pnpm db:generate` finds the tables and the migrations in step.
+- `e2e`: installs Chromium (without the headless shell) and WebKit, builds with `build:e2e`, runs `pnpm test:e2e`.
+  When it fails, the Playwright report and the traces in `test-results/` are kept as an artifact for 14 days. The job
+  has 30 minutes; Playwright stops itself at 25, so a stuck run still leaves its report.
 
 Actions are pinned to commit SHAs with the version in a comment; bump both together. `pnpm/setup` installs pnpm
 from `packageManager`, Node from `.node-version`, and runs a frozen install.
