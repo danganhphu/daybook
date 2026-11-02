@@ -14,6 +14,9 @@ import type { AccountId } from "@/shared/domain/account-id";
 export type PushSubscriptionWrites = {
   add(subscription: PushSubscription): void;
   update(subscription: PushSubscription): void;
+  // The moment of the last push only: a send takes a while, and a sign-in on that browser meanwhile may have moved the
+  // subscription to its new session, which writing the whole row back would undo
+  recordSent(id: PushSubscriptionId, at: Temporal.Instant): void;
   remove(id: PushSubscriptionId): void;
 };
 

@@ -25,6 +25,15 @@ export function createPushSubscriptionWrites(db: Database, batch: Batch): PushSu
       batch.enlist(db.insert(pushSubscriptionTable).values(toPushSubscriptionRow(subscription)));
     },
 
+    recordSent(id, at) {
+      batch.enlist(
+        db
+          .update(pushSubscriptionTable)
+          .set({ lastSentAt: at.epochMilliseconds })
+          .where(eq(pushSubscriptionTable.id, id)),
+      );
+    },
+
     update(subscription) {
       const { id: _id, createdAt: _createdAt, ...changes } = toPushSubscriptionRow(subscription);
       batch.enlist(

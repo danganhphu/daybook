@@ -17,6 +17,7 @@ import {
   NotificationsIcon,
   PersonIcon,
   RestoreFromTrashIcon,
+  SendIcon,
 } from "@/shared/ui/icon/icons";
 import { List } from "@/shared/ui/list/list";
 import { ListAction } from "@/shared/ui/list/list-action";
@@ -44,11 +45,14 @@ export function SettingsScreen({
   view,
   kinds,
   from,
+  telegram,
 }: {
   readonly view: AccountView;
   readonly kinds: ReadonlyArray<KindView>;
   // The tab they were opened from, where the back arrow returns; each section carries it on
   readonly from: string;
+  // What the Telegram row says; undefined where there is no bot, and no row
+  readonly telegram: string | undefined;
 }) {
   const signOutForm = useId();
 
@@ -67,6 +71,14 @@ export function SettingsScreen({
           title={settingsCopy.notifications}
           icon={NotificationsIcon}
         />
+        {telegram === undefined ? null : (
+          <ListLink
+            href={settingsPath(from, routes.settingsTelegram)}
+            title={settingsCopy.telegram}
+            detail={telegram}
+            icon={SendIcon}
+          />
+        )}
       </List>
 
       <List heading={settingsCopy.groups.signIn}>

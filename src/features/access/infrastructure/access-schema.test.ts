@@ -91,6 +91,12 @@ describe("STRICT on every access table", () => {
       "insert into password values ('a', ?, 19456, 2, 1, ?, 1, 0, null, 'soon')",
       ["S".repeat(22), hash],
     ],
+    ["telegram_link", "insert into telegram_link values ('a', 'many', 1, 'Lan', 1)", []],
+    [
+      "telegram_link_code",
+      "insert into telegram_link_code values ('t', 'a', ?, 'soon', 2)",
+      [hash],
+    ],
   ])(
     "given text in an integer column of %s, when inserted, then STRICT refuses it",
     async (_, sql, values) => {
@@ -277,4 +283,57 @@ describe("password table", () => {
       /UNIQUE constraint failed: password\.account_id/,
     );
   });
+});
+
+function insertTelegramLink(account: string, telegramUserId: unknown, name: unknown = "Lan") {
+  return run(
+    "insert into telegram_link (account_id, telegram_user_id, telegram_chat_id, telegram_name, linked_at) values (?, ?, ?, ?, 1)",
+    account,
+    telegramUserId,
+    telegramUserId,
+    name,
+  );
+}
+
+describe("telegram_link table", () => {
+  it("given one Telegram user for two accounts, when stored, then the unique index refuses the second", async () => {
+    const other = "019a0000-0000-7000-8000-000000000002";
+    await insertAccount(accountId, "lan");
+    await insertAccount(other, "minh", "M".repeat(43));
+    await insertTelegramLink(accountId, 70_000_001);
+
+    await expect(insertTelegramLink(other, 70_000_001)).rejects.toThrow(
+      /UNIQUE constraint failed: telegram_link\.telegram_user_id/,
+    );
+  });
+
+  it.each([
+    [0, "Lan", /telegram_link_user_id_positive/],
+    [70_000_001, "   ", /telegram_link_name_length/],
+  ])("given user %i named %j, when stored, then the check refuses it", async (id, name, check) => {
+    await insertAccount(accountId, "lan");
+
+    await expect(insertTelegramLink(accountId, id, name)).rejects.toThrow(check);
+  });
+});
+
+describe("telegram_link_code table", () => {
+  it.each([
+    ["short", 2, /telegram_link_code_hash_length/],
+    [hash, 1, /telegram_link_code_expires_after_creation/],
+  ])(
+    "given the hash %j expiring at %i, when stored, then the check refuses it",
+    async (codeHash, expiresAt, check) => {
+      await insertAccount(accountId, "lan");
+
+      await expect(
+        run(
+          "insert into telegram_link_code values ('t1', ?, ?, 1, ?)",
+          accountId,
+          codeHash,
+          expiresAt,
+        ),
+      ).rejects.toThrow(check);
+    },
+  );
 });

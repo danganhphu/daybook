@@ -6,13 +6,20 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 
 import { Temporal } from "temporal-polyfill/implementation";
 
-import { pepperByteLength } from "@/features/access/domain/access-policy";
+import { pepperByteLength, secretByteLength } from "@/features/access/domain/access-policy";
 import { newVapidKeys } from "@/features/notifications/infrastructure/vapid-keys";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 
-import { fixturesFile, persistTo, seedMigrations } from "./paths.ts";
+import {
+  fixturesFile,
+  persistTo,
+  seedMigrations,
+  telegramCallsFile,
+  telegramFile,
+} from "./paths.ts";
 import { readingsFor } from "./readings.ts";
 import { seed } from "./seed.ts";
+import { startTelegramStub } from "./telegram-stub.ts";
 
 const databaseId = process.env["DAYBOOK_DATABASE_ID"];
 const port = process.env["DAYBOOK_E2E_PORT"];
@@ -25,6 +32,9 @@ if (databaseId === undefined || port === undefined || process.env["APP_ORIGIN"] 
 const pepper = randomBytes(pepperByteLength).toString("base64url");
 // And a push key pair of its own; nothing in a run sends to a push service
 const vapid = await newVapidKeys();
+// A bot of its own too, whose Bot API is the stub beside the server: the token is never checked, the secret is
+const telegramPort = Number(port) + 1;
+const webhookSecret = randomBytes(secretByteLength).toString("base64url");
 
 rmSync(persistTo, { recursive: true, force: true });
 
@@ -46,6 +56,8 @@ mkdirSync(`${seedMigrations}/0001_e2e_seed`, { recursive: true });
 writeFileSync(`${seedMigrations}/0001_e2e_seed/migration.sql`, seeded.sql);
 applyMigrations(seedMigrations);
 writeFileSync(fixturesFile, JSON.stringify(seeded.fixtures));
+writeFileSync(telegramFile, JSON.stringify({ webhookSecret }));
+const telegram = await startTelegramStub(telegramPort, telegramCallsFile);
 
 const server = spawn(`pnpm exec vite preview --port ${port} --strictPort`, {
   stdio: "inherit",
@@ -58,6 +70,12 @@ const server = spawn(`pnpm exec vite preview --port ${port} --strictPort`, {
     VAPID_PUBLIC_KEY: vapid.publicKey,
     VAPID_PRIVATE_KEY: vapid.privateKey,
     REPLAY_READINGS: JSON.stringify(readingsFor(vietnamDate(Temporal.Now.instant()))),
+    TELEGRAM_BOT_TOKEN: "123456:e2e-token",
+    TELEGRAM_WEBHOOK_SECRET: webhookSecret,
+    TELEGRAM_API_ORIGIN: `http://127.0.0.1:${telegramPort}`,
   },
 });
-server.on("exit", (code) => process.exit(code ?? 0));
+server.on("exit", (code) => {
+  telegram.close();
+  process.exit(code ?? 0);
+});

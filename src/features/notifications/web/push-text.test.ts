@@ -1,9 +1,15 @@
 import { Temporal } from "temporal-polyfill/implementation";
+import { v7 as uuidv7 } from "uuid";
 import { describe, expect, it } from "vitest";
 
 import * as AccessEvents from "@/features/access/domain/access-event";
-import type { MorningContent } from "@/features/notifications/application/notification-content";
+import type {
+  DueItem,
+  MorningContent,
+} from "@/features/notifications/application/notification-content";
 import { isNotice } from "@/features/notifications/domain/notice";
+import { reminderIdSchema } from "@/features/reminders/domain/reminder";
+import { versionSchema } from "@/shared/domain/audit";
 import { moneySchema } from "@/shared/domain/money-schema";
 import { origin } from "@/testing/support/access";
 import { anAuthorId, content } from "@/testing/support/app";
@@ -12,8 +18,14 @@ import { pushMessageFor } from "./push-text";
 
 const thursday = Temporal.PlainDate.from("2026-10-29");
 
-function due(text: string, dueOn: string, customerName?: string) {
-  return { text: content(text), dueOn: Temporal.PlainDate.from(dueOn), customerName };
+function due(text: string, dueOn: string, customerName?: string): DueItem {
+  return {
+    reminderId: reminderIdSchema.parse(uuidv7()),
+    version: versionSchema.parse(1),
+    text: content(text),
+    dueOn: Temporal.PlainDate.from(dueOn),
+    customerName,
+  };
 }
 
 function morning(lists: Omit<MorningContent, "kind" | "day">): MorningContent {

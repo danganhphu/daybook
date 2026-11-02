@@ -25,6 +25,8 @@ export type NotificationsView = NotificationTimesView & {
   // This browser's subscription, as the server has it under this sign-in
   readonly thisDevice: string | undefined;
   readonly devices: ReadonlyArray<NotifiedDeviceRow>;
+  // Whether the bot sends them too; undefined while no Telegram is linked, and where there is no bot
+  readonly telegramOn: boolean | undefined;
 };
 
 // What a browser hands over from PushSubscription.toJSON()

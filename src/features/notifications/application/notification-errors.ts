@@ -6,4 +6,5 @@ export type NotificationError =
   | "push_service_unknown"
   | "not_found"
   | "times_changed_elsewhere"
-  | "days_changed_elsewhere";
+  | "days_changed_elsewhere"
+  | "telegram_changed_elsewhere";

@@ -26,6 +26,8 @@ describe("isNotice", () => {
     ["setup_link_issued", { purpose: "recovery" }],
     ["setup_link_redeemed", { purpose: "recovery" }],
     ["push_subscribed", undefined],
+    ["telegram_linked", undefined],
+    ["telegram_unlinked", undefined],
   ])("given %s, when sorted, then the person is told", (kind, detail) => {
     expect(isNotice(event(kind, detail))).toBe(true);
   });
@@ -37,6 +39,7 @@ describe("isNotice", () => {
     ["setup_link_issued", { purpose: "invite" }],
     ["setup_link_redeemed", { purpose: "first_setup" }],
     ["push_unsubscribed", undefined],
+    ["telegram_link_refused", undefined],
   ])("given %s, when sorted, then it is not a notice", (kind, detail) => {
     expect(isNotice(event(kind, detail))).toBe(false);
   });

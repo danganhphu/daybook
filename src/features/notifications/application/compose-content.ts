@@ -6,6 +6,7 @@ import type { CustomerRepository } from "@/features/customers/domain/customer-re
 import { isNotice } from "@/features/notifications/domain/notice";
 import * as NotificationPreferences from "@/features/notifications/domain/notification-preference";
 import type { NotificationPreferenceRepository } from "@/features/notifications/domain/notification-preference-repository";
+import type { LiveReminder } from "@/features/reminders/domain/reminder";
 import type { ReminderRepository } from "@/features/reminders/domain/reminder-repository";
 import type { ReportQueries } from "@/features/reports/application/report-queries";
 import { quietCutoff } from "@/features/reports/domain/gone-quiet";
@@ -13,9 +14,11 @@ import { periodContaining } from "@/features/reports/domain/report-period";
 import type { AccountId } from "@/shared/domain/account-id";
 
 import type {
+  DueItem,
   MorningContent,
   NoticeContent,
   NotificationContent,
+  PeriodSummary,
   WeeklyContent,
 } from "./notification-content";
 import type { NotificationJob } from "./notification-job";
@@ -39,7 +42,7 @@ export const contentLimits = {
 
 // By the person's own number of days, as the reports find them; the cutoff is the last order day that makes one quiet
 async function quietOn(
-  sources: ContentSources,
+  sources: Pick<ContentSources, "reports" | "preferences">,
   accountId: AccountId,
   day: Temporal.PlainDate,
   limit: number,
@@ -49,6 +52,25 @@ async function quietOn(
   const cutoff = quietCutoff(day, preference.quietAfterDays);
 
   return { cutoff, customers: await sources.reports.quietCustomers(cutoff, undefined, limit) };
+}
+
+// Reminders as a list names them: with their customer's name, read in one query
+export async function dueItems(
+  customers: Pick<CustomerRepository, "getMany">,
+  reminders: ReadonlyArray<LiveReminder>,
+): Promise<ReadonlyArray<DueItem>> {
+  const customerIds = [...new Set(reminders.flatMap((reminder) => reminder.customerId ?? []))];
+  const names = new Map(
+    (await customers.getMany(customerIds)).map((customer) => [customer.id, customer.name]),
+  );
+
+  return reminders.map((reminder) => ({
+    reminderId: reminder.id,
+    version: reminder.audit.version,
+    text: reminder.text,
+    dueOn: reminder.dueOn,
+    customerName: reminder.customerId === undefined ? undefined : names.get(reminder.customerId),
+  }));
 }
 
 // A customer goes in the morning list on the day they go quiet, not every morning after: the reports keep the whole
@@ -72,30 +94,23 @@ async function morning(
     return undefined;
   }
 
-  const customerIds = [...new Set(due.flatMap((reminder) => reminder.customerId ?? []))];
-  const names = new Map(
-    (await sources.customers.getMany(customerIds)).map((customer) => [customer.id, customer.name]),
-  );
-
   return {
     kind: "morning",
     day,
-    due: due.map((reminder) => ({
-      text: reminder.text,
-      dueOn: reminder.dueOn,
-      customerName: reminder.customerId === undefined ? undefined : names.get(reminder.customerId),
-    })),
+    due: await dueItems(sources.customers, due),
     quiet: quiet.map((customer) => customer.name),
   };
 }
 
-async function weekly(
-  sources: ContentSources,
+// The week or month around a day, as the Friday summary counts it: the bot's /week and /month say the same
+export async function periodSummary(
+  sources: Pick<ContentSources, "reports" | "preferences">,
   accountId: AccountId,
+  period: "week" | "month",
   day: Temporal.PlainDate,
-): Promise<WeeklyContent> {
-  const week = periodContaining("week", day);
-  const range = { from: week.from, to: week.to };
+): Promise<PeriodSummary> {
+  const { from, to } = periodContaining(period, day);
+  const range = { from, to };
   const [sales, received, owed, quiet] = await Promise.all([
     sources.reports.sales(range),
     sources.reports.received(range),
@@ -104,7 +119,7 @@ async function weekly(
   ]);
 
   return {
-    kind: "weekly",
+    period,
     day,
     orders: sales.orders,
     sales: sales.sales,
@@ -112,6 +127,16 @@ async function weekly(
     owed,
     quiet: quiet.customers.length,
   };
+}
+
+async function weekly(
+  sources: ContentSources,
+  accountId: AccountId,
+  day: Temporal.PlainDate,
+): Promise<WeeklyContent> {
+  const { period: _period, ...summary } = await periodSummary(sources, accountId, "week", day);
+
+  return { kind: "weekly", ...summary };
 }
 
 async function notice(

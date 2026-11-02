@@ -21,6 +21,7 @@ export const notificationPreferenceTable = sqliteTable(
     morningAt: text("morning_at"),
     weeklyAt: text("weekly_at"),
     quietAfterDays: integer("quiet_after_days").notNull().default(defaultQuietAfterDays),
+    telegram: integer("telegram", { mode: "boolean" }).notNull().default(true),
     ...auditColumns(() => accountTable.id),
   },
   (table) => [
@@ -30,6 +31,7 @@ export const notificationPreferenceTable = sqliteTable(
       "notification_preference_quiet_after_days_range",
       sql`${table.quietAfterDays} between ${sqlNumber(quietAfterDaysLimits.min)} and ${sqlNumber(quietAfterDaysLimits.max)}`,
     ),
+    check("notification_preference_telegram_boolean", sql`${table.telegram} in (0, 1)`),
     ...auditChecks("notification_preference", table),
   ],
 );

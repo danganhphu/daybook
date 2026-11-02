@@ -120,6 +120,8 @@ export function createOperatorConsole(
       const { statements, startUnitOfWork } = recorder();
       const work = startUnitOfWork();
       work.sessions.removeAll(accountId);
+      // Break-glass: a Telegram that writes as the account is a way in too
+      work.telegramLinks.remove(accountId);
       work.accessEvents.add(
         AccessEvents.record("sessions_revoked", { accountId }, origin, clock()),
       );

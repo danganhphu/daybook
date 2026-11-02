@@ -39,6 +39,8 @@ export type NotificationPreference = NotificationTimes & {
   readonly accountId: AccountId;
   // After how many days without an order the morning list names a customer, and the Friday summary counts them
   readonly quietAfterDays: QuietAfterDays;
+  // Whether the bot sends them too, once their Telegram is linked; on until they turn it off
+  readonly telegram: boolean;
   // Undefined until the person first changes one: until then they are the defaults, and nothing is stored
   readonly audit: Audit | undefined;
 };
@@ -58,13 +60,14 @@ export function defaults(accountId: AccountId): NotificationPreference {
     morningAt: timeOf(defaultTimes.morning),
     weeklyAt: timeOf(defaultTimes.weekly),
     quietAfterDays: orDefaultQuietAfterDays(),
+    telegram: true,
     audit: undefined,
   };
 }
 
 function changed(
   preference: NotificationPreference,
-  changes: Partial<NotificationTimes> | { readonly quietAfterDays: QuietAfterDays },
+  changes: Partial<Omit<NotificationPreference, "accountId" | "audit">>,
   by: AccountId,
   at: Temporal.Instant,
 ): NotificationPreference {
@@ -94,6 +97,15 @@ export function changeQuietAfterDays(
   at: Temporal.Instant,
 ): NotificationPreference {
   return changed(preference, { quietAfterDays: days }, by, at);
+}
+
+export function changeTelegram(
+  preference: NotificationPreference,
+  on: boolean,
+  by: AccountId,
+  at: Temporal.Instant,
+): NotificationPreference {
+  return changed(preference, { telegram: on }, by, at);
 }
 
 // The screen showed what is stored now: the defaults when nothing is, or the same version

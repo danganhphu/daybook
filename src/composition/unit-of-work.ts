@@ -6,6 +6,8 @@ import type {
   PasswordWrites,
   SessionWrites,
   SetupLinkWrites,
+  TelegramLinkCodeWrites,
+  TelegramLinkWrites,
 } from "@/features/access/application/access-writes";
 import {
   createAccessEventWrites,
@@ -15,6 +17,8 @@ import {
   createPasswordWrites,
   createSessionWrites,
   createSetupLinkWrites,
+  createTelegramLinkCodeWrites,
+  createTelegramLinkWrites,
 } from "@/features/access/infrastructure/access-writes";
 import type { CaptureWrites } from "@/features/capture/application/capture-writes";
 import { createCaptureWrites } from "@/features/capture/infrastructure/capture-writes";
@@ -84,6 +88,8 @@ export type DaybookUnitOfWork = UnitOfWork<{
   readonly setupLinks: SetupLinkWrites;
   readonly ceremonies: CeremonyWrites;
   readonly accessEvents: AccessEventWrites;
+  readonly telegramLinks: TelegramLinkWrites;
+  readonly telegramLinkCodes: TelegramLinkCodeWrites;
   readonly pushSubscriptions: PushSubscriptionWrites;
   readonly notificationPreferences: NotificationPreferenceWrites;
   readonly noticeCursor: NoticeCursorWrites;
@@ -112,6 +118,8 @@ export function createUnitOfWork(db: Database, batch: Batch = createBatch(db)): 
     setupLinks: createSetupLinkWrites(db, batch),
     ceremonies: createCeremonyWrites(db, batch),
     accessEvents: createAccessEventWrites(db, batch),
+    telegramLinks: createTelegramLinkWrites(db, batch),
+    telegramLinkCodes: createTelegramLinkCodeWrites(db, batch),
     pushSubscriptions: createPushSubscriptionWrites(db, batch),
     notificationPreferences: createNotificationPreferenceWrites(db, batch),
     noticeCursor: createNoticeCursorWrites(db, batch),

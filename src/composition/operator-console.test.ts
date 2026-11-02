@@ -6,6 +6,7 @@ import { displayNameSchema, usernameSchema } from "@/features/access/domain/acco
 import { origin, rows, seedAccount, seedSession } from "@/testing/support/access";
 import { testApp, testClock } from "@/testing/support/app";
 import { expectOk } from "@/testing/support/result";
+import { lanOnTelegram, seedTelegramLink } from "@/testing/support/telegram";
 
 import { createOperatorConsole } from "./operator-console";
 
@@ -77,6 +78,16 @@ describe("createOperatorConsole", () => {
     expect(
       await rows("select account_id from access_event where kind = 'sessions_revoked'"),
     ).toEqual([{ account_id: account.id }]);
+  });
+
+  it("given an account with a linked Telegram, when revoked, then the Telegram no longer writes as it", async () => {
+    const time = testClock("2026-10-21T01:00:00Z");
+    const account = await seedAccount(time.clock);
+    await seedTelegramLink(time.clock, account.id, lanOnTelegram);
+
+    await apply((await createOperatorConsole(time.clock).revokeSessions(account.id)).statements);
+
+    expect(await rows("select account_id from telegram_link")).toEqual([]);
   });
 
   it("given a username typed in any case, when the lookup runs, then it finds that account", async () => {

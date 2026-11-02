@@ -1,7 +1,6 @@
 "use server";
 
-import { refresh } from "next/cache";
-
+import { refreshed } from "@/app/refreshed";
 import { daybook } from "@/composition/daybook";
 import { requestOrigin } from "@/features/access/web/request-context";
 import { requireSession } from "@/features/access/web/session-gate";
@@ -9,16 +8,9 @@ import * as Notifications from "@/features/notifications/web/notification-comman
 import type { NotificationTimesView } from "@/features/notifications/web/notification-view";
 import type { Result } from "@/shared/domain/result";
 
-// Settings > Thông báo. Not security settings, so no step-up; each still checks the session. Changes from the screen
-// refresh it, so its device list shows what is stored now.
-
-function refreshed<T>(result: Result<T, string>): Result<T, string> {
-  if (result.ok) {
-    refresh();
-  }
-
-  return result;
-}
+// Settings > Thông báo. Not security settings, so no step-up; each still checks the session. Every answer refreshes
+// the screen, so it shows what is stored now: after a change, and after one refused as changed elsewhere, whose
+// version the next try needs.
 
 export async function turnOnPush(subscription: unknown): Promise<Result<null, string>> {
   const app = daybook();
@@ -53,6 +45,16 @@ export async function saveNotificationQuietDays(
   const session = await requireSession(app);
 
   return refreshed(await Notifications.saveQuietDays(app, session, days, version));
+}
+
+export async function saveNotificationTelegram(
+  on: unknown,
+  version: unknown,
+): Promise<Result<null, string>> {
+  const app = daybook();
+  const session = await requireSession(app);
+
+  return refreshed(await Notifications.saveTelegram(app, session, on, version));
 }
 
 export async function saveNotificationTimes(

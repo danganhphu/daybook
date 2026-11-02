@@ -4,6 +4,7 @@ import { expect } from "@playwright/test";
 import { createBdd, test as base } from "playwright-bdd";
 import { z } from "zod";
 
+import { webhookPath } from "@/bot/webhook-path";
 import { sessionCookieName } from "@/features/access/web/cookie-names";
 
 import type { SeededPasskey } from "./face-id";
@@ -12,8 +13,16 @@ import {
   hoaStaleSessionsUsedFile,
   setupLinksUsedFile,
   staleSessionsUsedFile,
+  telegramCallsFile,
+  telegramFile,
 } from "./paths";
+import type { StubCall } from "./telegram-stub";
 import { todayPage, type TodayPage } from "./today-page";
+
+const stubCallSchema = z.object({
+  method: z.string(),
+  params: z.record(z.string(), z.unknown()),
+}) satisfies z.ZodType<StubCall>;
 
 const seededSchema = z.object({
   sessionCookie: z.string(),
@@ -58,12 +67,45 @@ function spendNext(list: ReadonlyArray<string>, usedFile: string, what: string):
   return next;
 }
 
+export type TelegramSide = {
+  // Posts an update to the webhook as Telegram would, with the run's secret unless told otherwise; null for none
+  post(update: object, secret?: string | null): Promise<{ status: number; body: unknown }>;
+  // What the app asked of the stand-in for the Bot API so far, oldest first
+  calls(): ReadonlyArray<StubCall>;
+};
+
+const telegramSchema = z.object({ webhookSecret: z.string() });
+
+let updateId = 0;
+
 export const test = base.extend<{
   today: TodayPage;
   access: Access;
+  telegram: TelegramSide;
   // What one step of a scenario found for a later one, such as a link shown once; fresh for every scenario
   remembered: Map<string, string>;
 }>({
+  telegram: async ({ request }, use) => {
+    const { webhookSecret } = telegramSchema.parse(JSON.parse(readFileSync(telegramFile, "utf8")));
+
+    await use({
+      async post(update, secret = webhookSecret) {
+        updateId += 1;
+        const response = await request.post(webhookPath, {
+          headers: secret === null ? {} : { "X-Telegram-Bot-Api-Secret-Token": secret },
+          data: { update_id: updateId, ...update },
+        });
+        const text = await response.text();
+        return { status: response.status(), body: text === "" ? undefined : JSON.parse(text) };
+      },
+      calls: () =>
+        readFileSync(telegramCallsFile, "utf8")
+          .split("\n")
+          .filter((line) => line !== "")
+          .map((line) => stubCallSchema.parse(JSON.parse(line))),
+    });
+  },
+
   // oxlint-disable-next-line no-empty-pattern -- Playwright reads a fixture's dependencies from this pattern
   remembered: async ({}, use) => {
     await use(new Map());

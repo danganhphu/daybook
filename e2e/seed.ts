@@ -8,12 +8,12 @@ import { v7 as uuidv7 } from "uuid";
 
 import { verifierFor } from "@/features/access/application/password-keys";
 import {
-  passwordSaltByteLength,
   secretByteLength,
   sessionLifetime,
   stepUpWindow,
 } from "@/features/access/domain/access-policy";
 import { currentArgon2Parameters, derivedKeySchema } from "@/features/access/domain/password";
+import { passwordSaltByteLength } from "@/features/access/domain/password-policy";
 import { peppersFrom } from "@/features/access/infrastructure/pepper-keys";
 import { webCryptoSecrets } from "@/features/access/infrastructure/web-crypto-secrets";
 import { deriveKey, normalizePassword } from "@/features/access/web/browser-password";
@@ -34,6 +34,8 @@ import { accountIdSchema } from "@/shared/domain/account-id";
 import { searchText } from "@/shared/domain/search-text";
 import { vietnamDate } from "@/shared/domain/vietnam-day";
 import { vietnamTimeZone } from "@/shared/domain/vietnam-time-zone";
+
+import { hoaOnTelegram } from "./telegram-users.ts";
 
 // What the steps need to know about the rows
 export type Fixtures = {
@@ -61,7 +63,7 @@ const statementBreak = ";\n--> statement-breakpoint\n";
 
 // One per scenario that spends one, per project, with room for CI's retry
 const setupLinkCount = 16;
-const staleSessionCount = 8;
+const staleSessionCount = 12;
 const hoaStaleSessionCount = 4;
 
 // A run takes longer than a link's ten minutes, and its last scenarios still need unspent links
@@ -361,6 +363,13 @@ export async function seed(
     hoaPasskey.sql,
     ...hoaStale.map(({ sql }) => sql),
     await password(lan, lanPassword, pepper, now),
+    insert("telegram_link", {
+      account_id: hoa,
+      telegram_user_id: hoaOnTelegram.id,
+      telegram_chat_id: hoaOnTelegram.id,
+      telegram_name: `${hoaOnTelegram.firstName} ${hoaOnTelegram.lastName}`,
+      linked_at: now,
+    }),
     note(lan, yesterdaysNote, yesterdayNoon(now)),
     seededBook(lan, now),
     ...setupTokens.map((token) =>
