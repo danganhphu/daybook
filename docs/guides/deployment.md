@@ -30,8 +30,9 @@ A release that adds migrations applies them first, with the two commands of the 
 before it applies, in a terminal of your own. Before that:
 
 1. **Export the database** to a file on your own disk ([backups](#backups)): Time Travel keeps 7 days, a file keeps
-   for good, and the same file lets the migration be tried on real rows first, locally.
-2. **Note the bookmark** `cf` prints before applying: it is where a restore goes back to.
+   for good.
+2. **Take a bookmark**, the point a restore goes back to, and write it in the deploy's notes; applying prints none:
+   `pnpm exec cf d1 time-travel get-bookmark <database id>`.
 3. **A migration never removes what the running version reads.** A table or a column goes one release after the code
    stopped using it; a migration whose header says it breaks rollback is applied only with a plan for it.
 
@@ -100,8 +101,8 @@ Once, before the first `pnpm run deploy` with notifications in it:
 
    ```powershell
    $keys = pnpm -s notifications:keys | ConvertFrom-Json
-   $keys.VAPID_PUBLIC_KEY | npx wrangler secret put VAPID_PUBLIC_KEY --name daybook
-   $keys.VAPID_PRIVATE_KEY | npx wrangler secret put VAPID_PRIVATE_KEY --name daybook
+   $keys.VAPID_PUBLIC_KEY | pnpm dlx wrangler@4.151.0 secret put VAPID_PUBLIC_KEY --name daybook
+   $keys.VAPID_PRIVATE_KEY | pnpm dlx wrangler@4.151.0 secret put VAPID_PRIVATE_KEY --name daybook
    ```
 
    Keep the pair for good. A new one stops every browser's subscription, which was made with the old public key; each
@@ -120,7 +121,7 @@ Two migrations, applied as above before `pnpm run deploy`:
   good removes rows; D1's Time Travel can still bring the whole database back to a moment within the last 7 days on
   the free plan (https://developers.cloudflare.com/d1/reference/time-travel/).
 
-Note the bookmark `cf` prints before applying, as for every migration. After the deploy the first cron run of a day
+Take a bookmark before applying, as for every migration. After the deploy the first cron run of a day
 in Vietnam empties the trash of what is older than 30 days.
 
 ## The deploy that brings the Telegram bot
@@ -174,24 +175,26 @@ A deploy that went wrong goes back to the version before it; the database goes b
    past a change of secrets unless told to (`--bypass-deployment-checks`): read its message before forcing it. Code
    from before a migration may not read the rows after it, which is why removals wait a release.
 2. **The database**, only if a migration damaged rows: `pnpm exec cf d1 time-travel restore <database id> --bookmark
-   <the bookmark noted before migrating>`. It rewinds every table, so everything written since is lost, the access log
-   too; the export taken before the migration holds what to put back by hand. Then apply the migrations again, fixed,
-   as above.
+   <the bookmark taken before migrating>`. Without one, `get-bookmark <database id> --timestamp <ISO 8601 time>` finds
+   the nearest point at or before a moment. A restore rewinds every table, so everything written since is lost, the
+   access log too; the export taken before the migration holds what to put back by hand. Then apply the migrations
+   again, fixed, as above.
 3. Run `pnpm smoke`, and write down what happened.
 
 ## Backups
 
 Time Travel keeps 7 days on the free plan, and since the trash deletes for real (ADR 0017), a mistake noticed later
 is gone. So an export, kept on your own disk: before every remote migration, and once a week. `cf` has no export yet,
-so Wrangler does it through `npx` without joining the project:
+so Wrangler does it ([commands](commands.md#cloudflare-cli)), given the database's id: with no Wrangler config, a name
+is sent as the id and Cloudflare answers "Authentication error [code: 10000]".
 
 ```sh
-npx wrangler d1 export daybook --remote --output daybook-<date>.sql
+pnpm dlx wrangler@4.151.0 d1 export <database id> --remote --output daybook-<date>.sql
 ```
 
 An export blocks the database's other requests while it runs; for a book this size that is seconds. The file holds
-every customer, order and note: keep it off cloud folders that sync to other people. To try a migration on it, load it
-into a scratch local database (`npx wrangler d1 execute <name> --local --file daybook-<date>.sql`), never the dev one.
+every customer, order and note: keep it off cloud folders that sync to other people. It is plain SQL, so what a restore
+lost is read from it and put back by hand.
 
 ## Changing a secret
 
@@ -199,7 +202,7 @@ The Worker exists now, so Wrangler sets one secret and deploys a new version at 
 shows and stays out of the shell's history (`cf workers secrets update` takes it as a flag, which history keeps):
 
 ```sh
-node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))" | npx wrangler secret put PASSWORD_PEPPER --name daybook
+node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))" | pnpm dlx wrangler@4.151.0 secret put PASSWORD_PEPPER --name daybook
 ```
 
 A new pepper stops every fallback password until it is set again; passkeys keep working.

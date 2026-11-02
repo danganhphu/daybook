@@ -71,5 +71,13 @@ cases (`src/composition/operator-console.ts`), so they keep every rule the app k
 ## Cloudflare CLI
 
 The project uses `cf` (`pnpm exec cf ...`) and its typed `cloudflare.config.ts`, not Wrangler. To find a command,
-`pnpm exec cf cli search "<what you want to do>"`. For the few things `cf` cannot do yet, Wrangler runs through
-`npx` without joining the project, for example `npx wrangler tail daybook`.
+`pnpm exec cf cli search "<what you want to do>"`. For the few things `cf` cannot do yet (live logs, one secret, a D1
+export), Wrangler runs through `pnpm dlx` at the version the lockfile has, without joining the project:
+
+```sh
+pnpm dlx wrangler@4.151.0 tail daybook
+```
+
+Not `npx wrangler`: it finds the copy the Vite plugin brought in, which has no command linked. pnpm asks which of
+Wrangler's packages may run build scripts: none needs to. With no Wrangler config, a D1 command takes the database's
+id, not its name.

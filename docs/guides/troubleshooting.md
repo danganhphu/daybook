@@ -19,5 +19,7 @@ Problems already met, and what fixed them.
 | The bot never answers | Telegram does not know the webhook, or the secret changed since | `pnpm telegram:setup --origin <app URL>` |
 | Settings offers no notifications | The Web Push keys are unset, or half-set (`push_misconfigured` in Workers Logs) | Set both in one deploy |
 | "Sổ này đã đủ hai người dùng" | Two people can already sign in; the book is for two | Nothing to fix |
+| `npx wrangler` says "'wrangler' is not recognized" | npx finds the copy the Vite plugin brought in, which has no command linked | `pnpm dlx wrangler@<lockfile version> ...` ([commands](commands.md#cloudflare-cli)) |
+| `wrangler d1 export daybook` answers "Authentication error [code: 10000]" | With no Wrangler config, the name is sent as the database's id | Pass the database id |
 | `pnpm run deploy` stops with "Not deploying" | Not on `main`, changes not committed, or not pulled | Do what it says, then deploy again |
 | `NO_COLOR` warnings in test output | The shell sets `NO_COLOR` while Playwright sets `FORCE_COLOR` | Harmless |

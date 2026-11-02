@@ -333,8 +333,9 @@ End-to-end tests cover the flows a user would notice breaking; everything else i
 
 ## Cloudflare tooling
 
-- Use `cf`. For the few things it cannot do yet, run Wrangler through `npx` without adding it to the project:
-  `npx wrangler tail <worker>`, `npx wrangler secret put <name> --name <worker>`.
+- Use `cf`. For the few things it cannot do yet, run Wrangler through `pnpm dlx wrangler@<lockfile version>` without
+  adding it to the project: `tail <worker>`, `secret put <name> --name <worker>`, `d1 export <database id>`. Not
+  `npx wrangler`, which fails here, and a D1 command takes the id, not the name ([commands](docs/guides/commands.md)).
 - Find commands with `cf cli search "<task>"` and check them with `--help` or `cf schema`. Do not translate
   Wrangler commands from memory.
 - Preview with `--dry-run`. A destructive command that aborts for lack of `--force` still exits 0.
