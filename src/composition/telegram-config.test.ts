@@ -4,7 +4,8 @@ import { telegramApiOrigin } from "@/bot/fetch-bot-api";
 
 import { telegramBindingsSchema, telegramConfigFrom, telegramConfigOrOff } from "./telegram-config";
 
-const token = "123456:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw";
+// Made up, in a token's shape but too short to be one, so secret scanners do not take it for a real one
+const token = "123456:made-up-for-tests";
 const secret = "dGVzdC13ZWJob29rLXNlY3JldC1mb3ItZGF5Ym9vay1vaw";
 const deployed = "https://daybook.example.workers.dev";
 const both = { TELEGRAM_BOT_TOKEN: token, TELEGRAM_WEBHOOK_SECRET: secret };
