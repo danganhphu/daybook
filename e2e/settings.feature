@@ -70,6 +70,7 @@ Feature: Cài đặt
     And tôi thấy "lan.nguyen"
     When tôi sửa "Tên đăng nhập" thành "lan"
     Then tôi thấy thông báo "Đã đổi tên đăng nhập"
+    And tôi thấy "lan"
 
   # WebKit in Playwright has no passkeys
   @chromium-only

@@ -113,6 +113,7 @@ Then("tôi thấy lỗi {string}", async ({ page }, text: string) => {
   await expect(page.getByRole("alert").filter({ hasText: text })).toBeVisible();
 });
 
+// The newest: the same change made twice leaves two toasts of the same words for a moment
 Then("tôi thấy thông báo {string}", async ({ page }, title: string) => {
-  await expect(page.getByRole("dialog", { name: title })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: title }).last()).toBeVisible();
 });
